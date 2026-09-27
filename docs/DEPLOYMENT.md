@@ -6,7 +6,7 @@
 | --- | --- |
 | Code | Private GitHub repo `nadiafallah/sevn-hevn`, default branch `main` |
 | Checks | GitHub Actions `CI` on every push and pull request: migration tests, typecheck, lint, build |
-| Hosting | Vercel project linked to the repo through the Vercel GitHub app |
+| Hosting | Vercel project `sevn-hevn` (team "nadia", Hobby plan, pre-launch), linked to the repo through the Vercel GitHub app. Production branch `main`; functions in `bom1` (Mumbai) |
 | Data | Supabase project `sevn-hevn` (ref `amjgwnuroshdqrruasmn`, Mumbai `ap-south-1`, org "nadia web vs", Free plan) |
 
 ## Branches and environments
