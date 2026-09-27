@@ -2147,3 +2147,28 @@ html:has(dialog[open]) .wa-float {
     display: none;
   }
 }
+
+/* ── Website enquiry (optional "send from the website" in the hand-off) ── */
+.handoff__direct {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+  font-size: 0.9rem;
+}
+.handoff__direct--open .form__grid {
+  margin-top: 12px;
+}
+.handoff__direct-title {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.handoff__direct .form__actions {
+  margin-top: 16px;
+}
+.handoff__direct .btn[disabled] {
+  opacity: 0.6;
+  cursor: progress;
+}
+.band--dark .handoff__direct {
+  border-top-color: rgba(245, 240, 232, 0.2);
+}

@@ -38,7 +38,9 @@ export const policies: Policy[] = [
     final: false,
     body: [
       "This notice describes how this website currently works. A full privacy policy will replace it.",
-      "Enquiry forms on this site do not send or store your details on our servers. When you continue, your prepared message opens in WhatsApp or your email app, and you decide whether to send it. Messages you send are received by SEVN HEVN and used only to respond to your enquiry.",
+      "When you prepare a sourcing or viewing request, your message opens in WhatsApp or your email app and you decide whether to send it. That route does not store your details on our servers.",
+      "If you instead choose “Send from the website”, the request and the contact details you give are stored in our database (hosted by Supabase) so our team can reply. Only SEVN HEVN can read them; they are used only to respond to your request.",
+      "To prevent abuse we keep a one-way hashed form of the sender’s IP address with website-sent requests, never the address itself.",
       "Your bag is saved only in your own browser (local storage) so it is still there when you return. It contains item references, not personal details.",
       "This website does not currently use advertising or analytics cookies. If that changes, we will ask for your consent first.",
       "Like most websites, our hosting provider may keep standard technical logs (such as IP address and browser type) for security and reliability.",

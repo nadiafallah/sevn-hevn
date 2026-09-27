@@ -5,24 +5,48 @@ import { emailUrl, whatsappUrl } from "@/lib/whatsapp";
 import { track } from "@/lib/analytics";
 import { site } from "@/config/site";
 import { WhatsAppIcon } from "./icons";
+import { WebsiteSend, type SentEnquiry, type WebsiteSendRequest } from "./WebsiteSend";
 
 /**
  * Shown after a form validates. Nothing has been sent at this point: the customer
- * opens WhatsApp (or email) with the prepared message and sends it themselves.
+ * opens WhatsApp (or email) with the prepared message and sends it themselves — which the
+ * website cannot see, so it records nothing. Only the optional "send from the website" path
+ * stores the request, and "received" is shown only once the server confirms it.
  */
 export function Handoff({
   message,
   emailSubject,
   onEdit,
   source,
+  send,
+  tone,
 }: {
   message: string;
   emailSubject: string;
   onEdit: () => void;
   source: string;
+  send?: WebsiteSendRequest;
+  tone?: "light" | "dark";
 }) {
   const [opened, setOpened] = useState(false);
   const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle");
+  const [sent, setSent] = useState<SentEnquiry | null>(null);
+
+  if (sent) {
+    return (
+      <div className="handoff" role="status" aria-live="polite">
+        <p className="eyebrow">Request received</p>
+        <p className="handoff__lead">
+          Thank you. SEVN HEVN has received your request — reference <strong>{sent.reference}</strong>. We’ll reply personally by{" "}
+          {sent.method === "Email" ? "email" : sent.method === "Phone call" ? "phone" : "WhatsApp"} at {sent.contactValue}.
+        </p>
+        <p className="handoff__note">
+          Please quote the reference if you contact us about this request. For anything urgent, call{" "}
+          <a href={site.contact.telHref}>{site.contact.phoneDisplay}</a>.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="handoff" role="status" aria-live="polite">
@@ -57,6 +81,7 @@ export function Handoff({
           <a href={site.contact.telHref}>{site.contact.phoneDisplay}</a>.
         </p>
       )}
+      {send && <WebsiteSend send={send} tone={tone} onSent={setSent} />}
       <div className="handoff__secondary">
         <button
           type="button"

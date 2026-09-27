@@ -12,6 +12,7 @@ export type AnalyticsEvent =
   | "email_click"
   | "sourcing_prepared"
   | "viewing_prepared"
+  | "enquiry_sent"
   | "add_to_bag"
   | "checkout_start"
   | "filter_change"

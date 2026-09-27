@@ -51,6 +51,8 @@ interface SiteContextValue {
   openPanel: (panel: Panel) => void;
   closePanel: () => void;
   catalog: Record<string, CartCatalogItem>;
+  /** True only where the server can store website enquiries (the production deployment). */
+  websiteEnquiries: boolean;
   cart: {
     ready: boolean;
     lines: CartLine[];
@@ -79,7 +81,15 @@ function readStoredCart(): CartLine[] {
   }
 }
 
-export function SiteProvider({ catalog, children }: { catalog: CartCatalogItem[]; children: ReactNode }) {
+export function SiteProvider({
+  catalog,
+  websiteEnquiries,
+  children,
+}: {
+  catalog: CartCatalogItem[];
+  websiteEnquiries: boolean;
+  children: ReactNode;
+}) {
   const [panel, setPanel] = useState<Panel | null>(null);
   const [lines, setLines] = useState<CartLine[]>([]);
   const [ready, setReady] = useState(false);
@@ -162,6 +172,7 @@ export function SiteProvider({ catalog, children }: { catalog: CartCatalogItem[]
       openPanel,
       closePanel,
       catalog: catalogMap,
+      websiteEnquiries,
       cart: {
         ready,
         lines,
@@ -172,7 +183,7 @@ export function SiteProvider({ catalog, children }: { catalog: CartCatalogItem[]
         has: (ref) => lines.some((l) => l.ref === ref),
       },
     }),
-    [panel, openPanel, closePanel, catalogMap, ready, lines, add, remove, setQty],
+    [panel, openPanel, closePanel, catalogMap, websiteEnquiries, ready, lines, add, remove, setQty],
   );
 
   return <SiteContext.Provider value={value}>{children}</SiteContext.Provider>;

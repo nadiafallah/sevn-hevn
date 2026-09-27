@@ -56,6 +56,11 @@ export function ViewingForm({ prefill }: { prefill?: ViewingPrefill }) {
         message={message}
         emailSubject="Private viewing request"
         source="viewing"
+        send={{
+          kind: "viewing",
+          request: { interest: values.interest, date: formatDate(values.date), timeOfDay: values.timeOfDay, name: values.name, notes: values.notes },
+          relatedRef: prefill?.relatedRef,
+        }}
         onEdit={() => {
           setMessage(null);
           requestAnimationFrame(() => formRef.current?.querySelector<HTMLElement>("input")?.focus());

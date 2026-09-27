@@ -7,6 +7,7 @@ import { sourcingMessage } from "@/lib/whatsapp";
 import { track } from "@/lib/analytics";
 import type { SourcingPrefill } from "./SiteProvider";
 import { Handoff } from "./Handoff";
+import { contactMethods } from "./WebsiteSend";
 
 const budgets = [
   "Under AED 20,000",
@@ -17,7 +18,7 @@ const budgets = [
   "Prefer to discuss",
 ];
 
-const contactMethods = ["WhatsApp", "Phone call", "Email"] as const;
+const categoryLabel = (id: string) => categories.find((c) => c.id === id)?.label ?? id;
 
 type Errors = Partial<Record<"category" | "describe" | "contactValue", string>>;
 
@@ -60,11 +61,10 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
       requestAnimationFrame(() => summaryRef.current?.focus());
       return;
     }
-    const categoryLabel = categories.find((c) => c.id === values.category)?.label ?? values.category;
     setMessage(
       sourcingMessage({
         ...values,
-        category: categoryLabel,
+        category: categoryLabel(values.category),
         contactMethod: method,
         relatedRef: prefill?.relatedRef,
       }),
@@ -78,6 +78,14 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
         message={message}
         emailSubject="Private sourcing request"
         source="sourcing"
+        tone={tone}
+        send={{
+          kind: "sourcing",
+          request: { category: categoryLabel(values.category), brand: values.brand, model: values.model, details: values.details, budget: values.budget, timing: values.timing, name: values.name },
+          relatedRef: prefill?.relatedRef,
+          contactMethod: method,
+          contactValue: values.contactValue.trim(),
+        }}
         onEdit={() => {
           setMessage(null);
           requestAnimationFrame(() => formRef.current?.querySelector<HTMLElement>("select, input")?.focus());
