@@ -26,7 +26,7 @@ export function Header() {
     <>
       <div className="utility-bar">
         <div className="container utility-bar__inner">
-          <span>{site.location.display} · Private sourcing &amp; viewings by request</span>
+          <span>{site.location.display} · Sourcing &amp; private viewings</span>
           <a href={site.contact.telHref} className="utility-bar__phone">
             {site.contact.phoneDisplay}
           </a>

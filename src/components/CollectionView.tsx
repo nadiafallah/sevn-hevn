@@ -65,7 +65,8 @@ export function CollectionView({ items }: { items: Item[] }) {
       const qs = next.toString();
       const url = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
       if (mode === "push") window.history.pushState(state ?? null, "", url);
-      else window.history.replaceState(state ?? window.history.state, "", url);
+      // Pass a fresh state object: reusing Next.js's own history state would skip its URL sync.
+      else window.history.replaceState(state ?? null, "", url);
     },
     [],
   );

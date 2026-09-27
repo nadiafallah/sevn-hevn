@@ -122,7 +122,7 @@ export function SiteProvider({ catalog, children }: { catalog: CartCatalogItem[]
   const closePanel = useCallback(() => {
     setPanel((current) => {
       if (current?.type === "policy" && window.location.hash === `#${current.id}`) {
-        window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
       }
       return null;
     });

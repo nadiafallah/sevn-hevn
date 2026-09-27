@@ -88,7 +88,7 @@ export function ViewingForm({ prefill }: { prefill?: ViewingPrefill }) {
             onChange={set("interest")}
             maxLength={160}
             required
-            placeholder="e.g. A listed piece, or a consultation about vintage watches"
+            placeholder="e.g. A listed piece, or a consultation"
             aria-invalid={!!error.interest}
             aria-describedby={error.interest ? id("interest-err") : undefined}
           />
