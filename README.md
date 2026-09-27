@@ -66,7 +66,9 @@ Each item gets a shareable link: `/collection?item=REFERENCE`.
 
 ## Enquiries
 
-The sourcing and viewing forms validate the input and then prepare a WhatsApp message (or an email). The customer sends it themselves, so the site never claims that a message was sent. See [docs/SUPABASE.md](docs/SUPABASE.md) for enquiries stored by the website.
+The sourcing and viewing forms validate the input and then prepare a WhatsApp message (or an email). The customer sends it themselves, so the site never claims that a message was sent, and nothing is recorded.
+
+As an alternative, the customer can choose **"Send from the website"** and give a reply contact. `/api/enquiries` then stores the request in the private Supabase `enquiries` table. A reference is shown only after the database confirms the save. This works on the production deployment only; previews and local development say it is switched off. See [docs/SUPABASE.md](docs/SUPABASE.md).
 
 ## Payments
 

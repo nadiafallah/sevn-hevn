@@ -1,0 +1,94 @@
+name: Backup (Supabase data and product images)
+
+# Encrypted off-site copy of the catalogue, enquiries and product photos, kept as a private
+# workflow artifact for 30 days. Inactive (skips with a warning) until these are set in
+# GitHub → Settings → Secrets and variables → Actions:
+#   secret   SUPABASE_DB_URL     Session pooler connection string (Supabase → Connect → Session pooler)
+#   secret   BACKUP_PASSPHRASE   Long random passphrase; store it in your password manager too
+#   variable SUPABASE_URL        https://<project-ref>.supabase.co
+# Database rows: every run. Product images: Sundays and manual runs (to stay within artifact storage).
+# Restore steps: docs/BACKUPS.md
+
+on:
+  schedule:
+    - cron: "30 23 * * *" # 03:30 Dubai time
+  workflow_dispatch:
+    inputs:
+      include_images:
+        description: Also download product images
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+    steps:
+      - name: Check configuration
+        id: cfg
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ] || [ -z "$SUPABASE_URL" ]; then
+            echo "::warning::Backup is not configured yet (see docs/BACKUPS.md). Skipping."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install PostgreSQL 17 client
+        if: steps.cfg.outputs.ready == 'true'
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Dump database rows
+        if: steps.cfg.outputs.ready == 'true'
+        run: |
+          set -euo pipefail
+          PG=/usr/lib/postgresql/17/bin
+          mkdir -p backup
+          # Schema lives in supabase/migrations (git); back up the rows.
+          $PG/pg_dump "$SUPABASE_DB_URL" --data-only --schema=public -Fc -f backup/public-data.dump
+          $PG/pg_dump "$SUPABASE_DB_URL" --data-only --table=storage.buckets --table=storage.objects -Fc -f backup/storage-metadata.dump
+          $PG/psql "$SUPABASE_DB_URL" -Atc "select name from storage.objects where bucket_id = 'product-images' order by name" > backup/image-list.txt
+          $PG/psql "$SUPABASE_DB_URL" -Atc "select 'products=' || count(*) from public.products union all select 'product_images=' || count(*) from public.product_images union all select 'enquiries=' || count(*) from public.enquiries" | tee backup/row-counts.txt
+
+      - name: Download product images
+        if: steps.cfg.outputs.ready == 'true' && (inputs.include_images || github.event_name == 'schedule')
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$(date -u +%u)" != "7" ]; then
+            echo "Images are backed up on Sundays; skipping today."; exit 0
+          fi
+          mkdir -p backup/product-images
+          while IFS= read -r name; do
+            [ -z "$name" ] && continue
+            mkdir -p "backup/product-images/$(dirname "$name")"
+            encoded=$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$name")
+            curl -fsS --retry 3 -o "backup/product-images/$name" "$SUPABASE_URL/storage/v1/object/public/product-images/$encoded"
+          done < backup/image-list.txt
+          echo "Downloaded $(find backup/product-images -type f | wc -l) images"
+
+      - name: Encrypt
+        if: steps.cfg.outputs.ready == 'true'
+        run: |
+          set -euo pipefail
+          tar czf - backup | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3 --symmetric --cipher-algo AES256 \
+            -o "sevn-hevn-backup-$(date -u +%Y%m%d).tar.gz.gpg" 3<<<"$BACKUP_PASSPHRASE"
+          rm -rf backup
+
+      - uses: actions/upload-artifact@v4
+        if: steps.cfg.outputs.ready == 'true'
+        with:
+          name: sevn-hevn-backup-${{ github.run_id }}
+          path: sevn-hevn-backup-*.tar.gz.gpg
+          retention-days: 30
+          if-no-files-found: error
