@@ -15,8 +15,8 @@ const categoryDoors = [
   { id: "shoes", label: "Shoes", note: "Loafers, mules, sandals and more", image: { src: "/images/editorial/loafer-cobalt-suede.jpg", width: 1122, height: 1402, alt: "Cobalt suede loafers with gold-tone detail" } },
 ];
 
-export default function HomePage() {
-  const featured = getFeatured(4);
+export default async function HomePage() {
+  const featured = await getFeatured(4);
   const previewsOnly = featured.every((i) => i.status === "editorial_preview");
 
   return (

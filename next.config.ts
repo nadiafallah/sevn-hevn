@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
 
+// Product photos live in the public "product-images" Supabase Storage bucket. They are fetched and
+// resized by next/image and served from this origin, so the CSP below still needs only 'self'.
+const supabaseUrl = process.env.SUPABASE_URL?.trim();
+const productImagePatterns = supabaseUrl
+  ? [new URL("/storage/v1/object/public/product-images/**", supabaseUrl)]
+  : [];
+
 // Everything is served from this origin; WhatsApp, email and Instagram are plain outbound links.
 const csp = [
   "default-src 'self'",
@@ -21,6 +28,7 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     qualities: [75, 85],
+    remotePatterns: productImagePatterns,
   },
   async headers() {
     return [

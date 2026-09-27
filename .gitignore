@@ -10,9 +10,8 @@ next-env.d.ts
 
 # env — never commit real values
 .env
-.env*.local
-.env.production
-.env.development
+.env.*
+!.env.example
 
 # private reference documents (brand PDFs, business certificates)
 /reference/
@@ -24,3 +23,7 @@ next-env.d.ts
 *.pem
 npm-debug.log*
 .vercel
+
+# supabase cli local state
+/supabase/.temp/
+/supabase/.branches/

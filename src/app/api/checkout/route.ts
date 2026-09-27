@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getItem, isGenuine } from "@/lib/catalog";
+import { findItem, getCatalog, isGenuine } from "@/lib/catalog";
 import { formatAED, maxQuantity } from "@/lib/format";
 import { getPaymentProvider, type CheckoutLine } from "@/lib/payments";
 
@@ -29,12 +29,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Your bag is empty." }, { status: 400 });
   }
 
+  // Fresh read: prices and stock must never come from a cached catalogue here.
+  const catalog = await getCatalog({ fresh: true });
   const issues: Issue[] = [];
   const lines: CheckoutLine[] = [];
   for (const entry of rawLines) {
     const ref = typeof entry?.ref === "string" ? entry.ref.slice(0, 40) : "";
     const qty = Number(entry?.qty);
-    const item = getItem(ref);
+    const item = findItem(catalog, ref);
     if (!item) {
       issues.push({ ref, code: "not_found", message: "This piece is no longer listed." });
       continue;

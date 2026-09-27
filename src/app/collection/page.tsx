@@ -10,7 +10,7 @@ const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const sp = await searchParams;
-  const item = getItem(first(sp.item));
+  const item = await getItem(first(sp.item));
 
   if (item) {
     const title = item.brand ? `${item.brand} ${item.name}` : item.name;
@@ -49,8 +49,8 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function CollectionPage({ searchParams }: Props) {
   const sp = await searchParams;
-  const items = getCatalog();
-  const item = getItem(first(sp.item));
+  const items = await getCatalog();
+  const item = await getItem(first(sp.item));
 
   // Product structured data only for genuine, non-demo items — never editorial previews.
   const jsonLd =
@@ -63,7 +63,7 @@ export default async function CollectionPage({ searchParams }: Props) {
           ...(item.brand ? { brand: { "@type": "Brand", name: item.brand } } : {}),
           ...(item.modelReference ? { mpn: item.modelReference } : {}),
           ...(item.description ? { description: item.description } : {}),
-          image: item.images.map((i) => `${site.url}${i.src}`),
+          image: item.images.map((i) => new URL(i.src, site.url).toString()),
           ...(item.status === "available" && item.priceAED
             ? {
                 offers: {

@@ -55,8 +55,8 @@ const organizationJsonLd = {
   contactPoint: [{ "@type": "ContactPoint", telephone: site.contact.phoneE164, email: site.contact.email, contactType: "customer service", availableLanguage: ["English"] }],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const cartCatalog: CartCatalogItem[] = getCatalog()
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cartCatalog: CartCatalogItem[] = (await getCatalog())
     .filter((i) => i.status !== "editorial_preview")
     .map((i) => ({
       ref: i.ref,
