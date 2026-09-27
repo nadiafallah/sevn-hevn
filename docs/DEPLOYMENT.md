@@ -25,6 +25,27 @@ Development and preview deployments can never write into, or read, customer data
 
 Work on a branch, push, check the preview URL Vercel posts on the pull request, then merge to `main` to release.
 
+**Who can open what:** Vercel Authentication (Standard Protection) is on, so preview URLs and per-deployment URLs (`sevn-hevn-<hash>-nadia-ea59.vercel.app`) open only for members of the Vercel team. The production domain `https://sevn-hevn.vercel.app` is **public**, but kept out of search engines: `SITE_INDEXING=false` makes robots.txt disallow everything and adds noindex.
+
+## Status (27 Sep 2026)
+
+| Item | State |
+| --- | --- |
+| GitHub repo, CI | connected, CI passing |
+| Vercel project, GitHub integration, production from `main`, previews from other branches | connected |
+| Supabase schema, RLS, Storage bucket | applied to production and verified over the public API |
+| Catalogue refresh webhook (Vault → `https://sevn-hevn.vercel.app/api/revalidate`) | connected, verified: a product change showed on the site within 3 s |
+| `SUPABASE_SECRET_KEY` in Vercel Production | **not set yet**. Until it is, the website's "Send from the website" option reports it is unavailable. You add it yourself (see below). |
+| Custom domain `sevnhevnmaison.com` | not connected. When it is: set `NEXT_PUBLIC_SITE_URL`, and update the Vault entry `catalog_revalidate_url`. |
+| Backup workflow | prepared, waiting for its GitHub secrets ([BACKUPS.md](BACKUPS.md)) |
+| Vercel Pro | not purchased. Upgrade before public launch (commercial use). |
+
+**Adding the Supabase secret key** (keeps it out of chat, files and git):
+
+1. Supabase → project `sevn-hevn` → **Project Settings → API Keys → Secret keys** → create or reveal a secret key (`sb_secret_…`) and copy it.
+2. Vercel → project `sevn-hevn` → **Settings → Environment Variables → Add**: name `SUPABASE_SECRET_KEY`, environment **Production only**, tick **Sensitive**, paste, save.
+3. Vercel → **Deployments** → latest production deployment → **Redeploy**.
+
 ## Environment variables (Vercel → Project → Settings → Environment Variables)
 
 | Name | Production | Preview | Development | Notes |
@@ -33,7 +54,7 @@ Work on a branch, push, check the preview URL Vercel posts on the pull request, 
 | `SUPABASE_PUBLISHABLE_KEY` | ✓ | ✓ | ✓ | `sb_publishable_…`, safe to expose but kept server-side |
 | `SUPABASE_SECRET_KEY` | ✓ | – | – | `sb_secret_…`. Mark as **Sensitive**. Production only. |
 | `CATALOG_REVALIDATE_SECRET` | ✓ | – | – | Random, e.g. `openssl rand -hex 32`. Mark as **Sensitive**. Same value as the Supabase Vault entry. |
-| `NEXT_PUBLIC_SITE_URL` | ✓ | – | – | `https://sevnhevnmaison.com` once the domain is connected |
+| `NEXT_PUBLIC_SITE_URL` | ✓ | – | – | now `https://sevn-hevn.vercel.app`; change to `https://sevnhevnmaison.com` once the domain is connected |
 | `SITE_INDEXING` | `false` until the launch is approved | – | – | |
 | `DEMO_INVENTORY` | – | optional `true` | optional | always ignored on production |
 

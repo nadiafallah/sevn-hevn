@@ -67,7 +67,7 @@ Keys are never sent to the browser and never use a `NEXT_PUBLIC_` prefix. Even i
 
 ## Catalogue refresh webhook (one-time setup, per project)
 
-Migration `*_catalogue_revalidation.sql` adds a trigger that calls the site when `products` or `product_images` change. It stays silent until two Vault entries exist. **Dashboard → Integrations → Vault → Add new secret**:
+Migration `*_catalogue_revalidation.sql` adds a trigger that calls the site when `products` or `product_images` change. It stays silent until two Vault entries exist. They are **already set** for `https://sevn-hevn.vercel.app`. When the custom domain is connected, edit `catalog_revalidate_url` under **Dashboard → Integrations → Vault**. To set up a new project, add both:
 
 - `catalog_revalidate_url` = `https://<production-domain>/api/revalidate`
 - `catalog_revalidate_secret` = the same value as `CATALOG_REVALIDATE_SECRET` in Vercel (Production)
