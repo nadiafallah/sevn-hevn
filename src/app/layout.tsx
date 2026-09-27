@@ -72,7 +72,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     }));
 
   return (
-    <html lang="en" className={jost.variable}>
+    // suppressHydrationWarning: the inline script below adds the "js" class to <html> before React hydrates.
+    <html lang="en" className={jost.variable} suppressHydrationWarning>
       <head>
         {/* Marks JS as available so reveal animations never hide content without it. */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />

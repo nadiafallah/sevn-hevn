@@ -31,7 +31,7 @@ export function ItemCard({
   const href = `/collection?item=${encodeURIComponent(item.ref)}`;
   const meta =
     item.status === "editorial_preview"
-      ? item.description
+      ? (item.tagline ?? item.description)
       : [item.condition && conditionLabels[item.condition], item.year].filter(Boolean).join(" · ");
 
   return (

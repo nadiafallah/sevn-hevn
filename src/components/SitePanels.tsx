@@ -9,6 +9,7 @@ import { categories } from "@/data/taxonomy";
 import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
 import { track } from "@/lib/analytics";
 import { Dialog } from "./Dialog";
+import { Wordmark } from "./Wordmark";
 import { CartPanel } from "./CartPanel";
 import { SourcingForm } from "./SourcingForm";
 import { ViewingForm } from "./ViewingForm";
@@ -88,29 +89,30 @@ function MenuPanel() {
   const { closePanel, openPanel } = useSite();
   return (
     <nav aria-label="Main" className="menu-panel">
+      <Link href="/" className="menu-panel__logo" aria-label="SEVN HEVN — home" onClick={closePanel}>
+        <Wordmark title={null} />
+      </Link>
       <ul className="menu-panel__primary">
         <li>
           <Link href="/collection" onClick={closePanel}>
             Collection
           </Link>
         </li>
-        {categories
-          .filter((c) => c.launch)
-          .map((c) => (
-            <li key={c.id} className="menu-panel__sub">
-              <Link href={`/collection?category=${c.id}`} onClick={closePanel}>
-                {c.label}
-              </Link>
-            </li>
-          ))}
+        {categories.map((c) => (
+          <li key={c.id} className="menu-panel__sub">
+            <Link href={`/collection?category=${c.id}`} onClick={closePanel}>
+              {c.label}
+            </Link>
+          </li>
+        ))}
         <li>
           <button type="button" onClick={() => openPanel({ type: "sourcing" })}>
-            Private Sourcing
+            Personal shopper
           </button>
         </li>
         <li>
           <button type="button" onClick={() => openPanel({ type: "viewing" })}>
-            Visit Us
+            Private viewing
           </button>
         </li>
         <li>

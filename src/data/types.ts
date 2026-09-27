@@ -60,6 +60,8 @@ export interface Item {
   demo?: boolean;
   /** Short note shown on editorial previews. */
   editorialNote?: string;
+  /** One-line mood caption for editorial previews (from the homepage concept). */
+  tagline?: string;
 }
 
 export const conditionLabels: Record<Condition, string> = {

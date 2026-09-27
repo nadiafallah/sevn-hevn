@@ -25,6 +25,8 @@ Development and preview deployments can never write into, or read, customer data
 
 Work on a branch, push, check the preview URL Vercel posts on the pull request, then merge to `main` to release.
 
+**Only a push or merge to `main` on GitHub publishes.** Saving files on a computer, or committing without pushing, changes nothing on the live site. Each push to `main` starts a Production build automatically (about a minute); if the build fails, the previous version stays live.
+
 **Who can open what:** Vercel Authentication (Standard Protection) is on, so preview URLs and per-deployment URLs (`sevn-hevn-<hash>-nadia-ea59.vercel.app`) open only for members of the Vercel team. The production domain `https://sevn-hevn.vercel.app` is **public**, but kept out of search engines: `SITE_INDEXING=false` makes robots.txt disallow everything and adds noindex.
 
 ## Status (27 Sep 2026)

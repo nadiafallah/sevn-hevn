@@ -8,6 +8,11 @@ const DEFAULT_SITE_URL = "https://sevnhevnmaison.com";
 function resolveSiteUrl() {
   const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (raw) return raw.replace(/\/+$/, "");
+  // Production: the public production hostname (custom domain once connected), never the
+  // per-deployment URL, which sits behind Vercel Authentication.
+  if (process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return DEFAULT_SITE_URL;
 }

@@ -4,7 +4,9 @@ Last updated: 27 September 2026
 
 ## Done
 
-- **Brand:** the wordmark was traced to vector from the brand PDF (both V cuts kept) and is used in the header and footer. The favicon is the "S" glyph. The brand colour tokens are Ivory, Espresso, Champagne and Black, and the typeface is Jost (self-hosted through next/font).
+- **Redesign (27 Sep 2026), closer to the homepage PDF:** three-tier header (utility bar, large centred wordmark with Menu / Search / Bag, full category row in the concept's order), full-bleed hero with staggered text entrance, centred introduction with numbered pillars, three category doors, "Latest arrivals" (three editorial previews with the concept's captions; a swipe row on phones), Personal shopping band with the sourcing form, "Discover more" category row, private viewing, and a new footer. Fixed a hydration error on every page and canonical / Open Graph URLs that pointed at protected per-deployment URLs.
+
+- **Brand:** the wordmark was traced to vector from the brand PDF (both V cuts kept; checked against the embedded artwork at 96% pixel overlap). It is shown large and centred in the header (about 400 px wide on desktop, 226 px on phones, settling to a compact size on scroll), in the menu drawer and at full size in the footer. The footer carries the company name SEVN HEVN MAISON GENERAL TRADING L.L.C. The favicon is the "S" glyph. The brand colour tokens are Ivory, Espresso, Champagne and Black, and the typeface is Jost (self-hosted through next/font).
 - **Home (`/`):**
   - hero with "Welcome to your happy place." and an AI-image label
   - maison introduction
