@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { site } from "@/config/site";
 import { categoryById, type CategoryId } from "@/data/taxonomy";
 import { Wordmark } from "./Wordmark";
@@ -12,10 +12,13 @@ import { BagIcon, MenuIcon, SearchIcon } from "./icons";
 // Order and wording of the category row follow the homepage concept.
 const navCategories: CategoryId[] = ["bags", "watches", "shoes", "clothing", "eyewear", "accessories", "jewellery", "lifestyle"];
 
+const noopSubscribe = () => () => {};
+
 export function Header() {
   const pathname = usePathname();
   const { openPanel, cart } = useSite();
-  const onHome = pathname === "/";
+  // False while hydrating: the prerendered HTML must not depend on the path, or hydration fails.
+  const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
   const [condensed, setCondensed] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
 
@@ -37,15 +40,20 @@ export function Header() {
     return () => ro.disconnect();
   }, []);
 
-  // On Home the service links scroll to their sections; elsewhere they open the panel.
-  const service = (anchor: "sourcing" | "visit", label: string) =>
-    onHome ? (
-      <a href={`#${anchor}`}>{label}</a>
-    ) : (
-      <button type="button" onClick={() => openPanel({ type: anchor === "visit" ? "viewing" : "sourcing" })}>
-        {label}
-      </button>
-    );
+  // The same element on server and client. On Home the link scrolls to its section;
+  // elsewhere the click opens the matching panel instead.
+  const service = (anchor: "sourcing" | "visit", label: string) => (
+    <a
+      href={`/#${anchor}`}
+      onClick={(e) => {
+        if (window.location.pathname === "/") return;
+        e.preventDefault();
+        openPanel({ type: anchor === "visit" ? "viewing" : "sourcing" });
+      }}
+    >
+      {label}
+    </a>
+  );
 
   return (
     <>
@@ -97,7 +105,7 @@ export function Header() {
         <nav aria-label="Categories" className="cat-nav">
           <ul className="container cat-nav__list">
             <li>
-              <Link href="/collection" aria-current={pathname === "/collection" ? "page" : undefined}>
+              <Link href="/collection" aria-current={hydrated && pathname === "/collection" ? "page" : undefined}>
                 The Collection
               </Link>
             </li>
