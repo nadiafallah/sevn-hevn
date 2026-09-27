@@ -38,9 +38,20 @@ Work on a branch, push, check the preview URL Vercel posts on the pull request, 
 | Supabase schema, RLS, Storage bucket | applied to production and verified over the public API |
 | Catalogue refresh webhook (Vault → `https://sevn-hevn.vercel.app/api/revalidate`) | connected, verified: a product change showed on the site within 3 s |
 | `SUPABASE_SECRET_KEY` in Vercel Production | **not set yet**. Until it is, the website's "Send from the website" option reports it is unavailable. You add it yourself (see below). |
-| Custom domain `sevnhevnmaison.com` | not connected. When it is: set `NEXT_PUBLIC_SITE_URL`, and update the Vault entry `catalog_revalidate_url`. |
+| Custom domain `sevnhevnmaison.com` | added to the Vercel project (27 Sep 2026): the apex is canonical and `www` redirects to it (308). **Waiting for DNS at GoDaddy**, see below. After it resolves, change `NEXT_PUBLIC_SITE_URL` to `https://sevnhevnmaison.com`, redeploy, and update the Vault entry `catalog_revalidate_url`. |
 | Backup workflow | prepared, waiting for its GitHub secrets ([BACKUPS.md](BACKUPS.md)) |
 | Vercel Pro | not purchased. Upgrade before public launch (commercial use). |
+
+**Pointing the domain at Vercel** (GoDaddy → My Products → sevnhevnmaison.com → DNS). These values come from Vercel's domain configuration for this project:
+
+| Type | Name | Value | Action |
+| --- | --- | --- | --- |
+| A | `@` | `216.198.79.1` | add |
+| A | `@` | `64.29.17.1` | add |
+| A | `@` | `3.33.130.190`, `15.197.148.33` (GoDaddy parking) | delete |
+| CNAME | `www` | `f7cd6713914e89dd.vercel-dns-017.com` | replace the current `www → @` |
+
+Also switch off any GoDaddy "Forwarding" for the domain. Leave MX, TXT (SPF, DKIM, DMARC, verification) and any other email records untouched; on 27 Sep 2026 the domain had none. Vercel issues the HTTPS certificate on its own once the records resolve.
 
 **Adding the Supabase secret key** (keeps it out of chat, files and git):
 
