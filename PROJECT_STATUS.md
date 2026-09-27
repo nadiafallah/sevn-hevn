@@ -23,13 +23,15 @@ Last updated: 27 September 2026
 - **Honesty rules in data:** an item marked "available" without a price, stock or delivery details is shown as enquiry-only. The site never shows AED 0. Demo records are rejected by checkout and never included in structured data.
 - **SEO:** titles and descriptions, Open Graph image, canonical URLs, Organization JSON-LD, and Product JSON-LD for genuine items only. The sitemap is in place. Robots and `noindex` apply until `SITE_INDEXING=true`.
 - **Security headers:** CSP, X-Frame-Options, nosniff, Referrer-Policy and HSTS.
-- **Supabase catalogue, enquiry storage, GitHub and Vercel:** handled by a parallel session. See `docs/`.
+- **Supabase catalogue, website-sent enquiry storage, `/api/revalidate`, CI and backups:** added by a parallel session (commits eaebc6e, 0a38adc, 8b82df9). See `docs/SUPABASE.md`, `docs/DEPLOYMENT.md` and `docs/BACKUPS.md`. The Supabase project and Vercel deployment are waiting for the owner to choose a region and plan and to log in.
+- **GitHub:** private repository https://github.com/nadiafallah/sevn-hevn.
 
-## Checks run (27 Sep 2026, commit 9414bea, before the Supabase changes)
+## Checks run (27 Sep 2026, re-run on commit 8b82df9)
 
 - `tsc --noEmit`, `eslint .` and `next build` passed.
 - Screenshots at 1440 px and 390 px of Home, Collection and the item panel. No horizontal overflow and no console errors.
-- 30 automated browser checks with Playwright against the production build, including test items (not committed). All passed, apart from one assertion that was wrong in the test itself: it did not allow for the non-breaking space in "AED 18,500". The checks covered:
+- `npm run db:test`: 9 of 9 migration and database tests passed (RLS, enquiry privacy, rate limiting, product states, storage rules).
+- 31 automated browser checks with Playwright against a local production build, using temporary test items that were not committed. Supabase was not configured, so the static catalogue fallback was used. All 31 passed. The checks covered:
   - shared item URL, Escape, Back and Forward
   - filter URL and Back
   - search and the empty state
@@ -42,6 +44,7 @@ Last updated: 27 September 2026
   - stale or sold items
   - server revalidation and the 503 unavailable state
   - policy deep link
+  - the "send from the website" option honestly shows as switched off outside production (`/api/enquiries` returns 503 `enquiries_unavailable` locally)
   - mobile menu to panel
   - WhatsApp button against bag overlap
 - API checks with curl: bad JSON, empty bag, unknown / demo / sold / unpriced / over-quantity items, and browser-sent prices ignored.
