@@ -52,7 +52,7 @@ export function WebsiteSend({
   if (!websiteEnquiries) {
     return (
       <div className="handoff__direct">
-        <p className="handoff__note">Sending directly from the website is switched off on this preview. Please use WhatsApp or email above.</p>
+        <p className="handoff__note">Sending directly from the website isn’t available at the moment. Please use WhatsApp or email above.</p>
       </div>
     );
   }

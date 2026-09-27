@@ -68,7 +68,7 @@ Each item gets a shareable link: `/collection?item=REFERENCE`.
 
 The sourcing and viewing forms validate the input and then prepare a WhatsApp message (or an email). The customer sends it themselves, so the site never claims that a message was sent, and nothing is recorded.
 
-As an alternative, the customer can choose **"Send from the website"** and give a reply contact. `/api/enquiries` then stores the request in the private Supabase `enquiries` table. A reference is shown only after the database confirms the save. This works on the production deployment only; previews and local development say it is switched off. See [docs/SUPABASE.md](docs/SUPABASE.md).
+As an alternative, the customer can choose **"Send from the website"** and give a reply contact. `/api/enquiries` then stores the request in the private Supabase `enquiries` table. A reference is shown only after the database confirms the save. This works on the production deployment only; previews and local development (and production until `SUPABASE_SECRET_KEY` is set) say it isn’t available and point to WhatsApp or email. See [docs/SUPABASE.md](docs/SUPABASE.md).
 
 ## Payments
 
