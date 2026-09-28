@@ -25,7 +25,7 @@ Code, database rows and uploaded images are backed up separately. None of them c
 
 The backup contains customer enquiries (personal data). It is encrypted before upload, and GitHub deletes each copy after 30 days.
 
-**The website code repository is public**, and anyone can download the artifacts and logs of a public repository. So the workflow refuses to run there. To activate backups, create a separate **private** repository (for example `nadiafallah/sevn-hevn-backups`), copy `.github/workflows/backup.yml` into it, and add the secrets and variable below to that private repository, not to the public one.
+**The website code repository is public**, and anyone can download the artifacts and logs of a public repository. So the workflow refuses to run there. To activate backups, create a separate **private** repository (for example `nadiafallah/sevn-hevn-backups`), copy `.github/workflows/backup.yml` into it, and add the secrets and variable listed above to that private repository, not to the public one.
 
 **Restore** into a new or empty project:
 

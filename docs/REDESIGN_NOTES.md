@@ -1,8 +1,8 @@
 # Luxury editorial redesign — working notes
 
-Status (28 Sep 2026): **local preview only, awaiting the owner's approval.** Nothing in this redesign has been committed, pushed or deployed.
+Status (28 Sep 2026): **approved by the owner and released to production.** It was rebased onto `main` after `ca358bb`, keeping that commit's hydration rule: header markup never depends on the path. The category row is hidden on Collection by CSS (`body:has(.coll-bar)`), not by React.
 
-- Branch: `redesign/luxury-editorial` (local only). It is based on `origin/main` at `9505e74`.
+- Branch: `redesign/luxury-editorial`, merged into `main`.
 - Preview: `npm run build && npx next start -p 3200`, then open http://localhost:3200.
 - Screenshots: `reference/redesign-preview/` (git-ignored).
 
