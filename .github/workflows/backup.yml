@@ -34,7 +34,12 @@ jobs:
       - name: Check configuration
         id: cfg
         run: |
-          if [ -z "$SUPABASE_DB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ] || [ -z "$SUPABASE_URL" ]; then
+          # Artifacts and logs of a PUBLIC repository can be downloaded by anyone, so customer data
+          # (even encrypted) must never be backed up from one. Run this workflow in a private repo.
+          if [ "${{ github.event.repository.private }}" != "true" ]; then
+            echo "::warning::This repository is public. Backups are disabled here; run this workflow from a private repository (see docs/BACKUPS.md)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          elif [ -z "$SUPABASE_DB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ] || [ -z "$SUPABASE_URL" ]; then
             echo "::warning::Backup is not configured yet (see docs/BACKUPS.md). Skipping."
             echo "ready=false" >> "$GITHUB_OUTPUT"
           else
