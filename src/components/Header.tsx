@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import { site } from "@/config/site";
 import { categoryById, type CategoryId } from "@/data/taxonomy";
+import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
+import { track } from "@/lib/analytics";
 import { Wordmark } from "./Wordmark";
 import { useSite } from "./SiteProvider";
-import { BagIcon, MenuIcon, SearchIcon } from "./icons";
+import { BagIcon, MenuIcon, SearchIcon, WhatsAppIcon } from "./icons";
 
-// Order and wording of the category row follow the homepage concept.
+// Order of the category row follows the homepage concept.
 const navCategories: CategoryId[] = ["bags", "watches", "shoes", "clothing", "eyewear", "accessories", "jewellery", "lifestyle"];
 
 const noopSubscribe = () => () => {};
@@ -19,26 +21,6 @@ export function Header() {
   const { openPanel, cart } = useSite();
   // False while hydrating: the prerendered HTML must not depend on the path, or hydration fails.
   const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
-  const [condensed, setCondensed] = useState(false);
-  const headerRef = useRef<HTMLElement>(null);
-
-  // The wordmark sits large at the top of the page and settles to a compact size once the visitor
-  // scrolls. The gap between the two thresholds stops it flickering around a single scroll position.
-  useEffect(() => {
-    const update = () => setCondensed((was) => (was ? window.scrollY > 8 : window.scrollY > 80));
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
-  }, []);
-
-  // Sticky elements below the header (the Collection filter bar, anchor offsets) follow its real height.
-  useEffect(() => {
-    const el = headerRef.current;
-    if (!el || !("ResizeObserver" in window)) return;
-    const ro = new ResizeObserver(() => document.documentElement.style.setProperty("--header-h", `${Math.round(el.offsetHeight)}px`));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
 
   // The same element on server and client. On Home the link scrolls to its section;
   // elsewhere the click opens the matching panel instead.
@@ -59,31 +41,40 @@ export function Header() {
     <>
       <div className="utility-bar">
         <div className="container utility-bar__inner">
-          <span>{site.location.locality} / Collection preview</span>
-          <nav aria-label="Services" className="utility-bar__links">
-            {service("sourcing", "Personal shopper")}
-            {service("visit", "Private viewing")}
-            <button type="button" onClick={() => openPanel({ type: "contact" })}>
-              Contact
-            </button>
-            <a href={site.contact.telHref}>{site.contact.phoneDisplay}</a>
-          </nav>
+          <span>{site.location.display} · Private sourcing &amp; viewings</span>
+          <a href={site.contact.telHref} className="utility-bar__phone">
+            {site.contact.phoneDisplay}
+          </a>
         </div>
       </div>
-      <header ref={headerRef} className={`site-header${condensed ? " is-condensed" : ""}`}>
+      <header className="site-header">
         <div className="container site-header__inner">
           <div className="site-header__left">
-            <button type="button" className="menu-btn" onClick={() => openPanel({ type: "menu" })} aria-label="Open menu">
+            <button type="button" className="icon-btn site-header__menu" onClick={() => openPanel({ type: "menu" })} aria-label="Open menu">
               <MenuIcon />
-              <span className="menu-btn__label" aria-hidden="true">
-                Menu
-              </span>
             </button>
+            <nav aria-label="Main" className="site-nav">
+              <Link href="/collection" aria-current={hydrated && pathname === "/collection" ? "page" : undefined}>
+                Collection
+              </Link>
+              {service("sourcing", "Private Sourcing")}
+              {service("visit", "Private Viewing")}
+            </nav>
           </div>
           <Link href="/" className="site-header__logo" aria-label="SEVN HEVN — home">
             <Wordmark title={null} />
           </Link>
           <div className="site-header__right">
+            <a
+              className="icon-btn site-header__wa"
+              href={whatsappUrl(generalMessage())}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Chat with SEVN HEVN on WhatsApp"
+              onClick={() => track("whatsapp_click", { source: "header" })}
+            >
+              <WhatsAppIcon size={19} />
+            </a>
             <button type="button" className="icon-btn" onClick={() => openPanel({ type: "search" })} aria-label="Search the collection">
               <SearchIcon />
             </button>
@@ -102,21 +93,26 @@ export function Header() {
             </button>
           </div>
         </div>
-        <nav aria-label="Categories" className="cat-nav">
-          <ul className="container cat-nav__list">
-            <li>
-              <Link href="/collection" aria-current={hydrated && pathname === "/collection" ? "page" : undefined}>
-                The Collection
-              </Link>
-            </li>
-            {navCategories.map((id) => categoryById[id]).map((c) => (
-              <li key={c.id} className={c.launch ? "cat-nav__priority" : undefined}>
-                <Link href={`/collection?category=${c.id}`}>{c.id === "watches" ? "Vintage watches" : c.label}</Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
       </header>
+      {/* Category index from the brand concept. Always rendered so the markup never depends on the path;
+          CSS hides it on the Collection page, which has its own tabs. */}
+      <nav aria-label="Categories" className="cat-row">
+        <ul className="container cat-row__inner">
+          <li>
+            <Link href="/collection">All pieces</Link>
+          </li>
+          {navCategories.map((id) => (
+            <li key={id}>
+              <Link href={`/collection?category=${id}`}>{categoryById[id].label}</Link>
+            </li>
+          ))}
+          <li>
+            <button type="button" onClick={() => openPanel({ type: "sourcing" })}>
+              Request a piece
+            </button>
+          </li>
+        </ul>
+      </nav>
     </>
   );
 }

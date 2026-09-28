@@ -15,14 +15,15 @@ export function Footer() {
   return (
     <footer className="site-footer">
       <div className="container">
-        <Link href="/" aria-label="SEVN HEVN — home" className="site-footer__logo">
-          <Wordmark title={null} />
-        </Link>
-
         <div className="site-footer__grid">
           <div className="site-footer__brand">
-            <p className="site-footer__line">Welcome to your happy place.</p>
-            <p className="muted">Independent resale in {site.location.display}. Bags, vintage watches, shoes and considered finds.</p>
+            <p className="site-footer__tagline">
+              Welcome to your <em>happy place.</em>
+            </p>
+            <p className="site-footer__note">Independent resale in {site.location.display}. Exceptional pieces, personal service.</p>
+            <a className="btn btn--light site-footer__wa" href={whatsappUrl(generalMessage())} target="_blank" rel="noopener noreferrer" onClick={() => track("whatsapp_click", { source: "footer-cta" })}>
+              Chat on WhatsApp
+            </a>
           </div>
 
           <div>
@@ -66,7 +67,7 @@ export function Footer() {
               </li>
               <li>
                 <button type="button" onClick={() => openPanel({ type: "sourcing" })}>
-                  Personal shopper
+                  Private sourcing
                 </button>
               </li>
               <li>
@@ -102,11 +103,14 @@ export function Footer() {
           </div>
         </div>
 
+        <Link href="/" aria-label="SEVN HEVN — home" className="site-footer__logo">
+          <Wordmark title={null} />
+        </Link>
+
         <div className="site-footer__legal">
-          <p className="site-footer__company">
-            {site.legalName}
-            <span> · {site.location.display}</span>
-            {site.licence && <span>{` · ${site.licence.authority} licence ${site.licence.number}`}</span>}
+          <p>
+            {site.legalName} · {site.location.display}
+            {site.licence && ` · ${site.licence.authority} licence ${site.licence.number}`}
           </p>
           <p>{site.resellerStatement}</p>
           <p>

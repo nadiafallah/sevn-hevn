@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { Item } from "@/data/types";
 import { conditionLabels } from "@/data/types";
 import { priceLabel } from "@/lib/format";
+import { ArrowIcon } from "./icons";
 
 export function ItemBadge({ item }: { item: Item }) {
   if (item.demo) return <span className="tag tag--demo">Demo — not for sale</span>;
@@ -61,6 +62,9 @@ export function ItemCard({
           <h3 className="card__name">{item.name}</h3>
           {meta && <p className="card__meta">{meta}</p>}
           {item.status !== "editorial_preview" && <p className="card__price">{priceLabel(item)}</p>}
+          <span className="card__more" aria-hidden="true">
+            View details <ArrowIcon size={13} />
+          </span>
         </div>
       </a>
     </article>

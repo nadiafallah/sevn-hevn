@@ -187,8 +187,16 @@ export function CollectionView({ items }: { items: Item[] }) {
   return (
     <>
       <div className="coll-head container">
-        <p className="eyebrow">SEVN HEVN · {categoryLabel ?? "All pieces"}</p>
-        <h1 className="display display--sm">{categoryLabel ?? "The Collection"}</h1>
+        <div className="coll-head__title">
+          <p className="eyebrow">SEVN HEVN · {categoryLabel ?? "All pieces"}</p>
+          <h1 className="display display--sm">
+            {categoryLabel ?? (
+              <>
+                The <em>Collection</em>
+              </>
+            )}
+          </h1>
+        </div>
         {!hasGenuine && (
           <p className="coll-head__note">
             Listings of available pieces will appear here, with real photographs, condition and prices. Until then, the images below are AI-generated editorial previews — not items

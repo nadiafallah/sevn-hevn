@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Jost } from "next/font/google";
+import { Cormorant_Garamond, Jost } from "next/font/google";
 import { indexingEnabled, site } from "@/config/site";
 import { getCatalog } from "@/lib/catalog";
 import { supabaseWriteConfig } from "@/lib/supabase";
@@ -11,6 +11,8 @@ import { RevealObserver, WhatsAppFloat } from "@/components/Chrome";
 import "./globals.css";
 
 const jost = Jost({ subsets: ["latin"], weight: ["300", "400", "500"], display: "swap", variable: "--font-jost" });
+// Editorial display serif (SIL Open Font License 1.1), self-hosted by next/font.
+const cormorant = Cormorant_Garamond({ subsets: ["latin"], weight: ["400", "500"], style: ["normal", "italic"], display: "swap", variable: "--font-serif" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -73,7 +75,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     // suppressHydrationWarning: the inline script below adds the "js" class to <html> before React hydrates.
-    <html lang="en" className={jost.variable} suppressHydrationWarning>
+    <html lang="en" className={`${jost.variable} ${cormorant.variable}`} suppressHydrationWarning>
       <head>
         {/* Marks JS as available so reveal animations never hide content without it. */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />

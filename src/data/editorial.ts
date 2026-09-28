@@ -53,6 +53,7 @@ export const editorialPreviews: Item[] = [
     subcategory: "Handbags",
     description: "Warm cognac leather, contrast stitching and a quiet gold-tone turn-lock.",
     images: [{ src: "/images/editorial/bag-cognac.jpg", width: 1122, height: 1028, alt: "Cognac brown leather top-handle bag with contrast stitching on a travertine plinth" }],
+    featured: true,
     editorialNote: note,
   },
   {
@@ -76,6 +77,7 @@ export const editorialPreviews: Item[] = [
     subcategory: "Loafers",
     description: "Cobalt suede loafers with a gold-tone horsebit detail.",
     images: [{ src: "/images/editorial/loafer-cobalt-suede.jpg", width: 1122, height: 1402, alt: "Pair of cobalt blue suede loafers with gold-tone bit detail on a travertine plinth" }],
+    featured: true,
     editorialNote: note,
   },
 ];

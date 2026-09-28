@@ -107,7 +107,7 @@ function MenuPanel() {
         ))}
         <li>
           <button type="button" onClick={() => openPanel({ type: "sourcing" })}>
-            Personal shopper
+            Private sourcing
           </button>
         </li>
         <li>
