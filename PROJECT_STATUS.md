@@ -66,7 +66,7 @@ Last updated: 27 September 2026
 3. Final trade licence number and issuing authority, to go in `site.licence`.
 4. Approved shipping, returns, privacy and terms text.
 5. A payment provider and merchant account, with credentials added only through Vercel environment variables.
-6. DNS change at GoDaddy for sevnhevnmaison.com (values in docs/DEPLOYMENT.md). The domain is already added to the Vercel project.
+6. Optional: DNS change at GoDaddy for sevnhevnmaison.com (values in docs/DEPLOYMENT.md), so it redirects to https://www.sevnhevn.ae. The main domain www.sevnhevn.ae is live.
 7. A Facebook URL (optional).
 8. The original logo vector file from the designer (optional, better than the trace).
 

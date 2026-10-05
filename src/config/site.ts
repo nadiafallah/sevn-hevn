@@ -3,7 +3,7 @@
  * Change contact details here only — every link on the site reads from this file.
  */
 
-const DEFAULT_SITE_URL = "https://sevnhevnmaison.com";
+const DEFAULT_SITE_URL = "https://www.sevnhevn.ae";
 
 function resolveSiteUrl() {
   const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -26,7 +26,7 @@ export const site = {
   description:
     "SEVN HEVN is a Dubai maison for exceptional luxury pieces — bags, watches including vintage, shoes and jewellery — with private sourcing and private viewings by request.",
   url: resolveSiteUrl(),
-  canonicalHost: "sevnhevnmaison.com",
+  canonicalHost: "www.sevnhevn.ae",
   location: {
     display: "Dubai, UAE",
     locality: "Dubai",
@@ -42,8 +42,8 @@ export const site = {
     telHref: "tel:+971528877200",
     whatsappNumber: "971528877200",
     whatsappBase: "https://wa.me/971528877200",
-    email: "nadiafallah0@gmail.com",
-    emailHref: "mailto:nadiafallah0@gmail.com",
+    email: "info@sevnhevn.ae",
+    emailHref: "mailto:info@sevnhevn.ae",
   },
   social: {
     instagram: {

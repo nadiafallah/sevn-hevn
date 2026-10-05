@@ -27,18 +27,19 @@ Work on a branch, push, check the preview URL Vercel posts on the pull request, 
 
 **Only a push or merge to `main` on GitHub publishes.** Saving files on a computer, or committing without pushing, changes nothing on the live site. Each push to `main` starts a Production build automatically (about a minute); if the build fails, the previous version stays live.
 
-**Who can open what:** Vercel Authentication (Standard Protection) is on, so preview URLs and per-deployment URLs (`sevn-hevn-<hash>-nadia-ea59.vercel.app`) open only for members of the Vercel team. The production domain `https://sevn-hevn.vercel.app` is **public**, but kept out of search engines: `SITE_INDEXING=false` makes robots.txt disallow everything and adds noindex.
+**Who can open what:** Vercel Authentication (Standard Protection) is on, so preview URLs and per-deployment URLs (`sevn-hevn-<hash>-nadia-ea59.vercel.app`) open only for members of the Vercel team. The production domain **`https://www.sevnhevn.ae`** (and the fallback `https://sevn-hevn.vercel.app`) is **public**, but kept out of search engines: `SITE_INDEXING=false` makes robots.txt disallow everything and adds noindex.
 
-## Status (27 Sep 2026)
+## Status (5 Oct 2026)
 
 | Item | State |
 | --- | --- |
 | GitHub repo, CI | connected, CI passing |
 | Vercel project, GitHub integration, production from `main`, previews from other branches | connected |
 | Supabase schema, RLS, Storage bucket | applied to production and verified over the public API |
-| Catalogue refresh webhook (Vault → `https://sevn-hevn.vercel.app/api/revalidate`) | connected, verified: a product change showed on the site within 3 s |
+| Catalogue refresh webhook (Vault → `https://www.sevnhevn.ae/api/revalidate`) | connected and verified |
 | `SUPABASE_SECRET_KEY` in Vercel Production | **not set yet**. Until it is, the website's "Send from the website" option reports it is unavailable. You add it yourself (see below). |
-| Custom domain `sevnhevnmaison.com` | added to the Vercel project (27 Sep 2026): the apex is canonical and `www` redirects to it (308). **Waiting for DNS at GoDaddy**, see below. After it resolves, change `NEXT_PUBLIC_SITE_URL` to `https://sevnhevnmaison.com`, redeploy, and update the Vault entry `catalog_revalidate_url`. |
+| Main domain **`www.sevnhevn.ae`** | connected (5 Oct 2026). `sevnhevn.ae` redirects to it (308), HTTPS by Vercel (Let's Encrypt). DNS and email are at Tasjeel.ae / Host Arabia cPanel: apex `A 216.198.79.1` + `A 64.29.17.1`, `www CNAME f7cd6713914e89dd.vercel-dns-017.com`. Email stays on cPanel: `MX 0 mail.sevnhevn.ae`, `mail A 192.250.230.80`. Official address: `info@sevnhevn.ae`. |
+| `sevnhevnmaison.com` (GoDaddy) | added to Vercel and set to redirect to `www.sevnhevn.ae`, but its DNS still points at GoDaddy parking. It only works once the GoDaddy records below are changed. |
 | Backup workflow | prepared, waiting for its GitHub secrets ([BACKUPS.md](BACKUPS.md)) |
 | Vercel Pro | not purchased. Upgrade before public launch (commercial use). |
 
@@ -67,7 +68,7 @@ Also switch off any GoDaddy "Forwarding" for the domain. Leave MX, TXT (SPF, DKI
 | `SUPABASE_PUBLISHABLE_KEY` | ✓ | ✓ | ✓ | `sb_publishable_…`, safe to expose but kept server-side |
 | `SUPABASE_SECRET_KEY` | ✓ | – | – | `sb_secret_…`. Mark as **Sensitive**. Production only. |
 | `CATALOG_REVALIDATE_SECRET` | ✓ | – | – | Random, e.g. `openssl rand -hex 32`. Mark as **Sensitive**. Same value as the Supabase Vault entry. |
-| `NEXT_PUBLIC_SITE_URL` | ✓ | – | – | now `https://sevn-hevn.vercel.app`; change to `https://sevnhevnmaison.com` once the domain is connected |
+| `NEXT_PUBLIC_SITE_URL` | ✓ | – | – | `https://www.sevnhevn.ae` |
 | `SITE_INDEXING` | `false` until the launch is approved | – | – | |
 | `DEMO_INVENTORY` | – | optional `true` | optional | always ignored on production |
 

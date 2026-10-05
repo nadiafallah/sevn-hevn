@@ -1,6 +1,6 @@
 # SEVN HEVN — website
 
-The website for SEVN HEVN, Dubai (sevnhevnmaison.com). It has two pages, **Home** (`/`) and **Collection** (`/collection`). Item detail, bag, sourcing, viewing, contact and policies open as panels.
+The website for SEVN HEVN, Dubai (https://www.sevnhevn.ae). It has two pages, **Home** (`/`) and **Collection** (`/collection`). Item detail, bag, sourcing, viewing, contact and policies open as panels.
 
 Built with Next.js 16 (App Router), React 19 and TypeScript. It uses plain CSS and has no UI framework.
 
