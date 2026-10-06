@@ -79,6 +79,7 @@ export function ConciergeChat({ variant, onClose, active = true }: { variant: "w
   }
 
   const errorText: Record<ChatError, string> = {
+    start_failed: L.ui.startFailed,
     connection: L.ui.connectionLost,
     rate_limited: L.ui.rateLimited,
     unavailable: L.ui.unavailableTitle,
@@ -183,7 +184,12 @@ export function ConciergeChat({ variant, onClose, active = true }: { variant: "w
               {L.ui.retry}
             </button>
           )}
-          {shownError !== "connection" && !pending && (
+          {shownError === "start_failed" && (
+            <button type="button" className="link-btn" onClick={() => { setLocalError(null); chat.retryStart(); }}>
+              {L.ui.retry}
+            </button>
+          )}
+          {shownError !== "connection" && shownError !== "start_failed" && !pending && (
             <button type="button" className="link-btn" onClick={() => { setLocalError(null); chat.clearError(); }}>
               {L.ui.close}
             </button>

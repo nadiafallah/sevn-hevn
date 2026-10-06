@@ -477,6 +477,35 @@ describe("private panel", () => {
 });
 
 describe("the rest of the site", () => {
+  it("a failed first connection says so and can be retried; nothing claims a message was lost", async () => {
+    const { page, context } = await newPage();
+    let block = true;
+    await page.route("**/api/concierge", (route) => (block && route.request().method() === "GET" ? route.abort() : route.continue()));
+    await page.goto(`${BASE}/chat`);
+    await page.getByText(/couldn’t connect to the concierge/).waitFor();
+    assert.equal(await page.getByText(/last message/).count(), 0);
+    block = false;
+    await page.locator(".cc__error").getByRole("button", { name: "Try again" }).click();
+    await page.locator(".cc__msg--assistant").first().waitFor();
+    assert.equal(await page.locator(".cc__error").count(), 0);
+    await context.close();
+  });
+
+  it("only the four active categories are offered across the site", async () => {
+    const { page, context } = await newPage();
+    await page.goto(BASE);
+    const row = (await page.locator(".cat-row li").allTextContents()).map((t) => t.trim());
+    assert.deepEqual(row, ["All pieces", "Bags", "Watches", "Shoes", "Accessories", "Request a piece"]);
+    await page.goto(`${BASE}/collection?category=accessories`);
+    const tabs = (await page.locator(".coll-tabs button").allTextContents()).map((t) => t.trim());
+    assert.deepEqual(tabs, ["All", "Bags", "Watches", "Shoes", "Accessories"]);
+    assert.equal((await page.locator(".coll-tabs button[aria-pressed='true']").textContent()).trim(), "Accessories");
+    await page.getByRole("button", { name: "Request this piece" }).click();
+    await page.locator("dialog[open]").waitFor();
+    assert.equal(await page.locator("dialog[open] select").first().inputValue(), "accessories");
+    await context.close();
+  });
+
   it("home, collection, item panel and sourcing still work; the chat shows when it is unavailable", async () => {
     const { page, context } = await newPage();
     for (const path of ["/", "/collection", "/collection?item=SH-0001", "/chat"]) {

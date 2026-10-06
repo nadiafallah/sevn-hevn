@@ -19,7 +19,7 @@ import type { Item } from "./types";
  *   status: "enquiry_only",
  *   name: "Birkin 30",
  *   brand: "Hermès",
- *   category: "bags",                    // bags | watches | shoes | jewellery | accessories | clothing | eyewear | lifestyle
+ *   category: "bags",                    // bags | watches | shoes | accessories
  *   subcategory: "Handbags",
  *   modelReference: "",                  // e.g. watch reference "15202ST"
  *   description: "",

@@ -41,7 +41,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const title = label ? `${label} — Collection` : "The Collection";
   return {
     title,
-    description: `${label ?? "Bags, watches, shoes and jewellery"} at SEVN HEVN, Dubai. Browse the collection, enquire on WhatsApp or request a piece we don’t list.`,
+    description: `${label ?? "Bags, watches, shoes and accessories"} at SEVN HEVN, Dubai. Browse the collection, enquire on WhatsApp or request a piece we don’t list.`,
     alternates: { canonical: label ? `/collection?category=${cat}` : "/collection" },
     openGraph: { title: `${title} | SEVN HEVN`, url: "/collection", images: ["/og-image.jpg"] },
   };

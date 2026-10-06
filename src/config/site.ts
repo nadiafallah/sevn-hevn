@@ -24,7 +24,7 @@ export const site = {
   tagline: "Welcome to your happy place.",
   supportingLine: "Exceptional pieces. Personally sourced in Dubai.",
   description:
-    "SEVN HEVN is a Dubai maison for exceptional luxury pieces — bags, watches including vintage, shoes and jewellery — with private sourcing and private viewings by request.",
+    "SEVN HEVN is a Dubai maison for exceptional luxury pieces — bags, watches including vintage, shoes and accessories — with private sourcing and private viewings by request.",
   url: resolveSiteUrl(),
   canonicalHost: "www.sevnhevn.ae",
   location: {

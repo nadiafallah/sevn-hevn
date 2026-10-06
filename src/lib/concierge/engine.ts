@@ -156,7 +156,7 @@ export interface Turn {
   submitted?: { reference: string; id: string };
 }
 
-const CATEGORIES: CategoryKey[] = ["bags", "watches", "shoes", "jewellery", "accessories", "other"];
+const CATEGORIES: CategoryKey[] = ["bags", "watches", "shoes", "accessories", "other"];
 const TOPICS: Topic[] = ["price", "authenticity", "shipping", "returns", "other"];
 const METHODS: ContactMethod[] = ["whatsapp", "call", "email"];
 const TIMINGS = ["asap", "month", "flexible"];

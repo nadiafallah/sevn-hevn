@@ -52,7 +52,7 @@ export default async function HomePage() {
           <span className="media-label">AI-generated editorial image</span>
         </div>
         <div className="container hero__content">
-          <p className="eyebrow hero__eyebrow">Bags · Watches · Shoes · Jewellery</p>
+          <p className="eyebrow hero__eyebrow">Bags · Watches · Shoes · Accessories</p>
           <h1 id="hero-title" className="hero__title">
             <span className="hero__line">
               <span>Welcome to</span>
@@ -90,7 +90,7 @@ export default async function HomePage() {
         </div>
         <div className="intro__body" data-reveal>
           <p className="intro__text">
-            SEVN HEVN is the pleasure of finding something exceptional. From Dubai, we bring together bags, watches — vintage among them — shoes and jewellery chosen for their
+            SEVN HEVN is the pleasure of finding something exceptional. From Dubai, we bring together bags, watches — vintage among them — shoes and accessories chosen for their
             character and beauty, with the attentive, personal service a meaningful piece deserves.
           </p>
           <ol className="pillars">
@@ -144,10 +144,10 @@ export default async function HomePage() {
                 04
               </span>
               <h3>
-                Jewellery <em>&amp; beyond</em>
+                Accessories <em>&amp; beyond</em>
               </h3>
-              <p>Accessories, eyewear or a piece you’ve been looking for — tell us, and we’ll see what’s possible.</p>
-              <PanelButton panel={{ type: "sourcing" }} className="btn btn--light">
+              <p>Belts, scarves, charms or a piece you’ve been looking for — tell us, and we’ll see what’s possible.</p>
+              <PanelButton panel={{ type: "sourcing", prefill: { category: "accessories" } }} className="btn btn--light">
                 Request a piece
               </PanelButton>
             </div>

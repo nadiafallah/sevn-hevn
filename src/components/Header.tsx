@@ -4,15 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import { site } from "@/config/site";
-import { categoryById, type CategoryId } from "@/data/taxonomy";
+import { categories } from "@/data/taxonomy";
 import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
 import { track } from "@/lib/analytics";
 import { Wordmark } from "./Wordmark";
 import { useSite } from "./SiteProvider";
 import { BagIcon, MenuIcon, SearchIcon, WhatsAppIcon } from "./icons";
 
-// Order of the category row follows the homepage concept.
-const navCategories: CategoryId[] = ["bags", "watches", "shoes", "clothing", "eyewear", "accessories", "jewellery", "lifestyle"];
 
 const noopSubscribe = () => () => {};
 
@@ -101,9 +99,9 @@ export function Header() {
           <li>
             <Link href="/collection">All pieces</Link>
           </li>
-          {navCategories.map((id) => (
-            <li key={id}>
-              <Link href={`/collection?category=${id}`}>{categoryById[id].label}</Link>
+          {categories.map((c) => (
+            <li key={c.id}>
+              <Link href={`/collection?category=${c.id}`}>{c.label}</Link>
             </li>
           ))}
           <li>

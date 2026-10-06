@@ -4,7 +4,8 @@
  * The optional AI provider can improve on it, but the chat never depends on AI.
  */
 
-export type CategoryKey = "bags" | "watches" | "shoes" | "jewellery" | "accessories" | "other";
+/** The four active categories, plus "other" so a request outside them is still taken down for the team. */
+export type CategoryKey = "bags" | "watches" | "shoes" | "accessories" | "other";
 export type Intent = "sourcing" | "question" | "order" | "callback";
 export type Topic = "price" | "authenticity" | "shipping" | "returns" | "other";
 
@@ -87,17 +88,17 @@ const MODELS: [RegExp, string, string, CategoryKey][] = [
   [/\bnautilus\b|نوتيلوس/i, "Nautilus", "Patek Philippe", "watches"],
   [/\baquanaut\b/i, "Aquanaut", "Patek Philippe", "watches"],
   [/\broyal\s*oak\b|رويال\s*أوك/i, "Royal Oak", "Audemars Piguet", "watches"],
-  [/\balhambra\b|الهمبرا/i, "Alhambra", "Van Cleef & Arpels", "jewellery"],
-  [/\blove\s*bracelet\b/i, "Love bracelet", "Cartier", "jewellery"],
-  [/\bjuste\s*un\s*clou\b/i, "Juste un Clou", "Cartier", "jewellery"],
-  [/\bserpenti\b/i, "Serpenti", "Bvlgari", "jewellery"],
+  [/\balhambra\b|الهمبرا/i, "Alhambra", "Van Cleef & Arpels", "other"],
+  [/\blove\s*bracelet\b/i, "Love bracelet", "Cartier", "other"],
+  [/\bjuste\s*un\s*clou\b/i, "Juste un Clou", "Cartier", "other"],
+  [/\bserpenti\b/i, "Serpenti", "Bvlgari", "other"],
 ];
 
 const CATEGORY_WORDS: [RegExp, CategoryKey][] = [
   [/\b(hand)?bags?\b|\bclutch(es)?\b|\btote\b|\bpurse\b|\bwallet\b|حقيب|شنط|محفظ/i, "bags"],
   [/\bwatch(es)?\b|\btimepiece\b|ساع/i, "watches"],
   [/\bshoes?\b|\bheels?\b|\bsneakers?\b|\bsandals?\b|\bloafers?\b|\bboots?\b|\bpumps?\b|\bmules?\b|حذاء|أحذية|احذية|جزم|صندل|كعب/i, "shoes"],
-  [/\brings?\b|\bnecklace\b|\bbracelet\b|\bearrings?\b|\bpendant\b|\bjewel(le)?ry\b|خاتم|قلادة|عقد|سوار|أسورة|اسوارة|أقراط|حلق|مجوهرات/i, "jewellery"],
+  [/\brings?\b|\bnecklace\b|\bbracelet\b|\bearrings?\b|\bpendant\b|\bjewel(le)?ry\b|خاتم|قلادة|عقد|سوار|أسورة|اسوارة|أقراط|حلق|مجوهرات/i, "other"],
   [/\bbelt\b|\bscarf\b|\bsunglasses\b|\bcharm\b|حزام|وشاح|نظار/i, "accessories"],
 ];
 
@@ -106,7 +107,7 @@ const BRAND_CATEGORY: Record<string, CategoryKey> = {
   "Vacheron Constantin": "watches", Omega: "watches", "Jaeger-LeCoultre": "watches", IWC: "watches", Hublot: "watches",
   Panerai: "watches", Breguet: "watches", "A. Lange & Söhne": "watches", "F.P. Journe": "watches", Tudor: "watches",
   "Christian Louboutin": "shoes", "Manolo Blahnik": "shoes", "Jimmy Choo": "shoes", Aquazzura: "shoes", "Gianvito Rossi": "shoes",
-  "Van Cleef & Arpels": "jewellery", Graff: "jewellery", "Harry Winston": "jewellery", Goyard: "bags", Moynat: "bags", Delvaux: "bags",
+  "Van Cleef & Arpels": "other", Graff: "other", "Harry Winston": "other", Goyard: "bags", Moynat: "bags", Delvaux: "bags",
 };
 
 const COLOURS: [RegExp, string][] = [

@@ -13,7 +13,7 @@ import { track } from "@/lib/analytics";
 
 const STORAGE_KEY = "sevn-hevn-concierge-v1";
 
-export type ChatError = "connection" | "rate_limited" | "unavailable" | "server_error" | "photo_type" | "photo_too_large" | "photo_failed" | "photo_limit";
+export type ChatError = "start_failed" | "connection" | "rate_limited" | "unavailable" | "server_error" | "photo_type" | "photo_too_large" | "photo_failed" | "photo_limit";
 
 type Payload = { action: "start" | "reply"; input: Record<string, unknown> } | { action: "photo"; file: Blob };
 
@@ -50,11 +50,6 @@ function writeStored(v: Stored | null) {
 
 const newId = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/[^A-Za-z0-9_-]/g, "");
 
-function initialLocale(): Locale {
-  if (typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("ar")) return "ar";
-  return "en";
-}
-
 export function useConcierge(source: "widget" | "page", active: boolean) {
   const [locale, setLocale] = useState<Locale>("en");
   const [messages, setMessages] = useState<ClientMessage[]>([]);
@@ -65,6 +60,7 @@ export function useConcierge(source: "widget" | "page", active: boolean) {
   const [submittedRef, setSubmittedRef] = useState<string | null>(null);
   const conv = useRef<Stored | null>(null);
   const booted = useRef(false);
+  const [bootAttempt, setBootAttempt] = useState(0);
 
   const showIntro = useCallback((l: Locale) => {
     setMessages(introMessages(l).map((body) => ({ role: "assistant", body })));
@@ -76,7 +72,8 @@ export function useConcierge(source: "widget" | "page", active: boolean) {
     if (!active || booted.current) return;
     booted.current = true;
     const stored = readStored();
-    const l = stored?.locale ?? initialLocale();
+    // English unless the customer chose Arabic earlier in this conversation.
+    const l = stored?.locale ?? "en";
     setLocale(l);
     (async () => {
       try {
@@ -112,12 +109,21 @@ export function useConcierge(source: "widget" | "page", active: boolean) {
         showIntro(l);
         setStatus("ready");
       } catch {
-        showIntro(l);
+        // Nothing has been sent yet: say the chat couldn't connect and offer a retry of this check.
+        setMessages([]);
+        setPrompt(null);
         setStatus("ready");
-        setError("connection");
+        setError("start_failed");
       }
     })();
-  }, [active, showIntro]);
+  }, [active, showIntro, bootAttempt]);
+
+  const retryStart = useCallback(() => {
+    booted.current = false;
+    setError(null);
+    setStatus("loading");
+    setBootAttempt((n) => n + 1);
+  }, []);
 
   const apply = useCallback((data: ClientReply, replaceAll: boolean) => {
     setLocale(data.locale);
@@ -272,7 +278,7 @@ export function useConcierge(source: "widget" | "page", active: boolean) {
     [apply, locale, run, source],
   );
 
-  return { locale, messages, prompt, status, error, pending, submittedRef, send, retry, changeLocale, startOver, uploadPhoto, clearError: () => setError(null) };
+  return { locale, messages, prompt, status, error, pending, submittedRef, send, retry, retryStart, changeLocale, startOver, uploadPhoto, clearError: () => setError(null) };
 }
 
 /**

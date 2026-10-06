@@ -18,7 +18,7 @@ All of this happens in the Supabase dashboard: **Table Editor → products**. No
 
 1. **Add a piece**: *Insert row*.
    - `ref`: unique reference, letters, numbers and dashes only, e.g. `SH-0001`.
-   - `name`, `category` (`bags`, `watches`, `shoes`, `jewellery`, `accessories`, `clothing`, `eyewear`, `lifestyle`).
+   - `name`, `category`: one of `bags`, `watches`, `shoes`, `accessories`. Only these four categories are active; the database still accepts `jewellery`, `clothing`, `eyewear` and `lifestyle`, but the website does not show rows in those categories.
    - Optional details: `brand`, `model_reference`, `description`, `condition`, `year`, `material`, `colour`, `size`, `dimensions`, `included` (a list such as `{"Box","Dust bag"}`), `authentication` (documented facts only), `delivery`, `returns`.
    - Leave `published` **unticked** while you prepare it. Unpublished pieces never appear on the site.
 2. **Add photos**: see the next section.
