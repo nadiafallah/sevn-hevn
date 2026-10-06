@@ -20,6 +20,17 @@ const PRICE_BANDS = [
 ];
 
 const FILTER_KEYS = ["category", "designer", "availability", "condition", "price"] as const;
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/** Editorial previews are not for sale, so they are never counted as "pieces". */
+function resultCount(list: Item[]) {
+  const previews = list.filter((i) => i.status === "editorial_preview").length;
+  const pieces = list.length - previews;
+  if (previews === 0) return plural(pieces, "piece", "pieces");
+  const p = plural(previews, "editorial preview", "editorial previews");
+  return pieces === 0 ? p : `${plural(pieces, "piece", "pieces")} · ${p}`;
+}
 type FilterKey = (typeof FILTER_KEYS)[number];
 
 function normalise(s: string) {
@@ -76,7 +87,6 @@ export function CollectionView({ items }: { items: Item[] }) {
     const uniq = <T,>(arr: (T | undefined)[]) => Array.from(new Set(arr.filter(Boolean) as T[]));
     const priced = items.filter((i) => i.priceAED && i.status !== "editorial_preview");
     return {
-      category: categories.filter((c) => items.some((i) => i.category === c.id)).map((c) => ({ id: c.id, label: c.label })),
       designer: uniq(items.map((i) => i.brand))
         .sort()
         .map((b) => ({ id: b, label: b })),
@@ -177,7 +187,7 @@ export function CollectionView({ items }: { items: Item[] }) {
   }
 
   const categoryLabel = isCategoryId(selected.category) ? categoryById[selected.category].label : null;
-  const selectGroups: { key: FilterKey; label: string }[] = [
+  const selectGroups: { key: Exclude<FilterKey, "category">; label: string }[] = [
     { key: "designer", label: "Designer" },
     { key: "availability", label: "Availability" },
     { key: "condition", label: "Condition" },
@@ -227,7 +237,7 @@ export function CollectionView({ items }: { items: Item[] }) {
             <button type="button" aria-pressed={!selected.category} onClick={() => setFilter("category", "")}>
               All
             </button>
-            {options.category.map((c) => (
+            {categories.map((c) => (
               <button key={c.id} type="button" aria-pressed={selected.category === c.id} onClick={() => setFilter("category", c.id)}>
                 {c.label}
               </button>
@@ -277,7 +287,7 @@ export function CollectionView({ items }: { items: Item[] }) {
       <section className="container coll-results" aria-labelledby="results-count">
         <div className="coll-results__meta">
           <p id="results-count" ref={resultsRef} aria-live="polite">
-            {results.length} {results.length === 1 ? "piece" : "pieces"}
+            {resultCount(results)}
             {query.trim() && <> for “{query.trim()}”</>}
           </p>
           {(activeFilters.length > 0 || query) && (
@@ -295,7 +305,7 @@ export function CollectionView({ items }: { items: Item[] }) {
           </div>
         ) : (
           <div className="empty">
-            <h2 className="h3">Nothing here matches — yet.</h2>
+            <h2 className="h3">{categoryLabel && !query.trim() && activeFilters.length === 1 ? `No ${categoryLabel.toLowerCase()} listed yet.` : "Nothing here matches — yet."}</h2>
             <p>
               Tell us what you’re looking for and our team will see what’s possible. We’ll prepare a WhatsApp message with your request for you to send.
             </p>

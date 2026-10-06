@@ -91,6 +91,16 @@ test("sourcing in English: asks one thing at a time, skips what was said, submit
   assert.match(run.last.assistant[0], /WhatsApp at \+971 50 123 4567/);
 });
 
+test("only the four active categories are offered; requests outside them are still taken down", async () => {
+  assert.equal(extract("Cartier Love bracelet in yellow gold").category, "other");
+  assert.equal(extract("a black leather belt").category, "accessories");
+  const { deps } = makeDeps();
+  const run = await play(deps, [choice("sourcing"), "Something special for my mother"]);
+  const ask = run.turns.find((t) => t.state.step === "src_category");
+  assert.ok(ask, "the category question is asked");
+  assert.deepEqual(ask.prompt.choices.map((c) => c.id), ["bags", "watches", "shoes", "accessories", "other"]);
+});
+
 test("Arabic: right wording, numbers kept left-to-right, international destination", async () => {
   const { deps, submitted } = makeDeps();
   const run = await play(deps, [
