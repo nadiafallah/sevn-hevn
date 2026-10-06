@@ -8,6 +8,8 @@ Supabase holds three things for SEVN HEVN:
 | Product photos | Storage bucket `product-images` + table `product_images` | Photos can be opened by their URL. Visitors cannot list, upload, replace or delete files. Image rows are visible only when their product is published. |
 | Enquiries sent from the website | table `enquiries` | **Private.** Only you, in the dashboard. The public API can neither read nor write them. |
 
+Supabase also holds the **concierge chat and private panel** data (customers, requests, conversations, photos in the private `request-photos` bucket, orders, store knowledge, notifications and the activity log). Those tables are private: the team works with them in the panel at `/admin`, not in the Table Editor. See [CONCIERGE.md](CONCIERGE.md).
+
 Supabase is not the payment provider. Online payment stays a separate integration (see `src/lib/payments`). An `orders` table will be added with that integration, under the same deny-by-default rules.
 
 ## Updating products, prices and availability

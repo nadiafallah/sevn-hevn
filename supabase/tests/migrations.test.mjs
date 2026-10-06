@@ -1,58 +1,10 @@
 // Runs every migration in supabase/migrations against an in-process Postgres 17 (PGlite) with
-// small stand-ins for Supabase's roles, Storage, Vault and pg_net, then checks the access rules.
+// small stand-ins for Supabase's roles, Auth, Storage, Vault and pg_net (see harness.mjs), then
+// checks the catalogue and website-enquiry access rules.
 // Run with: npm run db:test   (no Docker, no network, never touches a remote database)
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { PGlite } from "@electric-sql/pglite";
-
-const dir = join(import.meta.dirname, "..", "migrations");
-
-const platformStandIns = `
-  create role anon nologin;
-  create role authenticated nologin;
-  create role service_role nologin bypassrls;
-  create schema extensions;
-  create schema storage;
-  create schema vault;
-  create schema net;
-  create table storage.buckets (id text primary key, name text not null, public boolean default false, file_size_limit bigint, allowed_mime_types text[]);
-  create table vault.store (name text primary key, decrypted_secret text);
-  create view vault.decrypted_secrets as select name, decrypted_secret from vault.store;
-  create table net.calls (url text, headers jsonb, body jsonb);
-  create function net.http_post(url text, body jsonb default '{}', params jsonb default '{}', headers jsonb default '{}', timeout_milliseconds int default 5000)
-    returns bigint language sql as $$ insert into net.calls values (url, headers, body); select 1::bigint $$;
-  -- Supabase grants table privileges to the API roles by default; RLS and revokes must hold regardless.
-  grant usage on schema public to anon, authenticated, service_role;
-  alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
-  alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
-  alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
-`;
-
-async function freshDb() {
-  const db = new PGlite();
-  await db.exec(platformStandIns);
-  for (const file of readdirSync(dir).filter((f) => f.endsWith(".sql")).sort()) {
-    // pg_net is a platform extension; the stand-in above provides net.http_post instead.
-    const sql = readFileSync(join(dir, file), "utf8").replace(/create extension if not exists pg_net[^;]*;/i, "");
-    try {
-      await db.exec(sql);
-    } catch (e) {
-      throw new Error(`${file}: ${e.message}`);
-    }
-  }
-  return db;
-}
-
-async function as(db, role, sql, params) {
-  await db.exec(`set role ${role}`);
-  try {
-    return await db.query(sql, params);
-  } finally {
-    await db.exec("reset role");
-  }
-}
+import { as, freshDb } from "./harness.mjs";
 
 const rejects = (p, pattern) => assert.rejects(p, pattern);
 

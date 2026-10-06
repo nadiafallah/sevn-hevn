@@ -16,7 +16,10 @@ export type AnalyticsEvent =
   | "add_to_bag"
   | "checkout_start"
   | "filter_change"
-  | "search";
+  | "search"
+  | "concierge_open"
+  | "concierge_started"
+  | "concierge_request_submitted";
 
 type Props = Record<string, string | number | boolean | undefined>;
 

@@ -18,6 +18,9 @@ Production check:
 
 ```bash
 npm run check                # typecheck + lint + build
+npm run db:test              # migrations and database access rules (in-process Postgres)
+npm run test:unit            # concierge conversation logic
+tests/e2e/run.sh             # browser end-to-end checks on a local stack (needs postgresql@17 + postgrest)
 npm start                    # serves the build on http://localhost:3000
 ```
 
@@ -34,6 +37,8 @@ npm start                    # serves the build on http://localhost:3000
 | WhatsApp message wording | `src/lib/whatsapp.ts` |
 | Styles and brand colours | `src/app/globals.css` (tokens at the top) |
 | Logo | `src/components/Wordmark.tsx` |
+| Concierge chat (wording, flow, server) | `src/lib/concierge/` (`i18n.ts` wording, `engine.ts` conversation), `src/components/concierge/` |
+| Private panel | `src/app/admin/`, `src/lib/admin/` |
 | Image sources | [ASSETS.md](ASSETS.md) |
 
 ## Changing contact details
@@ -69,6 +74,12 @@ Each item gets a shareable link: `/collection?item=REFERENCE`.
 The sourcing and viewing forms validate the input and then prepare a WhatsApp message (or an email). The customer sends it themselves, so the site never claims that a message was sent, and nothing is recorded.
 
 As an alternative, the customer can choose **"Send from the website"** and give a reply contact. `/api/enquiries` then stores the request in the private Supabase `enquiries` table. A reference is shown only after the database confirms the save. This works on the production deployment only; previews and local development (and production until `SUPABASE_SECRET_KEY` is set) say it isn’t available and point to WhatsApp or email. See [docs/SUPABASE.md](docs/SUPABASE.md).
+
+## Concierge chat and private panel
+
+A virtual-assistant chat (English and Arabic) takes customer requests, with photos, and stores them for the team. It opens from the **Concierge** button on every page and at `/chat`. The team works in a private panel at `/admin`, with owner and staff roles, notes, follow-ups, approved prices, orders and notifications. The chat never states a price, stock level, delivery promise or policy unless it comes from approved data.
+
+Setup, roles, daily use, notification connections, order checks, optional AI, migrations and tests are all in [docs/CONCIERGE.md](docs/CONCIERGE.md).
 
 ## Payments
 

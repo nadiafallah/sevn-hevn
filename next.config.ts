@@ -9,12 +9,15 @@ const productImagePatterns = supabaseUrl
   ? [new URL("/storage/v1/object/public/product-images/**", supabaseUrl)]
   : [];
 
+// Private panel only: customer photos are shown through short-lived signed Storage links.
+const supabaseOrigin = supabaseUrl ? new URL(supabaseUrl).origin : "";
+
 // Everything is served from this origin; WhatsApp, email and Instagram are plain outbound links.
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  `img-src 'self' data: blob:${supabaseOrigin ? ` ${supabaseOrigin}` : ""}`,
   "font-src 'self'",
   `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
   "frame-ancestors 'none'",

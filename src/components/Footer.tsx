@@ -66,6 +66,9 @@ export function Footer() {
                 <Link href="/collection">Collection</Link>
               </li>
               <li>
+                <Link href="/chat">Concierge chat</Link>
+              </li>
+              <li>
                 <button type="button" onClick={() => openPanel({ type: "sourcing" })}>
                   Private sourcing
                 </button>

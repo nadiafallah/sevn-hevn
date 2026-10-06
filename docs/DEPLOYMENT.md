@@ -71,6 +71,11 @@ Also switch off any GoDaddy "Forwarding" for the domain. Leave MX, TXT (SPF, DKI
 | `NEXT_PUBLIC_SITE_URL` | ✓ | – | – | `https://www.sevnhevn.ae` |
 | `SITE_INDEXING` | `false` until the launch is approved | – | – | |
 | `DEMO_INVENTORY` | – | optional `true` | optional | always ignored on production |
+| `CONCIERGE_SERVER_KEY` | ✓ | – | – | Concierge chat’s limited database key. **Sensitive**. Its hash is in `private.server_keys`. |
+| `CRON_SECRET` | ✓ | – | – | Daily notification retry (Vercel Cron). **Sensitive**. |
+| `SMTP_*`, `NOTIFY_EMAIL_*` | ✓ | – | – | E-mail notifications and order codes; `SMTP_PASSWORD` **Sensitive** (see CONCIERGE.md §5.1) |
+| `WHATSAPP_*` | ✓ | – | – | Optional WhatsApp alerts (CONCIERGE.md §5.2) |
+| `CONCIERGE_AI_ENABLED`, `ANTHROPIC_API_KEY` | ✓ | – | – | Optional AI, off by default (CONCIERGE.md §7) |
 
 Enter secret values yourself in the Vercel dashboard (or `vercel env add`, which prompts without echoing). Never paste them into chat, issues or commits. `.env*` files are git-ignored, except `.env.example`.
 

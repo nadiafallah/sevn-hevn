@@ -1,7 +1,9 @@
 name: CI
 
-# Every push to main and every pull request: migration tests (in-process Postgres, no network)
-# plus typecheck, lint and a production build. Vercel deploys separately via its GitHub app.
+# Every push to main and every pull request: migration and access-rule tests (in-process Postgres,
+# no network), concierge logic tests, typecheck, lint and a production build. The browser
+# end-to-end checks (tests/e2e/run.sh) need a local Postgres + PostgREST and run before release.
+# Vercel deploys separately via its GitHub app.
 on:
   push:
     branches: [main]
@@ -21,7 +23,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Test database migrations
+      - name: Test database migrations and access rules
         run: npm run db:test
+      - name: Test the concierge conversation logic
+        run: npm run test:unit
       - name: Typecheck, lint and build
         run: npm run check

@@ -1,18 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Jost } from "next/font/google";
+import { Cormorant_Garamond, IBM_Plex_Sans_Arabic, Jost } from "next/font/google";
 import { indexingEnabled, site } from "@/config/site";
-import { getCatalog } from "@/lib/catalog";
-import { supabaseWriteConfig } from "@/lib/supabase";
-import { SiteProvider, type CartCatalogItem } from "@/components/SiteProvider";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
-import { SitePanels } from "@/components/SitePanels";
-import { RevealObserver, WhatsAppFloat } from "@/components/Chrome";
 import "./globals.css";
 
 const jost = Jost({ subsets: ["latin"], weight: ["300", "400", "500"], display: "swap", variable: "--font-jost" });
 // Editorial display serif (SIL Open Font License 1.1), self-hosted by next/font.
 const cormorant = Cormorant_Garamond({ subsets: ["latin"], weight: ["400", "500"], style: ["normal", "italic"], display: "swap", variable: "--font-serif" });
+// Arabic text in the concierge chat (SIL Open Font License 1.1). Not preloaded: the browser fetches
+// it only when Arabic is actually shown.
+const arabic = IBM_Plex_Sans_Arabic({ subsets: ["arabic"], weight: ["400", "500"], display: "swap", preload: false, variable: "--font-arabic" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -44,58 +40,15 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const organizationJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: site.name,
-  legalName: site.legalName,
-  url: site.url,
-  logo: `${site.url}/brand/sevn-hevn-wordmark.svg`,
-  email: site.contact.email,
-  telephone: site.contact.phoneE164,
-  address: { "@type": "PostalAddress", addressLocality: site.location.locality, addressCountry: site.location.country },
-  sameAs: [site.social.instagram.url, ...(site.social.facebook.url ? [site.social.facebook.url] : [])],
-  contactPoint: [{ "@type": "ContactPoint", telephone: site.contact.phoneE164, email: site.contact.email, contactType: "customer service", availableLanguage: ["English"] }],
-};
-
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const cartCatalog: CartCatalogItem[] = (await getCatalog())
-    .filter((i) => i.status !== "editorial_preview")
-    .map((i) => ({
-      ref: i.ref,
-      name: i.name,
-      brand: i.brand,
-      status: i.status,
-      priceAED: i.priceAED,
-      stock: i.stock,
-      maxPerOrder: i.maxPerOrder,
-      image: i.images[0],
-      demo: i.demo,
-    }));
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     // suppressHydrationWarning: the inline script below adds the "js" class to <html> before React hydrates.
-    <html lang="en" className={`${jost.variable} ${cormorant.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${jost.variable} ${cormorant.variable} ${arabic.variable}`} suppressHydrationWarning>
       <head>
         {/* Marks JS as available so reveal animations never hide content without it. */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
       </head>
-      <body>
-        <SiteProvider catalog={cartCatalog} websiteEnquiries={supabaseWriteConfig() !== null}>
-          <a href="#main" className="skip-link">
-            Skip to content
-          </a>
-          <Header />
-          <main id="main" tabIndex={-1}>
-            {children}
-          </main>
-          <Footer />
-          <WhatsAppFloat />
-          <SitePanels />
-          <RevealObserver />
-        </SiteProvider>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
