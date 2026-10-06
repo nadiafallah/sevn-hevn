@@ -46,10 +46,6 @@ function server(): Server {
   return db;
 }
 
-export function conciergeAvailable() {
-  return conciergeServer() !== null;
-}
-
 function parseState(raw: Loaded["state"], locale: Locale): State {
   const s = raw as State;
   return s && s.v === 1 && typeof s.step === "string" && s.draft ? s : initialState(locale);

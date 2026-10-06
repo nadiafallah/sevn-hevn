@@ -1,8 +1,40 @@
 # Project status: SEVN HEVN
 
-Last updated: 27 September 2026
+Last updated: 6 October 2026
 
-## Done
+## Concierge chat and private panel (6 Oct 2026)
+
+Built, tested and deployed. **Dormant until the one-time database setup is run.** Details: [docs/CONCIERGE.md](docs/CONCIERGE.md).
+
+| Part | State |
+| --- | --- |
+| Customer chat: widget on every page and `/chat`, English and Arabic (RTL) | in production code; hidden until the database setup is run (`/chat` honestly says “not available” with WhatsApp and phone) |
+| Private panel `/admin`: owner and staff roles, requests, customers, orders, knowledge, team, export, audit | in production code; sign-in grants access after the database setup |
+| Database migration `20261006120000_concierge_crm.sql` | **not applied yet**. The assistant’s Supabase connector refuses schema changes, so the owner must run it once in the SQL Editor (CONCIERGE.md §2.0). A tested file with the migration, server-key hash and owner entry is on the owner’s Desktop: `SEVN-HEVN-production-setup.sql`. |
+| Vercel env `CONCIERGE_SERVER_KEY`, `CRON_SECRET` (Production, Secret) | set 6 Oct 2026 |
+| E-mail notifications (SMTP of info@sevnhevn.ae) | needs connection: mailbox password in Vercel (CONCIERGE.md §5.1) |
+| WhatsApp notifications (Meta Cloud API) | needs connection (CONCIERGE.md §5.2); manual “Open WhatsApp” link in the panel works |
+| Order status in the chat | waits for e-mail; until then customers get a call-back request, no order details shown |
+| AI assistance | built, off (paid API; owner decision, CONCIERGE.md §7) |
+| Supabase Auth URL settings | recommended: Site URL `https://www.sevnhevn.ae`, redirect `https://www.sevnhevn.ae/admin/**`; custom SMTP for staff e-mails |
+
+Decisions:
+
+- **Database writes from the website.** These use a dedicated server key whose hash is in the database and which can only call the chat’s functions. The all-powerful secret key is not used. This is least privilege, and it no longer depends on adding `SUPABASE_SECRET_KEY`.
+- **Panel sign-in.** Supabase Auth (email + password) with httpOnly cookies. Only people the owner adds can set up access. Roles are enforced in the database: RLS for reads, role-checked functions for writes, and an audit log.
+- **Owner identity.** The owner is the account e-mail used for GitHub, Vercel and Supabase. Staff are added in the panel.
+- **Test data.** Uses the Ofcom fiction phone range (+44 7700 900xxx). It is marked as test and kept out of statistics.
+- **Public pages moved into a route group.** `src/app/(site)/` lets the panel have its own layout. The site itself is unchanged.
+
+Tests (6 Oct 2026, commit on `main`):
+
+- `npm run check` (typecheck, lint, build) passed.
+- `npm run db:test`: 28 of 28 (9 existing + 19 new access-rule tests).
+- `npm run test:unit`: 18 of 18.
+- `tests/e2e/run.sh`: 11 of 11 browser scenarios on a local Postgres + PostgREST stack. Covers desktop and mobile, English and Arabic, photo with GPS removed, panel roles, server-side refusals, order verification, e-mail failure and retry, existing pages, and the axe accessibility scan.
+- Not run: the HawkScan DAST scan (CLI and API key not installed), and live chat/panel tests (blocked by the pending database setup).
+
+## Earlier work
 
 - **Redesign (27 Sep 2026), closer to the homepage PDF:** three-tier header (utility bar, large centred wordmark with Menu / Search / Bag, full category row in the concept's order), full-bleed hero with staggered text entrance, centred introduction with numbered pillars, three category doors, "Latest arrivals" (three editorial previews with the concept's captions; a swipe row on phones), Personal shopping band with the sourcing form, "Discover more" category row, private viewing, and a new footer. Fixed a hydration error on every page and canonical / Open Graph URLs that pointed at protected per-deployment URLs.
 
@@ -61,6 +93,15 @@ Last updated: 27 September 2026
 
 ## Waiting on the owner
 
+Concierge (6 Oct 2026):
+
+- **Run the one-time concierge database setup** (docs/CONCIERGE.md §2.0). Then sign in at `/admin/setup` or `/admin/login`.
+- Add the `info@sevnhevn.ae` mailbox password as `SMTP_PASSWORD` (plus `SMTP_HOST`, `SMTP_USER`, `NOTIFY_EMAIL_TO`) in Vercel Production to turn on e-mail alerts and order checks.
+- Decide on WhatsApp Cloud API and AI (both cost money; see CONCIERGE.md).
+
+Earlier items:
+
+
 1. Real inventory: photos, prices in AED, condition, year, what's included, documentation, and delivery and returns details per item.
 2. Office address and visit process, if a street address should appear. Until then the site shows "Dubai, UAE" only.
 3. Final trade licence number and issuing authority, to go in `site.licence`.
@@ -71,6 +112,10 @@ Last updated: 27 September 2026
 8. The original logo vector file from the designer (optional, better than the trace).
 
 ## Next actions
+
+- After the database setup: run a controlled live test, using an Ofcom test number, of the widget, `/chat`, the panel sign-in and a request. Then delete the test request from the panel.
+- Approve Arabic store-knowledge entries, and replace the interim policies when final.
+- Roadmap (CONCIERGE.md §11): stock sync, request analytics, saved replies, follow-up reminders, and a customer order page.
 
 - After the Supabase and Vercel work lands: re-run `npm run check` and the browser checks against the preview deployment.
 - Add real items and review the item panel with genuine data.

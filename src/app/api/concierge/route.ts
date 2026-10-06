@@ -1,6 +1,7 @@
 import { isLocale } from "@/lib/concierge/i18n";
 import type { Input } from "@/lib/concierge/engine";
-import { conciergeAvailable, loadConversation, respond, startConversation } from "@/lib/concierge/service";
+import { loadConversation, respond, startConversation } from "@/lib/concierge/service";
+import { conciergeReady } from "@/lib/concierge/config";
 import { MSG_ID, TOKEN, UUID, failure, json, sameOrigin } from "@/lib/concierge/http";
 
 export const dynamic = "force-dynamic";
@@ -27,8 +28,8 @@ function parseInput(raw: unknown): Input | null {
 }
 
 /** Lets the chat know whether it can take requests here (it says so honestly when it can't). */
-export function GET() {
-  return json({ available: conciergeAvailable() });
+export async function GET() {
+  return json({ available: await conciergeReady() });
 }
 
 export async function POST(request: Request) {

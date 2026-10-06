@@ -494,11 +494,16 @@ describe("the rest of the site", () => {
     assert.equal(await page.locator(".cc-launcher").isVisible(), false);
     await context.close();
 
+    // Where the chat can't take requests, its button and footer link are not shown at all, and the
+    // /chat page says so honestly with WhatsApp and phone instead.
     const { page: p2, context: c2 } = await newPage();
-    await p2.goto(UNAVAILABLE_BASE);
-    await p2.locator(".cc-launcher").click();
+    // (/collection renders per request; the home page is pre-rendered from the shared build.)
+    await p2.goto(`${UNAVAILABLE_BASE}/collection`);
+    assert.equal(await p2.locator(".cc-launcher").count(), 0);
+    assert.equal(await p2.locator(".site-footer a[href='/chat']").count(), 0);
+    await p2.goto(`${UNAVAILABLE_BASE}/chat`);
     await p2.getByText("The online concierge isn’t available right now.").waitFor();
-    assert.match(await p2.locator(".cc-panel a").first().getAttribute("href"), /wa\.me\/971528877200/);
+    assert.match(await p2.locator(".cc__unavailable a").first().getAttribute("href"), /wa\.me\/971528877200/);
     await c2.close();
     assert.deepEqual(consoleErrors, [], "no browser console errors");
   });

@@ -8,7 +8,7 @@ import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
 import { Wordmark } from "./Wordmark";
 import { useSite } from "./SiteProvider";
 
-export function Footer() {
+export function Footer({ chat = false }: { chat?: boolean }) {
   const { openPanel } = useSite();
   const year = new Date().getFullYear();
 
@@ -65,9 +65,11 @@ export function Footer() {
               <li>
                 <Link href="/collection">Collection</Link>
               </li>
-              <li>
-                <Link href="/chat">Concierge chat</Link>
-              </li>
+              {chat && (
+                <li>
+                  <Link href="/chat">Concierge chat</Link>
+                </li>
+              )}
               <li>
                 <button type="button" onClick={() => openPanel({ type: "sourcing" })}>
                   Private sourcing

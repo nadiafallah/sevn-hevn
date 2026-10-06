@@ -31,6 +31,26 @@ export function conciergeServer() {
   return { ...api, serverKey };
 }
 
+/**
+ * True when the chat can actually take requests: the server key is configured here AND the
+ * concierge database objects exist. Checked at most once a minute (cached), so the button and links
+ * only appear once the one-time database setup has been run.
+ */
+export async function conciergeReady() {
+  const db = conciergeServer();
+  if (!db) return false;
+  try {
+    const res = await fetch(`${db.url}/rest/v1/knowledge_entries?select=id&limit=1`, {
+      headers: { apikey: db.key, accept: "application/json" },
+      next: { revalidate: 60, tags: ["concierge-ready"] },
+      signal: AbortSignal.timeout(4000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 /** Salted hash of the client IP for rate limiting; the raw IP is never stored. */
 export function clientHash(request: Request, secret: string) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";

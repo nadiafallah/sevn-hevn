@@ -36,6 +36,31 @@ Before anything is sent, the customer sees a summary and must tick a box agreein
 
 ## 2. Setting it up
 
+### 2.0 One-time database setup (required; **pending as of 6 Oct 2026**)
+
+The site checks once a minute whether the concierge database objects exist. Until they do:
+
+- the Concierge button and the footer link are hidden;
+- `/chat` says the online concierge isn’t available and offers WhatsApp and phone;
+- the panel’s sign-in grants no access.
+
+To set it up:
+
+1. Open **Supabase → project `sevn-hevn` → SQL Editor**: `https://supabase.com/dashboard/project/amjgwnuroshdqrruasmn/sql/new`. Check the project name at the top.
+2. Run the contents of `supabase/migrations/20261006120000_concierge_crm.sql`, followed by:
+
+   ```sql
+   -- the SHA-256 (hex) of the CONCIERGE_SERVER_KEY value stored in Vercel; the key itself never goes here
+   insert into private.server_keys (name, sha256_hex) values ('concierge', '<sha256 of the key>');
+   -- the owner's sign-in e-mail
+   insert into public.staff_members (email, display_name, role) values ('<owner e-mail>', 'Owner', 'owner');
+   ```
+
+   On 6 Oct 2026 these were prepared in a single, tested file, `SEVN-HEVN-production-setup.sql`, on the owner’s Desktop. It is not in this repository because it contains the owner e-mail.
+3. Within about a minute the button appears. No redeploy is needed.
+
+The Supabase connector used by the assistant cannot run schema changes in its sessions, so this step is done in the dashboard.
+
 ### 2.1 Environment variables (Vercel → project `sevn-hevn` → Settings → Environment Variables)
 
 Enter secret values yourself in Vercel, and tick **Sensitive**. Never paste them into chat, e-mail or files.

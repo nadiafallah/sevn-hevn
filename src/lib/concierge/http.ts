@@ -22,6 +22,8 @@ export function sameOrigin(request: Request) {
 export function failure(e: unknown) {
   if (e instanceof ConciergeError) return json({ error: e.code }, e.status);
   if (e instanceof DbError) {
+    // Database objects not installed yet (one-time setup pending): say so honestly.
+    if (e.status === 404 && e.code === "db_error") return json({ error: "unavailable" }, 503);
     const map: Record<string, number> = {
       rate_limited: 429, conversation_not_found: 404, conversation_too_long: 409, photo_limit: 409, unreachable: 503, invalid_request: 400, not_authorized: 503,
     };

@@ -32,7 +32,8 @@ export const currentStaff = cache(async (): Promise<PanelContext | null> => {
     const staff = await rpc<Staff | null>(api, "admin_session", {}, token);
     return staff ? { staff, token, api, isOwner: staff.role === "owner" } : null;
   } catch (e) {
-    if (e instanceof DbError && (e.status === 401 || e.status === 403)) return null;
+    // 404: the panel's database functions are not installed yet (one-time setup pending).
+    if (e instanceof DbError && (e.status === 401 || e.status === 403 || e.status === 404)) return null;
     throw e;
   }
 });

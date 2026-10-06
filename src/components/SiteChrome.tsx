@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { site } from "@/config/site";
 import { getCatalog } from "@/lib/catalog";
 import { supabaseWriteConfig } from "@/lib/supabase";
+import { conciergeReady } from "@/lib/concierge/config";
 import { SiteProvider, type CartCatalogItem } from "./SiteProvider";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
@@ -40,6 +41,8 @@ export async function SiteChrome({ children }: { children: ReactNode }) {
       demo: i.demo,
     }));
 
+  const chatReady = await conciergeReady();
+
   return (
     <SiteProvider catalog={cartCatalog} websiteEnquiries={supabaseWriteConfig() !== null}>
       <a href="#main" className="skip-link">
@@ -49,9 +52,9 @@ export async function SiteChrome({ children }: { children: ReactNode }) {
       <main id="main" tabIndex={-1}>
         {children}
       </main>
-      <Footer />
+      <Footer chat={chatReady} />
       <WhatsAppFloat />
-      <ConciergeLauncher />
+      {chatReady && <ConciergeLauncher />}
       <SitePanels />
       <RevealObserver />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
