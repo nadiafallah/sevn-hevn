@@ -19,19 +19,19 @@ function sniff(b: Uint8Array): "jpeg" | "png" | "webp" | null {
 }
 
 /**
- * Re-encodes a customer photo as a plain JPEG (max 1600 px): it is decoded and drawn again, so
- * metadata (GPS location, camera serials, embedded thumbnails) and any non-image content are
- * dropped. Only the first frame of animated images is kept.
+ * Re-encodes a photo as a plain JPEG (customer photos: max 1600 px; product photos use a larger
+ * size): it is decoded and drawn again, so metadata (GPS location, camera serials, embedded
+ * thumbnails) and any non-image content are dropped. Only the first frame of animated images is kept.
  */
-export async function processPhoto(input: Uint8Array) {
+export async function processPhoto(input: Uint8Array, { maxSide = 1600, quality = 82 }: { maxSide?: number; quality?: number } = {}) {
   if (input.byteLength > MAX_UPLOAD_BYTES) throw new PhotoError("photo_too_large");
   if (!sniff(input)) throw new PhotoError("photo_type");
   try {
     const { data, info } = await sharp(input, { limitInputPixels: 40_000_000, failOn: "error", pages: 1 })
       .rotate()
-      .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+      .resize({ width: maxSide, height: maxSide, fit: "inside", withoutEnlargement: true })
       .flatten({ background: "#ffffff" })
-      .jpeg({ quality: 82, mozjpeg: true })
+      .jpeg({ quality, mozjpeg: true })
       .toBuffer({ resolveWithObject: true });
     return {
       bytes: new Uint8Array(data),

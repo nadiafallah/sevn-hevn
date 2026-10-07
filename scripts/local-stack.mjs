@@ -189,7 +189,7 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, GW);
   const bearer = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
   const claims = bearer.split(".").length === 3 ? verifyJwt(bearer) : null;
-  const keyless = url.pathname.startsWith("/__") || url.pathname.includes("/object/sign/") && req.method === "GET" || url.pathname.startsWith("/auth/v1/verify");
+  const keyless = url.pathname.startsWith("/__") || (url.pathname.includes("/object/sign/") || url.pathname.startsWith("/storage/v1/object/public/")) && req.method === "GET" || url.pathname.startsWith("/auth/v1/verify");
   if (!keyless && req.headers.apikey !== PUBLISHABLE) return send(res, 401, { message: "Invalid API key" });
   try {
     // REST → PostgREST
@@ -277,6 +277,13 @@ const server = http.createServer(async (req, res) => {
         if (url.searchParams.get("token") !== expected || Number(url.searchParams.get("exp")) < Date.now()) return send(res, 400, { message: "invalid signature" });
         const f = files.get(key);
         return f ? send(res, 200, f.bytes, { "content-type": f.type }) : send(res, 404, { message: "not found" });
+      }
+      if (req.method === "GET" && path.startsWith("public/")) {
+        // Files in public buckets (product photos) are served by URL, like Supabase.
+        const key = path.slice(7);
+        const b = (await admin.query("select public from storage.buckets where id = $1", [key.split("/")[0]])).rows[0];
+        const f = b?.public ? files.get(key) : null;
+        return f ? send(res, 200, f.bytes, { "content-type": f.type }) : send(res, 400, { statusCode: "404", error: "not_found", message: "Object not found" });
       }
       if (req.method === "POST" && path.startsWith("sign/")) {
         const key = path.slice(5);
