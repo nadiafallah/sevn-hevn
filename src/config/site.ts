@@ -47,8 +47,8 @@ export const site = {
   },
   social: {
     instagram: {
-      url: "https://www.instagram.com/sevnhevn.maison/",
-      handle: "@sevnhevn.maison",
+      url: "https://www.instagram.com/sevnhevn.dubai/",
+      handle: "@sevnhevn.dubai",
     },
     /** Hidden everywhere until a real URL is supplied. */
     facebook: {
