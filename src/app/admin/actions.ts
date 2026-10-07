@@ -1,6 +1,7 @@
 "use server";
 
 import { createHmac } from "node:crypto";
+import { revalidateTag } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { site } from "@/config/site";
@@ -11,6 +12,8 @@ import { isEmail } from "@/lib/concierge/phone";
 import { sendRecovery, signInWithPassword, signOut, signUp, updatePassword } from "@/lib/admin/gotrue";
 import { clearSessionCookies, currentStaff, requireOwner, requireStaff, setSessionCookies } from "@/lib/admin/session";
 import { fromDubaiLocal, knowledgeTopics, staffSettableStatuses } from "@/lib/admin/labels";
+import { CATALOG_TAG } from "@/lib/catalog";
+import { PRODUCT_IMAGES_BUCKET } from "@/lib/supabase";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────────
 
@@ -376,4 +379,117 @@ export async function testEmail() {
   await requireOwner();
   const r = await sendTestEmail();
   back("/admin/settings", r.ok ? { ok: "test_email_sent" } : { error: "test_email_failed" });
+}
+
+// ── Products (owner) ────────────────────────────────────────────────────────────────
+
+const REF = /^[A-Za-z0-9-]{2,40}$/;
+const productRef = (f: FormData) => {
+  const v = str(f, "ref", 40);
+  if (!REF.test(v)) redirect("/admin/products?error=invalid_request");
+  return v;
+};
+
+const PRODUCT_TEXT = [
+  "name", "category", "subcategory", "brand", "model_reference", "description", "stock", "condition", "condition_notes",
+  "year", "material", "colour", "size", "dimensions", "authentication", "delivery", "returns", "status",
+] as const;
+
+/** The product fields present in the form. Empty values clear optional fields (checked again in the database). */
+function productFields(form: FormData) {
+  const f: Record<string, unknown> = {};
+  for (const k of PRODUCT_TEXT) if (form.has(k)) f[k] = str(form, k, 2000);
+  // "AED 85,000" → "85000"; anything else that isn't a whole number is refused by the database.
+  if (form.has("price_aed")) f.price_aed = str(form, "price_aed", 30).replace(/aed|[\s,]/gi, "");
+  if (form.has("included")) f.included = str(form, "included", 800).split(/[,\n]/).map((x) => x.trim()).filter(Boolean).slice(0, 12);
+  // Unticked checkboxes are not submitted; the hidden marker says the box was on the form.
+  if (form.has("featured_shown")) f.featured = form.get("featured") === "on";
+  return f;
+}
+
+/** The website shows the change on the next visit (the database also notifies the site). */
+const refreshCatalogue = () => revalidateTag(CATALOG_TAG, { expire: 0 });
+
+export async function createProduct(form: FormData) {
+  const ctx = await requireOwner();
+  let ref = "";
+  try {
+    ref = await rpc<string>(ctx.api, "admin_save_product", { p_ref: null, p_fields: productFields(form) }, ctx.token);
+  } catch (e) {
+    back("/admin/products/new", { error: codeOf(e) });
+  }
+  refreshCatalogue();
+  back(`/admin/products/${ref}`, { ok: "product_created" });
+}
+
+export async function saveProduct(form: FormData) {
+  const ctx = await requireOwner();
+  const ref = productRef(form);
+  try {
+    await rpc(ctx.api, "admin_save_product", { p_ref: ref, p_fields: productFields(form) }, ctx.token);
+  } catch (e) {
+    back(`/admin/products/${ref}`, { error: codeOf(e) });
+  }
+  refreshCatalogue();
+  back(`/admin/products/${ref}`, { ok: "product_saved" });
+}
+
+export async function setProductPublished(form: FormData) {
+  const ctx = await requireOwner();
+  const ref = productRef(form);
+  const published = str(form, "published", 5) === "true";
+  try {
+    await rpc(ctx.api, "admin_save_product", { p_ref: ref, p_fields: { published } }, ctx.token);
+  } catch (e) {
+    back(`/admin/products/${ref}`, { error: codeOf(e) });
+  }
+  refreshCatalogue();
+  back(`/admin/products/${ref}`, { ok: published ? "product_published" : "product_unpublished" });
+}
+
+const photoId = (f: FormData) => {
+  const v = str(f, "photo", 20);
+  if (!/^[0-9]{1,18}$/.test(v)) redirect("/admin/products?error=invalid_request");
+  return Number(v);
+};
+
+export async function setMainProductPhoto(form: FormData) {
+  const ctx = await requireOwner();
+  const ref = productRef(form);
+  try {
+    await rpc(ctx.api, "admin_set_main_product_image", { p_id: photoId(form) }, ctx.token);
+  } catch (e) {
+    back(`/admin/products/${ref}`, { error: codeOf(e) });
+  }
+  refreshCatalogue();
+  back(`/admin/products/${ref}`, { ok: "photo_main" });
+}
+
+export async function removeProductPhoto(form: FormData) {
+  const ctx = await requireOwner();
+  const ref = productRef(form);
+  let path = "";
+  try {
+    path = await rpc<string>(ctx.api, "admin_delete_product_image", { p_id: photoId(form) }, ctx.token);
+  } catch (e) {
+    back(`/admin/products/${ref}`, { error: codeOf(e) });
+  }
+  await storageRemove(ctx.api, PRODUCT_IMAGES_BUCKET, [path], ctx.token).catch(() => console.error("[admin] product photo file could not be removed"));
+  refreshCatalogue();
+  back(`/admin/products/${ref}`, { ok: "photo_removed" });
+}
+
+export async function deleteProduct(form: FormData) {
+  const ctx = await requireOwner();
+  const ref = productRef(form);
+  if (str(form, "confirm", 20) !== "DELETE") back(`/admin/products/${ref}`, { error: "confirm_delete" });
+  let paths: string[] = [];
+  try {
+    paths = await rpc<string[]>(ctx.api, "admin_delete_product", { p_ref: ref }, ctx.token);
+  } catch (e) {
+    back(`/admin/products/${ref}`, { error: codeOf(e) });
+  }
+  await storageRemove(ctx.api, PRODUCT_IMAGES_BUCKET, paths, ctx.token).catch(() => console.error("[admin] product photo files could not be removed"));
+  refreshCatalogue();
+  back("/admin/products", { ok: "product_deleted" });
 }

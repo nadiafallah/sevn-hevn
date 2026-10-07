@@ -27,6 +27,7 @@ export interface Api {
 const KNOWN = [
   "rate_limited", "conflict", "conversation_not_found", "conversation_too_long", "photo_limit", "photo_missing",
   "not_authorized", "owner_only", "invalid_request", "not_found", "last_owner", "has_order", "not_retryable",
+  "needs_photo", "available_incomplete",
 ];
 
 function codeOf(message: string | undefined, status: number) {
@@ -77,14 +78,23 @@ export function select<T>(api: Api, table: string, query: Record<string, string>
   return call<T>(api, `/rest/v1/${table}?${new URLSearchParams(query)}`, { method: "GET", token });
 }
 
-/** Storage upload with the publishable key (allowed only into an open photo slot, by policy). */
-export async function storageUpload(api: Api, bucket: string, path: string, body: Uint8Array, contentType: string) {
+/**
+ * Storage upload. Without a token it uses the publishable key (allowed only into an open photo slot,
+ * by policy); with a signed-in owner's token, the owner's storage policies apply (product photos).
+ */
+export async function storageUpload(api: Api, bucket: string, path: string, body: Uint8Array, contentType: string, token?: string) {
   let res: Response;
   try {
     res = await fetch(`${api.url}/storage/v1/object/${bucket}/${path}`, {
       method: "POST",
       // Publishable keys are not JWTs: send only `apikey`, so Storage applies the public role's policies.
-      headers: { apikey: api.key, "content-type": contentType, "x-upsert": "false", "cache-control": "max-age=31536000" },
+      headers: {
+        apikey: api.key,
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+        "content-type": contentType,
+        "x-upsert": "false",
+        "cache-control": "max-age=31536000",
+      },
       body: Buffer.from(body),
       cache: "no-store",
       signal: AbortSignal.timeout(15000),

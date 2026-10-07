@@ -607,3 +607,96 @@ details.adm-card {
   border-top: 1px solid var(--rule);
   color: var(--error);
 }
+
+/* ── Products ── */
+.adm a.adm-btn--dark {
+  color: var(--ivory);
+}
+
+.adm-link--danger {
+  color: var(--error);
+}
+
+.adm-thumb {
+  display: block;
+  width: 48px;
+  height: 60px;
+  object-fit: cover;
+  border: 1px solid var(--rule);
+  background: var(--ivory-deep);
+}
+
+.adm-thumb--empty {
+  background: repeating-linear-gradient(135deg, var(--ivory-deep) 0 6px, var(--paper) 6px 12px);
+}
+
+.adm-photos--product li {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+.adm-photos--product img {
+  height: 200px;
+}
+
+.adm-badge--main {
+  position: absolute;
+  top: 8px;
+  left: 2px;
+  background: var(--espresso);
+  border-color: var(--espresso);
+  color: var(--ivory);
+}
+
+.adm-photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 13px;
+}
+
+.adm-upload {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  margin-top: 14px;
+}
+
+.adm-upload ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.adm-btn.is-disabled,
+.adm-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.adm-fieldset legend {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.adm-hints {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+/* Product form fields fill their column (and never run past it on a phone). */
+.adm-fieldset label {
+  min-width: 0;
+}
+
+.adm-fieldset input:not([type="checkbox"]):not([type="hidden"]),
+.adm-fieldset select,
+.adm-fieldset textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}

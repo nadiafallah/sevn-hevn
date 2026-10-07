@@ -14,7 +14,9 @@ Supabase is not the payment provider. Online payment stays a separate integratio
 
 ## Updating products, prices and availability
 
-All of this happens in the Supabase dashboard: **Table Editor → products**. No code, no deploy.
+**Easiest: the private panel → Products** (`/admin/products`, owner only). Add a piece, upload photos straight from a phone or computer (they are scaled down and location data is removed), then publish it. Staff can see every piece there but cannot change anything. The website shows changes on the next visit.
+
+The rest of this section describes the same fields for working directly in the Supabase dashboard (**Table Editor → products**), which is still possible. No code, no deploy.
 
 1. **Add a piece**: *Insert row*.
    - `ref`: unique reference, letters, numbers and dashes only, e.g. `SH-0001`.

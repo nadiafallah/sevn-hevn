@@ -19,4 +19,4 @@ npx next start -p 3300 > "$STACK_DIR.next.log" 2>&1 & pids+=($!)
 ( unset CONCIERGE_SERVER_KEY; exec npx next start -p 3301 ) > "$STACK_DIR.next3301.log" 2>&1 & pids+=($!)
 for _ in $(seq 1 60); do curl -sf -o /dev/null http://localhost:3300/ && curl -sf -o /dev/null http://localhost:3301/ && break; sleep 0.5; done
 
-node --test --test-concurrency=1 tests/e2e/concierge.e2e.mjs
+node --test --test-concurrency=1 tests/e2e/*.e2e.mjs
