@@ -244,7 +244,7 @@ main:focus {
   min-height: 52px;
   padding: 0 32px;
   border: 1px solid var(--espresso);
-  border-radius: 0;
+  border-radius: 1.75rem;
   font-size: 0.7rem;
   font-weight: 500;
   letter-spacing: 0.2em;
@@ -296,6 +296,150 @@ main:focus {
 .btn[disabled] {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+/* Moving border: a soft glint travels clockwise around every button's
+   edge (after Aceternity UI's "moving border"). Pure CSS: the glint is a
+   radial gradient whose centre walks the corners. ::before masks it to the
+   border ring; ::after lets a faint halo through the face, under the label.
+   Browsers that can't animate custom properties, reduced motion and
+   disabled buttons keep the plain border. */
+@property --btn-glint-x {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+@property --btn-glint-y {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+.btn {
+  --btn-glint: #ead9b2;
+  position: relative;
+  isolation: isolate;
+}
+
+.btn--line {
+  --btn-glint: #a8884e;
+}
+
+.btn--light,
+.band--dark .handoff .btn {
+  --btn-glint: var(--champagne);
+}
+
+.btn--light:hover {
+  --btn-glint: var(--paper);
+}
+
+.btn::before,
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.btn::before {
+  padding: 2px;
+  background: radial-gradient(
+    circle 36px at var(--btn-glint-x) var(--btn-glint-y),
+    var(--btn-glint) 62%,
+    transparent
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+
+.btn::after {
+  z-index: -1;
+  background: radial-gradient(
+    circle 64px at var(--btn-glint-x) var(--btn-glint-y),
+    var(--btn-glint),
+    transparent
+  );
+}
+
+/* Keyframe stops sit at the corners; the long edges take most of the loop
+   so the glint moves at a near-even speed on typical button shapes. */
+@keyframes btn-glint {
+  0%,
+  100% {
+    --btn-glint-x: 0%;
+    --btn-glint-y: 0%;
+  }
+  40% {
+    --btn-glint-x: 100%;
+    --btn-glint-y: 0%;
+  }
+  50% {
+    --btn-glint-x: 100%;
+    --btn-glint-y: 100%;
+  }
+  90% {
+    --btn-glint-x: 0%;
+    --btn-glint-y: 100%;
+  }
+}
+
+@keyframes btn-glint-wide {
+  0%,
+  100% {
+    --btn-glint-x: 0%;
+    --btn-glint-y: 0%;
+  }
+  45% {
+    --btn-glint-x: 100%;
+    --btn-glint-y: 0%;
+  }
+  50% {
+    --btn-glint-x: 100%;
+    --btn-glint-y: 100%;
+  }
+  95% {
+    --btn-glint-x: 0%;
+    --btn-glint-y: 100%;
+  }
+}
+
+/* transition-behavior ships only in browsers that also animate @property. */
+@supports (transition-behavior: normal) {
+  .btn::before,
+  .btn::after {
+    animation: btn-glint 3s linear infinite;
+  }
+  .btn::before {
+    opacity: 0.9;
+  }
+  .btn::after {
+    opacity: 0.22;
+  }
+  .btn--block::before,
+  .btn--block::after {
+    animation-name: btn-glint-wide;
+  }
+}
+
+.btn[disabled]::before,
+.btn[disabled]::after {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn::before,
+  .btn::after {
+    display: none;
+  }
 }
 
 .link-btn {
