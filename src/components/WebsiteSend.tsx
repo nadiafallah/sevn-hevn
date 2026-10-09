@@ -2,14 +2,17 @@
 
 import { useId, useRef, useState, type FormEvent } from "react";
 import { track } from "@/lib/analytics";
+import { useI18n } from "@/i18n/I18nProvider";
 import { useSite } from "./SiteProvider";
 
+/** Values understood by /api/enquiries (kept in English); labels come from the dictionary. */
 export const contactMethods = ["WhatsApp", "Phone call", "Email"] as const;
 export type ContactMethod = (typeof contactMethods)[number];
+export const methodKey = { WhatsApp: "whatsapp", "Phone call": "phone", Email: "email" } as const satisfies Record<ContactMethod, string>;
 
 export interface WebsiteSendRequest {
   kind: "sourcing" | "viewing";
-  /** Structured form fields; the server rebuilds the message from these. */
+  /** Structured form fields (ids for choices); the server rebuilds the team's message from these. */
   request: Record<string, string>;
   relatedRef?: string;
   contactMethod?: ContactMethod;
@@ -39,6 +42,8 @@ export function WebsiteSend({
   onSent: (sent: SentEnquiry) => void;
 }) {
   const { websiteEnquiries, openPanel } = useSite();
+  const { t, locale } = useI18n();
+  const w = t.websiteSend;
   const uid = useId();
   const id = (k: string) => `${uid}-${k}`;
   const errRef = useRef<HTMLParagraphElement>(null);
@@ -52,7 +57,7 @@ export function WebsiteSend({
   if (!websiteEnquiries) {
     return (
       <div className="handoff__direct">
-        <p className="handoff__note">Sending directly from the website isn’t available at the moment. Please use WhatsApp or email above.</p>
+        <p className="handoff__note">{w.unavailable}</p>
       </div>
     );
   }
@@ -61,7 +66,7 @@ export function WebsiteSend({
     return (
       <div className="handoff__direct">
         <button type="button" className="link-btn" onClick={() => setOpen(true)} aria-expanded="false" aria-controls={id("form")}>
-          Prefer not to use WhatsApp? Send this request from the website
+          {w.toggle}
         </button>
       </div>
     );
@@ -70,10 +75,7 @@ export function WebsiteSend({
   async function onSubmit(ev: FormEvent) {
     ev.preventDefault();
     const value = contact.trim();
-    const invalid =
-      method === "Email"
-        ? !EMAIL.test(value) && "Enter a valid email address."
-        : !PHONE.test(value) && "Enter a valid phone number, including country code.";
+    const invalid = method === "Email" ? !EMAIL.test(value) && t.forms.errors.email : !PHONE.test(value) && t.forms.errors.phone;
     if (invalid) {
       setError(invalid);
       requestAnimationFrame(() => errRef.current?.focus());
@@ -85,17 +87,30 @@ export function WebsiteSend({
       const res = await fetch("/api/enquiries", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...send, contactMethod: method, contactValue: value, website: honeypot }),
+        body: JSON.stringify({ ...send, contactMethod: method, contactValue: value, locale, website: honeypot }),
       });
-      const data = (await res.json().catch(() => ({}))) as { reference?: string; error?: string };
+      const data = (await res.json().catch(() => ({}))) as { reference?: string; error?: string; code?: string };
       if (res.ok && data.reference) {
         track("enquiry_sent", { kind: send.kind });
         onSent({ reference: data.reference, method, contactValue: value });
         return;
       }
-      setError(data.error ?? "We couldn’t send your request just now. Please use WhatsApp or email.");
+      // The server's messages are English; show the wording for the visitor's language instead.
+      setError(
+        data.code === "rate_limited"
+          ? w.errorRate
+          : data.code === "invalid_contact"
+            ? method === "Email"
+              ? t.forms.errors.email
+              : t.forms.errors.phone
+            : res.status === 400
+              ? w.errorDetails
+              : data.code === "enquiries_unavailable"
+                ? w.unavailable
+                : w.errorSend,
+      );
     } catch {
-      setError("We couldn’t reach our server. Please check your connection, or use WhatsApp or email.");
+      setError(w.errorNetwork);
     } finally {
       setPending(false);
     }
@@ -104,35 +119,36 @@ export function WebsiteSend({
 
   return (
     <form id={id("form")} className={`form form--${tone} handoff__direct handoff__direct--open`} onSubmit={onSubmit} noValidate>
-      <p className="handoff__direct-title">Send from the website</p>
-      <p className="form__help">We’ll store this request and reply personally. Tell us where to reach you.</p>
+      <p className="handoff__direct-title">{w.title}</p>
+      <p className="form__help">{w.help}</p>
 
       {/* Honeypot for automated submissions; hidden from people and assistive technology. */}
       <div className="visually-hidden" aria-hidden="true">
-        <label htmlFor={id("website")}>Website</label>
+        <label htmlFor={id("website")}>{w.honeypot}</label>
         <input id={id("website")} tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
       </div>
 
       <div className="form__grid">
         <fieldset className="field field--choice field--wide">
-          <legend>Reply by</legend>
+          <legend>{w.replyBy}</legend>
           <div className="choice-row">
             {contactMethods.map((m) => (
               <label key={m} className="choice">
                 <input type="radio" name={id("method")} value={m} checked={method === m} onChange={() => setMethod(m)} />
-                <span>{m}</span>
+                <span>{t.forms.methods[methodKey[m]]}</span>
               </label>
             ))}
           </div>
         </fieldset>
         <div className="field field--wide">
           <label htmlFor={id("contact")}>
-            {method === "Email" ? "Email address" : "Phone number"} <span aria-hidden="true">*</span>
+            {method === "Email" ? t.forms.emailAddress : t.forms.phoneNumber} <span aria-hidden="true">*</span>
           </label>
           <input
             id={id("contact")}
             type={method === "Email" ? "email" : "tel"}
             autoComplete={method === "Email" ? "email" : "tel"}
+            dir="ltr"
             value={contact}
             onChange={(e) => setContact(e.target.value)}
             maxLength={120}
@@ -151,12 +167,12 @@ export function WebsiteSend({
 
       <div className="form__actions">
         <button type="submit" className="btn btn--line" disabled={pending} aria-busy={pending}>
-          {pending ? "Sending…" : "Send to SEVN HEVN"}
+          {pending ? w.sending : w.send}
         </button>
         <p className="form__fine">
-          Your details are used only to reply to this request.{" "}
+          {w.fine}{" "}
           <button type="button" className="link-btn" onClick={() => openPanel({ type: "policy", id: "privacy" })}>
-            Privacy
+            {w.privacy}
           </button>
         </p>
       </div>

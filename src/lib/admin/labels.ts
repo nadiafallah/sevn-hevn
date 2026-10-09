@@ -1,4 +1,9 @@
 /** Plain-English labels for the private panel. */
+import type { Condition } from "@/data/types";
+import { en } from "@/i18n/dictionaries/en";
+
+/** Item condition grades, worded as on the English website. */
+export const conditionLabels: Record<Condition, string> = en.ui.conditions;
 
 export const requestStatusLabels: Record<string, string> = {
   new: "New",

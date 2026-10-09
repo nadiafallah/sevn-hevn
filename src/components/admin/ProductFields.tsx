@@ -1,5 +1,5 @@
 import { categories } from "@/data/taxonomy";
-import { conditionLabels } from "@/data/types";
+import { conditionLabels } from "@/lib/admin/labels";
 import { productStatusOptions, type PanelProduct } from "@/lib/admin/products";
 
 const subcategories = Array.from(new Set(categories.flatMap((c) => c.sub)));

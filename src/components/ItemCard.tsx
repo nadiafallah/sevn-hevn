@@ -1,14 +1,17 @@
+"use client";
+
 import Image from "next/image";
 import type { Item } from "@/data/types";
-import { conditionLabels } from "@/data/types";
+import { useI18n } from "@/i18n/I18nProvider";
 import { priceLabel } from "@/lib/format";
 import { ArrowIcon } from "./icons";
 
 export function ItemBadge({ item }: { item: Item }) {
-  if (item.demo) return <span className="tag tag--demo">Demo — not for sale</span>;
-  if (item.status === "editorial_preview") return <span className="tag">Editorial preview</span>;
-  if (item.status === "sold") return <span className="tag tag--dark">Sold</span>;
-  if (item.status === "reserved") return <span className="tag tag--dark">Reserved</span>;
+  const { t } = useI18n();
+  if (item.demo) return <span className="tag tag--demo">{t.badges.demo}</span>;
+  if (item.status === "editorial_preview") return <span className="tag">{t.badges.preview}</span>;
+  if (item.status === "sold") return <span className="tag tag--dark">{t.badges.sold}</span>;
+  if (item.status === "reserved") return <span className="tag tag--dark">{t.badges.reserved}</span>;
   return null;
 }
 
@@ -28,17 +31,18 @@ export function ItemCard({
   onOpen?: (ref: string) => void;
   priority?: boolean;
 }) {
+  const { t, href } = useI18n();
   const [first, second] = item.images;
-  const href = `/collection?item=${encodeURIComponent(item.ref)}`;
+  const link = href(`/collection?item=${encodeURIComponent(item.ref)}`);
   const meta =
     item.status === "editorial_preview"
       ? (item.tagline ?? item.description)
-      : [item.condition && conditionLabels[item.condition], item.year].filter(Boolean).join(" · ");
+      : [item.condition && t.conditions[item.condition], item.year].filter(Boolean).join(" · ");
 
   return (
     <article className="card">
       <a
-        href={href}
+        href={link}
         className="card__link"
         onClick={
           onOpen
@@ -61,9 +65,9 @@ export function ItemCard({
           {item.brand && <p className="card__brand">{item.brand}</p>}
           <h3 className="card__name">{item.name}</h3>
           {meta && <p className="card__meta">{meta}</p>}
-          {item.status !== "editorial_preview" && <p className="card__price">{priceLabel(item)}</p>}
+          {item.status !== "editorial_preview" && <p className="card__price">{priceLabel(item, t.price)}</p>}
           <span className="card__more" aria-hidden="true">
-            View details <ArrowIcon size={13} />
+            {t.card.more} <ArrowIcon size={13} />
           </span>
         </div>
       </a>

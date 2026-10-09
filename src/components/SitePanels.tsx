@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent } from "react";
 import { site } from "@/config/site";
-import { policyById } from "@/content/policies";
+import { policyFinal } from "@/content/policies";
 import { categories } from "@/data/taxonomy";
+import { useI18n } from "@/i18n/I18nProvider";
 import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
 import { track } from "@/lib/analytics";
 import { Dialog } from "./Dialog";
@@ -13,18 +14,20 @@ import { Wordmark } from "./Wordmark";
 import { CartPanel } from "./CartPanel";
 import { SourcingForm } from "./SourcingForm";
 import { ViewingForm } from "./ViewingForm";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useSite } from "./SiteProvider";
 import { InstagramIcon, MailIcon, PhoneIcon, SearchIcon, WhatsAppIcon } from "./icons";
 
 export function ContactList() {
+  const { t } = useI18n();
   return (
     <ul className="contact-list">
       <li>
-        <a href={whatsappUrl(generalMessage())} target="_blank" rel="noopener noreferrer" onClick={() => track("whatsapp_click", { source: "contact" })}>
+        <a href={whatsappUrl(generalMessage(t.messages))} target="_blank" rel="noopener noreferrer" onClick={() => track("whatsapp_click", { source: "contact" })}>
           <WhatsAppIcon size={18} />
           <span>
-            <span className="contact-list__label">WhatsApp</span>
-            {site.contact.phoneDisplay}
+            <span className="contact-list__label">{t.contact.whatsapp}</span>
+            <bdi dir="ltr">{site.contact.phoneDisplay}</bdi>
           </span>
         </a>
       </li>
@@ -32,8 +35,8 @@ export function ContactList() {
         <a href={site.contact.telHref} onClick={() => track("call_click", { source: "contact" })}>
           <PhoneIcon />
           <span>
-            <span className="contact-list__label">Call</span>
-            {site.contact.phoneDisplay}
+            <span className="contact-list__label">{t.contact.call}</span>
+            <bdi dir="ltr">{site.contact.phoneDisplay}</bdi>
           </span>
         </a>
       </li>
@@ -41,8 +44,8 @@ export function ContactList() {
         <a href={site.contact.emailHref} onClick={() => track("email_click", { source: "contact" })}>
           <MailIcon />
           <span>
-            <span className="contact-list__label">Email</span>
-            {site.contact.email}
+            <span className="contact-list__label">{t.contact.email}</span>
+            <bdi dir="ltr">{site.contact.email}</bdi>
           </span>
         </a>
       </li>
@@ -50,8 +53,8 @@ export function ContactList() {
         <a href={site.social.instagram.url} target="_blank" rel="noopener noreferrer">
           <InstagramIcon />
           <span>
-            <span className="contact-list__label">Instagram</span>
-            {site.social.instagram.handle}
+            <span className="contact-list__label">{t.contact.instagram}</span>
+            <bdi dir="ltr">{site.social.instagram.handle}</bdi>
           </span>
         </a>
       </li>
@@ -62,6 +65,7 @@ export function ContactList() {
 function SearchPanel() {
   const router = useRouter();
   const { closePanel } = useSite();
+  const { t, href } = useI18n();
   const [q, setQ] = useState("");
   const id = useId();
   function submit(e: FormEvent) {
@@ -69,17 +73,17 @@ function SearchPanel() {
     const query = q.trim();
     track("search", { length: query.length });
     closePanel();
-    router.push(query ? `/collection?q=${encodeURIComponent(query)}` : "/collection");
+    router.push(href(query ? `/collection?q=${encodeURIComponent(query)}` : "/collection"));
   }
   return (
     <form role="search" onSubmit={submit} className="search-form">
       <label htmlFor={id} className="visually-hidden">
-        Search the collection
+        {t.panels.searchLabel}
       </label>
       <SearchIcon size={22} />
-      <input id={id} type="search" autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search designers, pieces, colours" maxLength={80} enterKeyHint="search" />
+      <input id={id} type="search" autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder={t.panels.searchPlaceholder} maxLength={80} enterKeyHint="search" dir="auto" />
       <button type="submit" className="btn btn--dark">
-        Search
+        {t.panels.searchButton}
       </button>
     </form>
   );
@@ -87,90 +91,99 @@ function SearchPanel() {
 
 function MenuPanel() {
   const { closePanel, openPanel } = useSite();
+  const { t, href } = useI18n();
   return (
-    <nav aria-label="Main" className="menu-panel">
-      <Link href="/" className="menu-panel__logo" aria-label="SEVN HEVN — home" onClick={closePanel}>
+    <nav aria-label={t.nav.main} className="menu-panel">
+      <Link href={href("/")} className="menu-panel__logo" aria-label={t.nav.home} onClick={closePanel}>
         <Wordmark title={null} />
       </Link>
       <ul className="menu-panel__primary">
         <li>
-          <Link href="/collection" onClick={closePanel}>
-            Collection
+          <Link href={href("/collection")} onClick={closePanel}>
+            {t.panels.menuCollection}
           </Link>
         </li>
         {categories.map((c) => (
           <li key={c.id} className="menu-panel__sub">
-            <Link href={`/collection?category=${c.id}`} onClick={closePanel}>
-              {c.label}
+            <Link href={href(`/collection?category=${c.id}`)} onClick={closePanel}>
+              {t.categories[c.id]}
             </Link>
           </li>
         ))}
         <li>
           <button type="button" onClick={() => openPanel({ type: "sourcing" })}>
-            Private sourcing
+            {t.panels.menuSourcing}
           </button>
         </li>
         <li>
           <button type="button" onClick={() => openPanel({ type: "viewing" })}>
-            Private viewing
+            {t.panels.menuViewing}
           </button>
         </li>
         <li>
           <button type="button" onClick={() => openPanel({ type: "contact" })}>
-            Contact
+            {t.panels.menuContact}
           </button>
         </li>
       </ul>
-      <p className="muted small menu-panel__loc">{site.location.display}</p>
+      <LanguageSwitcher variant="menu" />
+      <p className="muted small menu-panel__loc">{t.location}</p>
     </nav>
   );
 }
 
 export function SitePanels() {
   const { panel, closePanel, openPanel } = useSite();
-  const is = (t: string) => panel?.type === t;
+  const { t } = useI18n();
+  const p = t.panels;
+  const is = (type: string) => panel?.type === type;
+  const policy = panel?.type === "policy" ? t.policies[panel.id] : null;
 
   return (
     <>
-      <Dialog open={is("cart")} onClose={closePanel} title="Your bag">
+      <Dialog open={is("cart")} onClose={closePanel} title={p.bag}>
         <CartPanel />
       </Dialog>
 
-      <Dialog open={is("sourcing")} onClose={closePanel} title="Request a piece" eyebrow="Private sourcing">
-        <p className="dlg__intro">Tell us what you have in mind. We’ll prepare a WhatsApp message for you to send to our team in Dubai.</p>
-        <SourcingForm key={JSON.stringify(panel?.type === "sourcing" ? panel.prefill : null)} prefill={panel?.type === "sourcing" ? panel.prefill : undefined} />
+      <Dialog open={is("sourcing")} onClose={closePanel} title={p.sourcingTitle} eyebrow={p.sourcingEyebrow}>
+        <p className="dlg__intro">{p.sourcingIntro}</p>
+        <SourcingForm
+          key={JSON.stringify(panel?.type === "sourcing" ? panel.prefill : null)}
+          prefill={panel?.type === "sourcing" ? panel.prefill : undefined}
+          carryKey="sourcing:panel"
+        />
       </Dialog>
 
-      <Dialog open={is("viewing")} onClose={closePanel} title="Arrange a private viewing" eyebrow={site.location.display}>
-        <p className="dlg__intro">Request a time to see a piece or talk through what you’re looking for. Our team will reply to arrange it.</p>
-        <ViewingForm key={JSON.stringify(panel?.type === "viewing" ? panel.prefill : null)} prefill={panel?.type === "viewing" ? panel.prefill : undefined} />
+      <Dialog open={is("viewing")} onClose={closePanel} title={p.viewingTitle} eyebrow={t.location}>
+        <p className="dlg__intro">{p.viewingIntro}</p>
+        <ViewingForm key={JSON.stringify(panel?.type === "viewing" ? panel.prefill : null)} prefill={panel?.type === "viewing" ? panel.prefill : undefined} carryKey="viewing:panel" />
       </Dialog>
 
-      <Dialog open={is("contact")} onClose={closePanel} title="Contact" eyebrow={site.location.display}>
-        <p className="dlg__intro">Speak with our team directly.</p>
+      <Dialog open={is("contact")} onClose={closePanel} title={p.contactTitle} eyebrow={t.location}>
+        <p className="dlg__intro">{p.contactIntro}</p>
         <ContactList />
         <button type="button" className="btn btn--line btn--block" onClick={() => openPanel({ type: "viewing" })}>
-          Arrange a private viewing
+          {p.viewingTitle}
         </button>
       </Dialog>
 
-      <Dialog open={is("search")} onClose={closePanel} title="Search" variant="center" hideTitle>
+      <Dialog open={is("search")} onClose={closePanel} title={p.search} variant="center" hideTitle>
         <SearchPanel />
       </Dialog>
 
-      <Dialog open={is("menu")} onClose={closePanel} title="Menu" variant="drawer-left" hideTitle>
+      <Dialog open={is("menu")} onClose={closePanel} title={p.menu} variant="drawer-left" hideTitle>
         <MenuPanel />
       </Dialog>
 
-      <Dialog open={is("policy")} onClose={closePanel} title={panel?.type === "policy" ? policyById[panel.id].title : "Information"} variant="wide">
-        {panel?.type === "policy" && (
+      <Dialog open={is("policy")} onClose={closePanel} title={policy?.title ?? p.information} variant="wide">
+        {panel?.type === "policy" && policy && (
           <div className="policy">
-            {!policyById[panel.id].final && <p className="tag tag--line">Interim notice — final policy to follow</p>}
-            {policyById[panel.id].body.map((p) => (
-              <p key={p}>{p}</p>
+            {!policyFinal[panel.id] && <p className="tag tag--line">{p.interim}</p>}
+            {policy.body.map((para) => (
+              <p key={para}>{para}</p>
             ))}
             <p className="muted small">
-              Questions? <a href={site.contact.emailHref}>{site.contact.email}</a> · <a href={site.contact.telHref}>{site.contact.phoneDisplay}</a>
+              {p.questions} <a href={site.contact.emailHref} dir="ltr">{site.contact.email}</a> · <a href={site.contact.telHref} dir="ltr">{site.contact.phoneDisplay}</a>
             </p>
           </div>
         )}

@@ -6,12 +6,17 @@ export function formatAED(amount: number) {
   return aed.format(amount);
 }
 
-/** Never shows AED 0 for an unknown price. */
-export function priceLabel(item: Pick<Item, "priceAED" | "status">) {
-  if (item.status === "editorial_preview") return "Editorial preview";
-  if (item.status === "sold") return "Sold";
+const englishPriceWords = { preview: "Editorial preview", sold: "Sold", enquire: "Enquire for details" };
+
+/**
+ * Never shows AED 0 for an unknown price. The amount is formatted the same way ("AED 12,345") in
+ * every language, so a language switch never changes how a price reads.
+ */
+export function priceLabel(item: Pick<Item, "priceAED" | "status">, words: typeof englishPriceWords = englishPriceWords) {
+  if (item.status === "editorial_preview") return words.preview;
+  if (item.status === "sold") return words.sold;
   if (item.priceAED && item.priceAED > 0) return formatAED(item.priceAED);
-  return "Enquire for details";
+  return words.enquire;
 }
 
 export function isPurchasable(item: Pick<Item, "status" | "priceAED" | "stock" | "demo">) {

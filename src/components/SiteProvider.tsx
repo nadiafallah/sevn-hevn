@@ -2,10 +2,10 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { ItemImage, ItemStatus } from "@/data/types";
-import type { PolicyId } from "@/content/policies";
-import { policyById } from "@/content/policies";
+import { isPolicyId, type PolicyId } from "@/content/policies";
 import { maxQuantity } from "@/lib/format";
 import { track } from "@/lib/analytics";
+import { takeCarried } from "@/i18n/carry";
 
 export interface CartCatalogItem {
   ref: string;
@@ -117,11 +117,20 @@ export function SiteProvider({
     }
   }, [lines, ready]);
 
+  // After a language change: reopen the panel that was open and return to the same place.
+  useEffect(() => {
+    const carried = takeCarried("panel") as Panel | null | undefined;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (carried && typeof carried === "object" && "type" in carried) setPanel(carried);
+    const y = takeCarried("scrollY");
+    if (typeof y === "number" && y > 0) requestAnimationFrame(() => window.scrollTo({ top: y, behavior: "instant" }));
+  }, []);
+
   // Policy panels can be linked directly, e.g. /#privacy
   useEffect(() => {
     const fromHash = () => {
       const id = window.location.hash.slice(1);
-      if (id in policyById) setPanel({ type: "policy", id: id as PolicyId });
+      if (isPolicyId(id)) setPanel({ type: "policy", id });
     };
     fromHash();
     window.addEventListener("hashchange", fromHash);
