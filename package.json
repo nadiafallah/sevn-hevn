@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "check": "npm run typecheck && npm run lint && npm run build",
     "db:test": "node --test supabase/tests/*.test.mjs",
     "test:unit": "tsx --test tests/*.test.ts"

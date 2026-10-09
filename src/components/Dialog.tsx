@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 type Variant = "drawer" | "drawer-left" | "center" | "wide";
 
@@ -31,6 +32,7 @@ export function Dialog({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const { t } = useI18n();
 
   useEffect(() => {
     const dialog = ref.current;
@@ -75,7 +77,7 @@ export function Dialog({
               {title}
             </h2>
           </div>
-          <button type="button" className="icon-btn dlg__close" onClick={onClose} aria-label="Close">
+          <button type="button" className="icon-btn dlg__close" onClick={onClose} aria-label={t.close}>
             <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20">
               <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" strokeWidth="1.25" fill="none" />
             </svg>

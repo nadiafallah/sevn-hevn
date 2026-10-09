@@ -1,6 +1,23 @@
 # Project status: SEVN HEVN
 
-Last updated: 6 October 2026
+Last updated: 10 October 2026
+
+## Website languages (Oct 2026)
+
+The public site is in English, Arabic (right-to-left), Russian and French. English keeps the unprefixed addresses (`/`, `/collection`, `/chat`); the others live under `/ar`, `/ru` and `/fr`. `/en/…` redirects to the unprefixed address. Every page lists the other languages with `hreflang`.
+
+| Part | State |
+| --- | --- |
+| Pages, panels, forms, bag, policies, metadata and sitemap in four languages | done (`src/i18n/`) |
+| Language selector: utility bar (all screen sizes) and menu drawer | done; the choice is remembered in a cookie and the open panel, form fields and chat carry over |
+| Arabic typography and right-to-left layout | IBM Plex Sans Arabic and Noto Naskh Arabic, no letter-spacing on Arabic, logical CSS properties; the hero copy stays on the lit wall of the photograph |
+| Concierge chat | English and Arabic, as before; it opens in Arabic on the Arabic site and in English elsewhere. Russian and French chat wording is not written yet, and the chat database accepts only `en`/`ar` |
+| Product text per language | not stored yet: database items show their English text in every language |
+| Native-speaker review of the Russian and French wording | recommended |
+
+Also in this release: Instagram links point to @sevnhevn.dubai, buttons have rounded corners with a moving border, the header switches to the menu button where its links no longer fit beside the wordmark, and the mobile Collection filters no longer widen the page.
+
+Tests (10 Oct 2026): `npm run check`; `npm run db:test` 36 of 36; `npm run test:unit` 19 of 19; `tests/e2e/run.sh` 17 of 17; a browser check of home, Collection and chat in all four languages at 1440 px and 390 px (no horizontal overflow, no console errors, no serious axe findings; bag and language selector open). `npm run typecheck` now runs `next typegen` first, so route types exist on a clean checkout.
 
 ## Concierge chat and private panel (6 Oct 2026)
 

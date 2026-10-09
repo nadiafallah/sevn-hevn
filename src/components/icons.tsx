@@ -31,8 +31,9 @@ export const MenuIcon = ({ size = 22, className }: P) => (
   </svg>
 );
 
+/** Mirrored in right-to-left pages (see "Languages" in globals.css). */
 export const ArrowIcon = ({ size = 16, className }: P) => (
-  <svg {...base(size)} className={className}>
+  <svg {...base(size)} className={className ? `icon-arrow ${className}` : "icon-arrow"}>
     <path d="M4 12h15M13 6l6 6-6 6" />
   </svg>
 );
