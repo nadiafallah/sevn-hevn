@@ -25,7 +25,9 @@ export const fr: Dictionary = {
   },
 
   home: {
-    heroAlt: "Un sac à poignée émeraude et un sac porté épaule matelassé noir sur un socle en travertin, dans une lumière chaude",
+    heroAlt: "Sac à poignée en cuir cognac, surpiqûres contrastées et finitions dorées",
+    featuredPiece: "La pièce à la une",
+    viewPiece: "Voir la pièce",
     aiImage: "Image éditoriale générée par IA",
     aiImageShort: "Image éditoriale IA",
     heroEyebrow: "Sacs · Montres · Chaussures · Accessoires",
@@ -46,7 +48,7 @@ export const fr: Dictionary = {
     categoryTitle: "Commencez par une *catégorie.*",
     allPieces: "Toutes les pièces",
     doors: {
-      bags: { note: "À poignée, portés épaule, pochettes et voyage", alt: "Sac à poignée en cuir cognac sur un socle en travertin" },
+      bags: { note: "À poignée, portés épaule, pochettes et voyage", alt: "Sac à poignée en cuir grainé émeraude sur un socle en travertin" },
       watches: { note: "Contemporaines et vintage, par référence et par année", alt: "Montre rectangulaire dorée sur un bracelet en cuir foncé" },
       shoes: { note: "Mocassins, mules, sandales et plus encore", alt: "Mocassins en daim bleu cobalt à détail doré" },
     },
