@@ -19,6 +19,8 @@ function resolveSiteUrl() {
 
 export const site = {
   name: "SEVN HEVN",
+  /** Other ways people say or type the name (the spoken "Seven Heaven", the one-word handle), for search engines. */
+  alternateNames: ["Seven Heaven", "SevnHevn", "SEVN HEVN Maison"],
   /** Company name exactly as written in the supplied document. */
   legalName: "SEVN HEVN MAISON GENERAL TRADING L.L.C.",
   tagline: "Welcome to your happy place.",

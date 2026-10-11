@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { indexingEnabled, site } from "@/config/site";
 import { isLocale, localeInfo, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { baseOpenGraph } from "@/lib/seo";
 import { SiteChrome } from "@/components/SiteChrome";
 import { fontVariables } from "../fonts";
 import "../globals.css";
@@ -24,15 +25,7 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Pr
     description: t.description,
     applicationName: site.name,
     robots: indexingEnabled ? { index: true, follow: true } : { index: false, follow: false },
-    openGraph: {
-      type: "website",
-      siteName: site.name,
-      locale: localeInfo[locale].og,
-      alternateLocale: locales.filter((l) => l !== locale).map((l) => localeInfo[l].og),
-      title: t.ogTitle,
-      description: t.description,
-      images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: t.ogImageAlt }],
-    },
+    openGraph: baseOpenGraph(locale),
     twitter: { card: "summary_large_image", title: t.ogTitle, description: t.description, images: ["/og-image.jpg"] },
     formatDetection: { telephone: false },
   };

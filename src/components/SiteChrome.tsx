@@ -39,6 +39,7 @@ export async function SiteChrome({ locale, children }: { locale: Locale; childre
     "@context": "https://schema.org",
     "@type": "Organization",
     name: site.name,
+    alternateName: site.alternateNames,
     legalName: site.legalName,
     url: site.url,
     description: t.meta.description,
