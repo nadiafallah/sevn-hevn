@@ -20,11 +20,12 @@ import { ViewingForm } from "@/components/ViewingForm";
 import { ContactList } from "@/components/SitePanels";
 import { ArrowIcon, WhatsAppIcon } from "@/components/icons";
 
-// Category doors use detail crops of the supplied editorial images (set per door in CSS).
+// Category doors use detail crops of the supplied editorial images (set per door in CSS). Their `sizes`
+// allow for that zoom (up to 1.46× on hover), so the enlarged crop is still drawn from enough pixels.
 const categoryDoors = [
-  { id: "bags", image: { src: "/images/editorial/bag-emerald.jpg", width: 1122, height: 1402 } },
-  { id: "watches", image: { src: "/images/editorial/watch-gold-rectangular.jpg", width: 1122, height: 1402 } },
-  { id: "shoes", image: { src: "/images/editorial/loafer-cobalt-suede.jpg", width: 1122, height: 1402 } },
+  { id: "bags", image: { src: "/images/editorial/bag-emerald-v2.jpg", width: 1122, height: 1402 } },
+  { id: "watches", image: { src: "/images/editorial/watch-gold-rectangular-v2.jpg", width: 1122, height: 1402 } },
+  { id: "shoes", image: { src: "/images/editorial/loafer-cobalt-suede-v2.jpg", width: 1122, height: 1402 } },
 ] as const;
 
 export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
@@ -150,7 +151,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             <li key={c.id} data-reveal style={{ transitionDelay: `${i * 90}ms` }}>
               <Link href={href(`/collection?category=${c.id}`)} className={`door door--${c.id}`}>
                 <div className="door__media">
-                  <Image src={c.image.src} alt={t.doors[c.id].alt} width={c.image.width} height={c.image.height} sizes="(min-width: 1000px) 25vw, 50vw" className="door__img" />
+                  <Image src={c.image.src} alt={t.doors[c.id].alt} width={c.image.width} height={c.image.height} sizes="(min-width: 1000px) 42vw, 92vw" className="door__img" />
                   <span className="media-label">{t.aiImageShort}</span>
                 </div>
                 <div className="door__text">

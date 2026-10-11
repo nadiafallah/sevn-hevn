@@ -13,12 +13,16 @@ import { useSite } from "./SiteProvider";
 import { ItemBadge } from "./ItemCard";
 import { PhoneIcon, WhatsAppIcon } from "./icons";
 
+const MAIN_SIZES = "(min-width: 900px) 50vw, 100vw";
+
 export function ProductDetail({ item }: { item: Item }) {
   const { cart, openPanel } = useSite();
   const { t, locale, fmt } = useI18n();
   const p = t.product;
   const [active, setActive] = useState(0);
   const image = item.images[active] ?? item.images[0];
+  // A photo wider than the desktop frame is shown whole there, over a soft blur of itself.
+  const wide = !!image && image.width / image.height > 0.9;
   const preview = item.status === "editorial_preview";
   const buyable = isPurchasable(item);
   const inBag = cart.has(item.ref);
@@ -49,8 +53,11 @@ export function ProductDetail({ item }: { item: Item }) {
     <div className="pd">
       <div className="pd__gallery">
         {image && (
-          <div className="pd__main">
-            <Image key={image.src} src={image.src} alt={image.alt} width={image.width} height={image.height} sizes="(min-width: 900px) 50vw, 100vw" priority className="pd__img" />
+          <div className={`pd__main${wide ? " pd__main--wide" : ""}`}>
+            {wide && (
+              <Image key={`${image.src}-backdrop`} src={image.src} alt="" width={image.width} height={image.height} sizes={MAIN_SIZES} quality={85} className="pd__backdrop" />
+            )}
+            <Image key={image.src} src={image.src} alt={image.alt} width={image.width} height={image.height} sizes={MAIN_SIZES} quality={85} priority className="pd__img" />
             {preview && <span className="media-label">{t.aiImage}</span>}
           </div>
         )}
