@@ -1,5 +1,6 @@
 /**
- * Lightweight, deterministic understanding of what a customer typed (English and Arabic).
+ * Lightweight, deterministic understanding of what a customer typed (English, Arabic, Russian and French).
+ * \b only works around Latin letters in JavaScript, so Arabic and Cyrillic words are matched as stems.
  * It only fills in details the customer actually wrote; anything it misses is simply asked.
  * The optional AI provider can improve on it, but the chat never depends on AI.
  */
@@ -95,11 +96,11 @@ const MODELS: [RegExp, string, string, CategoryKey][] = [
 ];
 
 const CATEGORY_WORDS: [RegExp, CategoryKey][] = [
-  [/\b(hand)?bags?\b|\bclutch(es)?\b|\btote\b|\bpurse\b|\bwallet\b|حقيب|شنط|محفظ/i, "bags"],
-  [/\bwatch(es)?\b|\btimepiece\b|ساع/i, "watches"],
-  [/\bshoes?\b|\bheels?\b|\bsneakers?\b|\bsandals?\b|\bloafers?\b|\bboots?\b|\bpumps?\b|\bmules?\b|حذاء|أحذية|احذية|جزم|صندل|كعب/i, "shoes"],
-  [/\brings?\b|\bnecklace\b|\bbracelet\b|\bearrings?\b|\bpendant\b|\bjewel(le)?ry\b|خاتم|قلادة|عقد|سوار|أسورة|اسوارة|أقراط|حلق|مجوهرات/i, "other"],
-  [/\bbelt\b|\bscarf\b|\bsunglasses\b|\bcharm\b|حزام|وشاح|نظار/i, "accessories"],
+  [/\b(hand)?bags?\b|\bclutch(es)?\b|\btote\b|\bpurse\b|\bwallet\b|حقيب|شنط|محفظ|сумк|сумоч|клатч|кошел|\bsacs?\b|\bpochettes?\b|\bportefeuilles?\b|\bmaroquinerie\b/i, "bags"],
+  [/\bwatch(es)?\b|\btimepiece\b|ساع|часы|часов|часики|\bmontres?\b/i, "watches"],
+  [/\bshoes?\b|\bheels?\b|\bsneakers?\b|\bsandals?\b|\bloafers?\b|\bboots?\b|\bpumps?\b|\bmules?\b|حذاء|أحذية|احذية|جزم|صندل|كعب|обув|туфл|кроссов|кед|сандал|босонож|лофер|ботин|сапог|мюли|\bchaussures?\b|\bescarpins?\b|\bbaskets\b|\bsandales?\b|\bmocassins?\b|\bbottes?\b|\bbottines?\b/i, "shoes"],
+  [/\brings?\b|\bnecklace\b|\bbracelet\b|\bearrings?\b|\bpendant\b|\bjewel(le)?ry\b|خاتم|قلادة|عقد|سوار|أسورة|اسوارة|أقراط|حلق|مجوهرات|кольц|колье|ожерель|браслет|серьг|подвес|кулон|ювелир|\bbagues?\b|\bcolliers?\b|\bboucles? d.oreilles?\b|\bpendentifs?\b|\bbijoux?\b|\bjoaillerie\b/i, "other"],
+  [/\bbelt\b|\bscarf\b|\bsunglasses\b|\bcharm\b|حزام|وشاح|نظار|ремен|ремн|пояс|шарф|платок|платк|очки|брелок|\bceintures?\b|[ée]charpes?\b|\bfoulards?\b|\blunettes\b/i, "accessories"],
 ];
 
 const BRAND_CATEGORY: Record<string, CategoryKey> = {
@@ -111,27 +112,29 @@ const BRAND_CATEGORY: Record<string, CategoryKey> = {
 };
 
 const COLOURS: [RegExp, string][] = [
-  [/\bblack\b|\bnoir\b|أسود|اسود|سوداء/i, "black"],
-  [/\bwhite\b|\bblanc\b|أبيض|ابيض|بيضاء/i, "white"],
-  [/\bgold\b|ذهبي|ذهب/i, "gold"],
+  [/\bblack\b|\bnoire?s?\b|أسود|اسود|سوداء|ч[её]рн/i, "black"],
+  [/\bwhite\b|\bblanc(he)?s?\b|أبيض|ابيض|بيضاء|бел(ый|ая|ое|ые|ую|ого|ой)/i, "white"],
+  [/\bgold\b|ذهبي|ذهب|золот|\bdor[ée]/i, "gold"],
   [/\b[eé]toupe\b/i, "etoupe"],
-  [/\bbeige\b|\bcraie\b|بيج/i, "beige"],
-  [/\bbrown\b|\bchocolate\b|بني/i, "brown"],
-  [/\bred\b|\brouge\b|أحمر|احمر|حمراء/i, "red"],
-  [/\bpink\b|\brose\b|وردي|زهري/i, "pink"],
-  [/\bblue\b|\bbleu\b|\bnavy\b|أزرق|ازرق|كحلي/i, "blue"],
-  [/\bgreen\b|\bvert\b|أخضر|اخضر/i, "green"],
-  [/\bgr[ae]y\b|رمادي/i, "grey"],
-  [/\borange\b|برتقالي/i, "orange"],
-  [/\byellow\b|أصفر|اصفر/i, "yellow"],
-  [/\bpurple\b|\bviolet\b|بنفسجي/i, "purple"],
-  [/\bsilver\b|فضي/i, "silver"],
+  [/\bbeige\b|\bcraie\b|بيج|беж/i, "beige"],
+  [/\bbrown\b|\bchocolate?\b|\bmarron\b|بني|коричнев/i, "brown"],
+  [/\bred\b|\brouges?\b|أحمر|احمر|حمراء|красн/i, "red"],
+  [/\bpink\b|\broses?\b|وردي|زهري|розов/i, "pink"],
+  [/\bblue\b|\bbleue?s?\b|\bnavy\b|أزرق|ازرق|كحلي|син(ий|яя|ее|ие|юю|его|ей)|голуб/i, "blue"],
+  [/\bgreen\b|\bverte?s?\b|أخضر|اخضر|зел[её]н/i, "green"],
+  [/\bgr[ae]y\b|\bgris(es?)?\b|رمادي|сер(ый|ая|ое|ые|ую|ого|ой)/i, "grey"],
+  [/\borange\b|برتقالي|оранжев/i, "orange"],
+  [/\byellow\b|\bjaunes?\b|أصفر|اصفر|ж[её]лт/i, "yellow"],
+  [/\bpurple\b|\bviolet\b|بنفسجي|фиолетов/i, "purple"],
+  [/\bsilver\b|\bargent|فضي|серебр/i, "silver"],
   [/\brose\s*gold\b/i, "rose gold"],
 ];
 
 const SIZE_PATTERNS = [
   /\b(?:size|sz|eu|uk|us)\s*\d{1,2}(?:[.,]5)?\b/i,
   /\bمقاس\s*\d{1,2}(?:[.,]5)?/,
+  /размер\s*\d{1,2}(?:[.,]5)?/i,
+  /\b(?:taille|pointure)\s*\d{1,2}(?:[.,]5)?\b/i,
   /\b\d{2}\s?mm\b/i,
   /\b(?:birkin|kelly|constance|picotin)\s*(\d{2})\b/i,
   /\b(?:mini|small|medium|large|pm|mm|gm)\b/i,
@@ -178,12 +181,12 @@ export function hasEnoughDetail(d: Extracted & { description?: string }) {
 }
 
 const INTENTS: [RegExp, Intent, Topic?][] = [
-  [/\bORD-?[A-Z0-9]{6}\b|\b(track|tracking|my order|order status|delivery status)\b|تتبع|طلبي|حالة الطلب|رقم الطلب/i, "order"],
-  [/\b(call me|call back|callback|speak to|talk to|human|person|agent|representative)\b|اتصل|اتصال|تكلم|موظف|شخص/i, "callback"],
-  [/\b(authentic|genuine|real|fake|replica|certificate)\b|أصلي|اصلي|مقلد|تقليد|شهادة/i, "question", "authenticity"],
-  [/\b(ship|shipping|deliver|delivery|courier|customs)\b|شحن|توصيل|جمارك/i, "question", "shipping"],
-  [/\b(return|returns|refund|exchange)\b|إرجاع|ارجاع|استرجاع|استرداد|استبدال/i, "question", "returns"],
-  [/\b(price|cost|how much|available|availability|in stock)\b|سعر|بكم|كم سعر|متوفر|متوفرة|توفر/i, "question", "price"],
+  [/\bORD-?[A-Z0-9]{6}\b|\b(track|tracking|my order|order status|delivery status)\b|تتبع|طلبي|حالة الطلب|رقم الطلب|мо(й|его|ём|ем) заказ|статус заказа|номер заказа|отслед|\b(ma|mes) commandes?\b|\bsuivi de (ma )?commande\b|\bsuivre (ma )?commande\b|\bnum[ée]ro de commande\b/i, "order"],
+  [/\b(call me|call back|callback|speak to|talk to|human|person|agent|representative)\b|اتصل|اتصال|تكلم|موظف|شخص|позвоните|перезвон|звонок|оператор|менеджер|сотрудник|живым человеком|\bappelez[- ]moi\b|\brappel(er|ez)?\b|\bparler [àa]\s|\bconseill[eè]re?\b|\bune personne\b|\bun humain\b/i, "callback"],
+  [/\b(authentic|genuine|real|fake|replica|certificate)\b|أصلي|اصلي|مقلد|تقليد|شهادة|подлин|оригинал|подделк|реплик|сертификат|\bauthenti|\bcontrefa[cç]on|\bcertificat\b/i, "question", "authenticity"],
+  [/\b(ship|shipping|deliver|delivery|courier|customs)\b|شحن|توصيل|جمارك|доставк|достав(ить|ите|ят|ляете)|отправк|курьер|таможн|\blivr(er|aison|ez|ez-vous)\b|\bexp[ée]di|\bcoursier\b|\bdouane/i, "question", "shipping"],
+  [/\b(return|returns|refund|exchange)\b|إرجاع|ارجاع|استرجاع|استرداد|استبدال|возврат|вернуть|обмен|\bretours?\b|\brembours|[ée]change\b/i, "question", "returns"],
+  [/\b(price|cost|how much|available|availability|in stock)\b|سعر|بكم|كم سعر|متوفر|متوفرة|توفر|цен[аыуе]|сколько стоит|стоимост|в наличии|наличи|\bprix\b|\bcombien\b|\bco[uû]te|\bdisponib|\ben stock\b/i, "question", "price"],
 ];
 
 export function detectIntent(text: string): { intent?: Intent; topic?: Topic } {
@@ -216,6 +219,7 @@ export function matchChoice(text: string, choices: { id: string; label: string }
   );
 }
 
-// \b does not work around Arabic letters in JavaScript, so the end of a word is matched explicitly.
-export const YES = /^(y|yes|yeah|yep|sure|ok|okay|please|correct|right|نعم|أجل|اجل|صحيح|تمام|اكيد|أكيد|طيب)(?=$|[\s,.!؟?،])/i;
-export const NO = /^(n|no|nope|not really|no thanks|لا|كلا|ليس)(?=$|[\s,.!؟?،])/i;
+// \b does not work around Arabic or Cyrillic letters in JavaScript, so the end of a word is matched explicitly.
+export const YES =
+  /^(y|yes|yeah|yep|sure|ok|okay|please|correct|right|نعم|أجل|اجل|صحيح|تمام|اكيد|أكيد|طيب|да|ага|конечно|верно|хорошо|ок|пожалуйста|oui|ouais|d['’]accord|exact|exactement|bien s[uû]r|volontiers|s['’]il vous pla[iî]t)(?=$|[\s,.!؟?،])/i;
+export const NO = /^(n|no|nope|not really|no thanks|لا|كلا|ليس|нет|не надо|не совсем|non|pas vraiment|non merci)(?=$|[\s,.!؟?،])/i;

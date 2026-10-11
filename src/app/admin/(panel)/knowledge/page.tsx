@@ -1,7 +1,7 @@
 import { select } from "@/lib/concierge/db";
 import { requireOwner } from "@/lib/admin/session";
 import { Flash, one, type SP } from "@/components/admin/Flash";
-import { day, knowledgeTopics, when } from "@/lib/admin/labels";
+import { chatLanguages, day, knowledgeTopics, languageLabel, when } from "@/lib/admin/labels";
 import { saveKnowledge, setKnowledgeStatus } from "../../actions";
 
 export const metadata = { title: "Store knowledge" };
@@ -27,7 +27,7 @@ function Fields({ e }: { e?: Entry }) {
     <>
       <div className="adm-row">
         <label>Topic<select name="topic" defaultValue={e?.topic ?? "shipping"}>{knowledgeTopics.map((t) => <option key={t} value={t}>{t}</option>)}</select></label>
-        <label>Language<select name="locale" defaultValue={e?.locale ?? "en"}><option value="en">English</option><option value="ar">Arabic</option></select></label>
+        <label>Language<select name="locale" defaultValue={e?.locale ?? "en"}>{chatLanguages.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}</select></label>
         <label>Country (blank = all)<input name="country_code" defaultValue={e?.country_code ?? ""} maxLength={2} pattern="[A-Za-z]{2}" placeholder="AE" /></label>
       </div>
       <label>Title<input name="title" required defaultValue={e?.title ?? ""} maxLength={160} /></label>
@@ -63,7 +63,7 @@ export default async function Knowledge({ searchParams }: { searchParams: SP }) 
             {e.title} <span className={`adm-badge adm-badge--k-${e.status}`}>{e.status}</span>
           </h2>
           <p className="adm-muted adm-small">
-            {e.topic} · {e.locale === "ar" ? "Arabic" : "English"} · {e.country_code ?? "all destinations"} · source: {e.source}
+            {e.topic} · {languageLabel(e.locale)} · {e.country_code ?? "all destinations"} · source: {e.source}
             {e.source_url && <> (<a href={e.source_url} target="_blank" rel="noopener noreferrer">link</a>)</>} · updated {when(e.updated_at)}
             {e.approved_at && ` · approved ${when(e.approved_at)}`}{e.review_by && ` · review by ${day(e.review_by)}`}
           </p>

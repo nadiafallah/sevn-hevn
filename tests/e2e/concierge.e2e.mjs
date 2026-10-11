@@ -218,6 +218,39 @@ describe("customer chat", () => {
     await context.close();
   });
 
+  it("desktop, Russian site, widget: opens in Russian, switches to French mid-request without losing anything", async () => {
+    const { page, context } = await newPage();
+    await page.goto(`${BASE}/ru`);
+    await page.locator(".cc-launcher").click();
+    const panel = page.locator(".cc-panel");
+    await panel.locator(".cc__msg--assistant").first().waitFor();
+    assert.equal(await panel.locator(".cc").getAttribute("lang"), "ru");
+    assert.match(await panel.locator(".cc__log").innerText(), /виртуальный ассистент SEVN HEVN/);
+    assert.deepEqual(await panel.locator(".cc__lang-btn").allInnerTexts(), ["English", "العربية", "Русский", "Français"]);
+    await pick(page, "Найти конкретное изделие");
+    await answer(page, "Ищу сумку Hermès Kelly");
+    assert.match(await lastAssistant(page), /модель, размер или цвет/);
+    await panel.getByRole("button", { name: "Français" }).click();
+    await page.waitForFunction(() => document.querySelector(".cc-panel .cc")?.getAttribute("lang") === "fr");
+    assert.match(await panel.locator(".cc__log").innerText(), /Ищу сумку Hermès Kelly/, "earlier messages stay after switching");
+    assert.match(await lastAssistant(page), /comme le modèle, la taille ou la couleur/);
+    await pick(page, "Passer");
+    await pick(page, "Je préfère ne pas le préciser");
+    await pick(page, "Émirats arabes unis");
+    await pick(page, "Passer");
+    await pick(page, "Passer");
+    await answer(page, "+44 7700 900141");
+    await pick(page, "WhatsApp");
+    await page.getByLabel("J’accepte que SEVN HEVN me contacte au sujet de cette demande.").check();
+    await page.getByRole("button", { name: "Envoyer la demande" }).click();
+    await page.getByText(/Votre demande a bien été reçue/).waitFor();
+    const ref = (await lastAssistant(page)).match(/REQ-[A-Z0-9]{6}/)[0];
+    assert.deepEqual(await axeViolations(page, ".cc-panel"), []);
+    const [req] = await sql("select locale, contact_method, contact_phone, details ->> 'model' as model from public.requests where reference = $1", [ref]);
+    assert.deepEqual(req, { locale: "fr", contact_method: "whatsapp", contact_phone: "+447700900141", model: "Kelly" });
+    await context.close();
+  });
+
   it("a repeated submit (double click, retry after a dropped connection) records one request", async () => {
     const start = await api({ action: "start", locale: "en", source: "widget", clientMsgId: "dup-000001", input: { type: "choice", value: "callback" } });
     const conv = start.data.conversation;

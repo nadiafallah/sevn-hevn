@@ -133,15 +133,17 @@ html:has(.cc-panel[data-open="true"]) .wa-float {
 
 .cc__head {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px 12px;
   padding: 14px 16px 12px 20px;
   background: var(--ivory);
   border-bottom: 1px solid var(--rule);
 }
 
 .cc__brand {
+  flex: 1 1 0;
   min-width: 0;
 }
 
@@ -172,16 +174,31 @@ html:has(.cc-panel[data-open="true"]) .wa-float {
 }
 
 .cc__lang {
-  display: inline-flex;
+  display: flex;
+  flex: 1 0 100%;
   border: 1px solid var(--rule-strong);
 }
 
 .cc__lang-btn {
+  flex: 1 1 0;
+  min-width: 0;
   min-height: 34px;
-  padding: 0 10px;
+  padding: 0 6px;
   border: 0;
   background: transparent;
   font-size: 12px;
+  white-space: nowrap;
+  transition:
+    background-color 0.25s var(--ease),
+    color 0.25s var(--ease);
+}
+
+.cc__lang-btn + .cc__lang-btn {
+  border-inline-start: 1px solid var(--rule);
+}
+
+.cc__lang-btn:not([aria-pressed="true"]):not(:disabled):hover {
+  background: var(--ivory-deep);
 }
 
 .cc__lang-btn[lang="ar"] {

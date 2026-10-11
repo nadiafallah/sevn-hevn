@@ -182,7 +182,7 @@ function reviewRows(s: State) {
   else add(L.labels.question, d.question || (d.topic ? L.topics[d.topic] : undefined));
   if (d.category && d.intent === "sourcing") add(L.labels.category, L.categories[d.category]);
   add(L.labels.brand, d.brand);
-  add(L.labels.details, [d.model, d.colour, d.size, d.year, d.details].filter(Boolean).join(" · "));
+  add(L.labels.details, [d.model, d.colour && (L.colours[d.colour] ?? d.colour), d.size, d.year, d.details].filter(Boolean).join(" · "));
   add(L.labels.piece, d.itemRef ? [d.itemName, d.itemRef].filter(Boolean).join(" · ") : undefined);
   add(L.labels.order, d.orderRef);
   add(L.labels.budget, d.budget);
@@ -363,7 +363,7 @@ function notedList(s: State, before: Draft) {
   const parts = [
     d.brand !== before.brand ? d.brand : undefined,
     d.model !== before.model ? d.model : undefined,
-    d.colour !== before.colour ? d.colour : undefined,
+    d.colour !== before.colour && d.colour ? (L.colours[d.colour] ?? d.colour) : undefined,
     d.size !== before.size ? d.size : undefined,
     d.year !== before.year ? d.year : undefined,
     d.category !== before.category && d.category ? L.categories[d.category] : undefined,
@@ -381,7 +381,8 @@ function money(amount: number | string, currency: string) {
 }
 
 function dateLabel(iso: string, locale: Locale) {
-  return new Intl.DateTimeFormat(locale === "ar" ? "ar-AE-u-nu-latn" : "en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Dubai" }).format(new Date(iso));
+  const intl = { en: "en-GB", ar: "ar-AE-u-nu-latn", ru: "ru-RU", fr: "fr-FR" }[locale];
+  return new Intl.DateTimeFormat(intl, { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Dubai" }).format(new Date(iso));
 }
 
 function formatOrder(o: VerifiedOrder, locale: Locale) {
@@ -465,7 +466,7 @@ async function answerKnowledge(s: State, topic: Topic, deps: Deps, out: string[]
   const L = t(s.locale);
   const d = s.draft;
   const k = await deps.knowledge(topic, d.destination?.code, s.locale).catch(() => null);
-  // English text quoted in an Arabic conversation goes in its own message, so it keeps its own direction.
+  // English text quoted in another language goes in its own message (in Arabic it also keeps its own direction).
   if (k?.english) out.push(L.a.knowledgeEnglish, `${k.title}:\n${k.body}`);
   else if (k) out.push(L.a.knowledge(k.title, k.body));
   else out.push(L.a.knowledgeMissing);

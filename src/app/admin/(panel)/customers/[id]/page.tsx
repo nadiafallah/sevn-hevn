@@ -4,7 +4,7 @@ import { select } from "@/lib/concierge/db";
 import { formatPhone } from "@/lib/concierge/phone";
 import { requireStaff } from "@/lib/admin/session";
 import { Flash, one, type SP } from "@/components/admin/Flash";
-import { fulfilmentLabels, methodLabels, money, paymentLabels, requestStatusLabels, requestTypeLabels, when } from "@/lib/admin/labels";
+import { chatLanguages, fulfilmentLabels, languageLabel, methodLabels, money, paymentLabels, requestStatusLabels, requestTypeLabels, when } from "@/lib/admin/labels";
 import { updateCustomer } from "../../../actions";
 
 export const metadata = { title: "Customer" };
@@ -33,7 +33,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
             <dl className="adm-dl">
               <dt>Phone</dt><dd className="adm-ltr">{c.phone_e164 ? <a href={`tel:${c.phone_e164}`}>{formatPhone(c.phone_e164)}</a> : "—"}</dd>
               <dt>Email</dt><dd>{c.email ?? "—"}</dd>
-              <dt>Language</dt><dd>{c.preferred_language === "ar" ? "Arabic" : "English"}</dd>
+              <dt>Language</dt><dd>{languageLabel(c.preferred_language)}</dd>
               <dt>Prefers</dt><dd>{c.preferred_contact ? methodLabels[c.preferred_contact] : "—"}</dd>
               <dt>Country</dt><dd>{c.country_code ?? "—"}</dd>
               <dt>First contact</dt><dd>{when(c.created_at)}</dd>
@@ -46,7 +46,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
                 <input type="hidden" name="id" value={c.id} />
                 <label>Name<input name="name" defaultValue={c.name ?? ""} maxLength={80} /></label>
                 <label>Email<input name="email" type="email" defaultValue={c.email ?? ""} maxLength={254} /></label>
-                <label>Language<select name="preferred_language" defaultValue={c.preferred_language}><option value="en">English</option><option value="ar">Arabic</option></select></label>
+                <label>Language<select name="preferred_language" defaultValue={c.preferred_language}>{chatLanguages.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}</select></label>
                 <label>Prefers<select name="preferred_contact" defaultValue={c.preferred_contact ?? ""}><option value="">—</option>{Object.entries(methodLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
                 <label>Country code<input name="country_code" defaultValue={c.country_code ?? ""} maxLength={2} pattern="[A-Za-z]{2}" /></label>
                 <button type="submit" className="adm-btn adm-btn--dark">Save</button>

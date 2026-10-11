@@ -11,7 +11,7 @@ import { processNotifications, sendTestEmail } from "@/lib/concierge/notify";
 import { isEmail } from "@/lib/concierge/phone";
 import { sendRecovery, signInWithPassword, signOut, signUp, updatePassword } from "@/lib/admin/gotrue";
 import { clearSessionCookies, currentStaff, requireOwner, requireStaff, setSessionCookies } from "@/lib/admin/session";
-import { fromDubaiLocal, knowledgeTopics, staffSettableStatuses } from "@/lib/admin/labels";
+import { fromDubaiLocal, knowledgeTopics, languageCode, staffSettableStatuses } from "@/lib/admin/labels";
 import { CATALOG_TAG } from "@/lib/catalog";
 import { PRODUCT_IMAGES_BUCKET } from "@/lib/supabase";
 
@@ -238,7 +238,7 @@ export async function updateCustomer(form: FormData) {
   try {
     await rpc(ctx.api, "admin_update_customer", {
       p_id: cid,
-      p_changes: { name: str(form, "name", 80), email, preferred_language: str(form, "preferred_language", 2) || "en", preferred_contact: str(form, "preferred_contact", 10), country_code: str(form, "country_code", 2) },
+      p_changes: { name: str(form, "name", 80), email, preferred_language: languageCode(str(form, "preferred_language", 2)) ?? "en", preferred_contact: str(form, "preferred_contact", 10), country_code: str(form, "country_code", 2) },
     }, ctx.token);
   } catch (e) {
     back(`/admin/customers/${cid}`, { error: codeOf(e) });
@@ -319,7 +319,7 @@ export async function saveKnowledge(form: FormData) {
       p_fields: {
         topic,
         country_code: str(form, "country_code", 2),
-        locale: str(form, "locale", 2) === "ar" ? "ar" : "en",
+        locale: languageCode(str(form, "locale", 2)) ?? "en",
         title: str(form, "title", 160),
         body: str(form, "body", 2000),
         source: str(form, "source", 300),

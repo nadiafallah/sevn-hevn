@@ -6,7 +6,7 @@ import { formatPhone } from "@/lib/concierge/phone";
 import { requireStaff } from "@/lib/admin/session";
 import { Flash, one, type SP } from "@/components/admin/Flash";
 import {
-  availabilityLabels, callOutcomeLabels, day, fulfilmentLabels, methodLabels, money, notificationLabels, paymentLabels,
+  availabilityLabels, callOutcomeLabels, day, fulfilmentLabels, languageLabel, methodLabels, money, notificationLabels, paymentLabels,
   requestStatusLabels, requestTypeLabels, reviewLabels, staffSettableStatuses, toDubaiLocal, when,
 } from "@/lib/admin/labels";
 import { addNote, deleteRequest, recordPrice, retryNotification, updateRequest } from "../../../actions";
@@ -86,9 +86,14 @@ export default async function RequestPage({ params, searchParams }: { params: Pr
     ),
   ]);
 
-  const greeting = r.locale === "ar"
-    ? `مرحباً${r.contact_name ? ` ${r.contact_name}` : ""}، معك فريق SEVN HEVN بخصوص طلبك ${r.reference}.`
-    : `Hello${r.contact_name ? ` ${r.contact_name}` : ""}, this is the SEVN HEVN team about your request ${r.reference}.`;
+  // The first line of the WhatsApp reply, in the customer's chat language.
+  const who = r.contact_name ? ` ${r.contact_name}` : "";
+  const greetings: Record<string, string> = {
+    ar: `مرحباً${who}، معك فريق SEVN HEVN بخصوص طلبك ${r.reference}.`,
+    ru: `Здравствуйте${r.contact_name ? `, ${r.contact_name}` : ""}! Это команда SEVN HEVN по вашему запросу ${r.reference}.`,
+    fr: `Bonjour${who}, ici l’équipe SEVN HEVN au sujet de votre demande ${r.reference}.`,
+  };
+  const greeting = greetings[r.locale] ?? `Hello${who}, this is the SEVN HEVN team about your request ${r.reference}.`;
   const customerWa = `https://wa.me/${r.contact_phone.replace(/\D/g, "")}?text=${encodeURIComponent(greeting)}`;
   const statuses = isOwner ? Object.keys(requestStatusLabels) : staffSettableStatuses;
   const details = Object.entries(r.details ?? {});
@@ -103,7 +108,7 @@ export default async function RequestPage({ params, searchParams }: { params: Pr
           {r.reference} {r.is_test && <span className="adm-badge adm-badge--test">Test</span>}
         </h1>
         <p className="adm-muted">
-          {requestTypeLabels[r.type]} · received {when(r.created_at)} · {r.locale === "ar" ? "Arabic" : "English"} · via {r.source === "page" ? "/chat page" : "website widget"}
+          {requestTypeLabels[r.type]} · received {when(r.created_at)} · {languageLabel(r.locale)} · via {r.source === "page" ? "/chat page" : "website widget"}
         </p>
         <p>
           <span className={`adm-status adm-status--${r.status}`}>{requestStatusLabels[r.status]}</span>
