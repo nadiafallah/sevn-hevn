@@ -5,9 +5,11 @@ import type { Item } from "@/data/types";
 import { useI18n } from "@/i18n/I18nProvider";
 import { priceLabel } from "@/lib/format";
 import { ArrowIcon } from "./icons";
+import { View360Button } from "./viewer/View360Button";
 
 export function ItemBadge({ item }: { item: Item }) {
   const { t } = useI18n();
+  if (item.showcase) return <span className="tag tag--line">{t.showcase.badge}</span>;
   if (item.demo) return <span className="tag tag--demo">{t.badges.demo}</span>;
   if (item.status === "editorial_preview") return <span className="tag">{t.badges.preview}</span>;
   if (item.status === "sold") return <span className="tag tag--dark">{t.badges.sold}</span>;
@@ -71,6 +73,7 @@ export function ItemCard({
           </span>
         </div>
       </a>
+      {item.view && <View360Button item={item} />}
     </article>
   );
 }

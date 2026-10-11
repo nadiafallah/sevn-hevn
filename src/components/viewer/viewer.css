@@ -1,0 +1,252 @@
+/* ==========================================================================
+   360° viewer (ProductViewer). Uses the brand tokens from globals.css.
+   ========================================================================== */
+.pv {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pv__kind {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.pv__demo {
+  padding: 3px 8px;
+  border: 1px solid var(--champagne);
+  color: var(--espresso);
+  letter-spacing: 0.16em;
+}
+
+.pv__stage {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  max-height: min(68vh, 720px);
+  width: 100%;
+  overflow: hidden;
+  background: var(--ivory-deep);
+  /* Vertical swipes scroll the page; horizontal drags turn the piece. */
+  touch-action: pan-y;
+}
+
+.pv__stage:focus-visible {
+  outline: 2px solid var(--espresso);
+  outline-offset: 3px;
+}
+
+.pv-spin {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+}
+
+.pv-spin:active {
+  cursor: grabbing;
+}
+
+.pv-spin.is-zoomed {
+  cursor: move;
+  touch-action: none;
+}
+
+.pv-spin__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform-origin: center;
+  transition: opacity 0.3s var(--ease);
+  pointer-events: none;
+}
+
+.pv-model {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: 100%;
+  background: var(--ivory-deep);
+  --poster-color: var(--ivory-deep);
+  --progress-bar-color: transparent;
+}
+
+.pv-model--waiting {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.pv-inside {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.pv-inside__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pv__loading {
+  position: absolute;
+  inset-inline: 16px;
+  bottom: 14px;
+  display: grid;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.pv__bar {
+  display: block;
+  height: 2px;
+  background: var(--espresso);
+  transform-origin: left;
+  transition: transform 0.25s var(--ease);
+}
+
+[dir="rtl"] .pv__bar {
+  transform-origin: right;
+}
+
+.pv__error {
+  display: grid;
+  place-content: center;
+  gap: 16px;
+  height: 100%;
+  padding: 24px;
+  text-align: center;
+}
+
+.pv__error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.pv__hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.pv__angle input {
+  width: 100%;
+  accent-color: var(--espresso);
+}
+
+.pv__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pv__spacer {
+  flex: 1;
+}
+
+.pv__tool {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--rule-strong);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--espresso);
+  transition:
+    background-color 0.25s var(--ease),
+    color 0.25s var(--ease),
+    border-color 0.25s var(--ease);
+}
+
+.pv__text-btn {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 1.75rem;
+  background: transparent;
+  color: var(--espresso);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition:
+    background-color 0.25s var(--ease),
+    color 0.25s var(--ease);
+}
+
+@media (hover: hover) {
+  .pv__tool:hover:not(:disabled),
+  .pv__text-btn:hover {
+    background: var(--espresso);
+    border-color: var(--espresso);
+    color: var(--ivory);
+  }
+}
+
+.pv__tool:active:not(:disabled),
+.pv__text-btn:active {
+  box-shadow: inset 0 2px 6px rgba(42, 28, 22, 0.18);
+}
+
+.pv__tool:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pv__text-btn[aria-pressed="true"] {
+  background: var(--espresso);
+  color: var(--ivory);
+}
+
+.pv__credit {
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Full screen (the Fullscreen API, or a fixed layer where it is missing, e.g. iPhone). */
+.pv:fullscreen,
+.pv.is-full {
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  background: var(--ivory);
+}
+
+.pv.is-full {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+}
+
+.pv:fullscreen .pv__stage,
+.pv.is-full .pv__stage {
+  flex: 1;
+  aspect-ratio: auto;
+  max-height: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pv-spin__img,
+  .pv__bar {
+    transition: none;
+  }
+}

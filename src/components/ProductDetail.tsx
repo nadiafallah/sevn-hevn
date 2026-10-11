@@ -12,13 +12,20 @@ import { site } from "@/config/site";
 import { useSite } from "./SiteProvider";
 import { ItemBadge } from "./ItemCard";
 import { PhoneIcon, WhatsAppIcon } from "./icons";
+import { LazyProductViewer } from "./viewer/View360Button";
 
 export function ProductDetail({ item }: { item: Item }) {
   const { cart, openPanel } = useSite();
   const { t, locale, fmt } = useI18n();
   const p = t.product;
-  const [active, setActive] = useState(0);
-  const image = item.images[active] ?? item.images[0];
+  // A number is a photo; "view" is the 360° view.
+  const [active, setActive] = useState<number | "view">(0);
+  // Colourways that a 3D model carries: the photos and the model always show the same one.
+  const variants = item.view?.kind === "model" ? item.view.variants : undefined;
+  const [variantIndex, setVariantIndex] = useState(0);
+  const variant = variants?.[variantIndex];
+  const images = variant?.images.length ? variant.images : item.images;
+  const image = active === "view" ? undefined : (images[active] ?? images[0]);
   const preview = item.status === "editorial_preview";
   const buyable = isPurchasable(item);
   const inBag = cart.has(item.ref);
@@ -48,26 +55,37 @@ export function ProductDetail({ item }: { item: Item }) {
   return (
     <div className="pd">
       <div className="pd__gallery">
-        {image && (
-          <div className="pd__main">
-            <Image key={image.src} src={image.src} alt={image.alt} width={image.width} height={image.height} sizes="(min-width: 900px) 50vw, 100vw" priority className="pd__img" />
-            {preview && <span className="media-label">{t.aiImage}</span>}
+        {active === "view" && item.view ? (
+          <div className="pd__main pd__main--view">
+            <LazyProductViewer item={item} variant={variant?.name} onExit={() => setActive(0)} />
           </div>
+        ) : (
+          image && (
+            <div className="pd__main">
+              <Image key={image.src} src={image.src} alt={image.alt} width={image.width} height={image.height} sizes="(min-width: 900px) 50vw, 100vw" priority className="pd__img" />
+              {item.showcase ? <span className="media-label">{t.showcase.imageLabel}</span> : preview && <span className="media-label">{t.aiImage}</span>}
+            </div>
+          )
         )}
-        {item.images.length > 1 && (
+        {(images.length > 1 || item.view) && (
           <div className="pd__thumbs" role="group" aria-label={p.chooseImage}>
-            {item.images.map((im, i) => (
+            {images.map((im, i) => (
               <button
                 key={im.src}
                 type="button"
                 className="pd__thumb"
                 aria-pressed={i === active}
-                aria-label={fmt(p.imageOf, { n: i + 1, total: item.images.length })}
+                aria-label={fmt(p.imageOf, { n: i + 1, total: images.length })}
                 onClick={() => setActive(i)}
               >
                 <Image src={im.src} alt="" width={120} height={150} sizes="80px" />
               </button>
             ))}
+            {item.view && (
+              <button type="button" className="pd__thumb pd__thumb--360" aria-pressed={active === "view"} aria-label={t.viewer.title} onClick={() => setActive("view")}>
+                {t.viewer.thumb}
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -85,12 +103,37 @@ export function ProductDetail({ item }: { item: Item }) {
         </p>
         {!preview && <p className="pd__price">{priceLabel(item, t.price)}</p>}
 
-        {preview && (
+        {variants && variants.length > 1 && (
+          <div className="pd__variant" role="group" aria-label={t.viewer.colour}>
+            <p className="eyebrow">{t.viewer.colour}</p>
+            <div className="pd__colours">
+              {variants.map((vr, i) => (
+                <button key={vr.name} type="button" className="pd__colour" aria-pressed={i === variantIndex} onClick={() => setVariantIndex(i)}>
+                  {(locale !== "en" && vr.labels?.[locale]) || vr.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {item.showcase ? (
           <div className="notice">
             <p>
-              <strong>{p.previewStrong}</strong> {item.editorialNote ?? p.previewDefault} {p.previewTail}
+              <strong>{t.showcase.notForSale}</strong>{" "}
+              {fmt(t.showcase.credit, { type: t.showcase.types[item.showcase.type] ?? "", source: item.showcase.source, author: item.showcase.author, licence: item.showcase.licence })}{" "}
+              <a href={item.showcase.sourceUrl} target="_blank" rel="noopener noreferrer">
+                {item.showcase.source}
+              </a>
             </p>
           </div>
+        ) : (
+          preview && (
+            <div className="notice">
+              <p>
+                <strong>{p.previewStrong}</strong> {item.editorialNote ?? p.previewDefault} {p.previewTail}
+              </p>
+            </div>
+          )
         )}
 
         {item.description && <p className="pd__desc">{item.description}</p>}

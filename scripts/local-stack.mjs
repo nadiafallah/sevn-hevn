@@ -162,8 +162,10 @@ function sendMail(to, subject, text) {
 
 const files = new Map();
 const readBody = (req) => new Promise((res) => { const c = []; req.on("data", (d) => c.push(d)); req.on("end", () => res(Buffer.concat(c))); });
+// Like Supabase, the gateway answers browsers on other origins (direct uploads from the panel).
+const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "apikey, authorization, content-type, x-upsert, cache-control", "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS" };
 const send = (res, status, body, headers = {}) => {
-  res.writeHead(status, { "content-type": "application/json", ...headers });
+  res.writeHead(status, { "content-type": "application/json", ...CORS, ...headers });
   res.end(typeof body === "string" || Buffer.isBuffer(body) ? body : JSON.stringify(body));
 };
 
@@ -189,6 +191,10 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, GW);
   const bearer = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
   const claims = bearer.split(".").length === 3 ? verifyJwt(bearer) : null;
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, CORS);
+    return res.end();
+  }
   const keyless = url.pathname.startsWith("/__") || (url.pathname.includes("/object/sign/") || url.pathname.startsWith("/storage/v1/object/public/")) && req.method === "GET" || url.pathname.startsWith("/auth/v1/verify");
   if (!keyless && req.headers.apikey !== PUBLISHABLE) return send(res, 401, { message: "Invalid API key" });
   try {
@@ -284,6 +290,28 @@ const server = http.createServer(async (req, res) => {
         const b = (await admin.query("select public from storage.buckets where id = $1", [key.split("/")[0]])).rows[0];
         const f = b?.public ? files.get(key) : null;
         return f ? send(res, 200, f.bytes, { "content-type": f.type }) : send(res, 400, { statusCode: "404", error: "not_found", message: "Object not found" });
+      }
+      // Signed uploads (large files go straight from the browser to Storage, like Supabase).
+      if (req.method === "POST" && path.startsWith("upload/sign/")) {
+        const key = path.slice("upload/sign/".length);
+        const [bucket, ...p] = key.split("/");
+        try {
+          await asRole(claims, (c) => c.query("insert into storage.objects (bucket_id, name, owner) values ($1, $2, $3)", [bucket, p.join("/"), claims?.sub ?? null]));
+        } catch (e) {
+          return send(res, 403, { statusCode: "403", error: "Unauthorized", message: e.message });
+        }
+        const token = createHmac("sha256", JWT_SECRET).update(`upload:${key}`).digest("hex");
+        return send(res, 200, { url: `/object/upload/sign/${key}?token=${token}` });
+      }
+      if (req.method === "PUT" && path.startsWith("upload/sign/")) {
+        const key = path.slice("upload/sign/".length);
+        if (url.searchParams.get("token") !== createHmac("sha256", JWT_SECRET).update(`upload:${key}`).digest("hex")) return send(res, 400, { message: "invalid signature" });
+        const bytes = await readBody(req);
+        const b = (await admin.query("select * from storage.buckets where id = $1", [key.split("/")[0]])).rows[0];
+        if (b.file_size_limit && bytes.length > Number(b.file_size_limit)) return send(res, 413, { message: "Payload too large" });
+        if (b.allowed_mime_types && !b.allowed_mime_types.includes(req.headers["content-type"])) return send(res, 415, { message: "mime type not supported" });
+        files.set(key, { bytes, type: req.headers["content-type"] });
+        return send(res, 200, { Key: key });
       }
       if (req.method === "POST" && path.startsWith("sign/")) {
         const key = path.slice(5);

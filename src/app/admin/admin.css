@@ -700,3 +700,112 @@ details.adm-card {
   width: 100%;
   min-width: 0;
 }
+
+/* ── 360° view (product page) ─────────────────────────────────────────────── */
+.adm-checklist {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+
+.adm-checklist li::before {
+  content: "○";
+  display: inline-block;
+  width: 1.4em;
+  color: var(--muted);
+}
+
+.adm-checklist li[data-ok]::before {
+  content: "✓";
+  color: #2f6b3f;
+}
+
+.adm-subhead {
+  margin: 20px 0 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.adm-frames {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.adm-frames li {
+  position: relative;
+  display: grid;
+  gap: 4px;
+}
+
+.adm-frames img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: contain;
+  background: var(--ivory-deep);
+}
+
+.adm-frames__n {
+  position: absolute;
+  top: 4px;
+  inset-inline-start: 4px;
+  padding: 0 5px;
+  font-size: 0.7rem;
+  background: rgba(251, 248, 243, 0.9);
+}
+
+.adm-frames .adm-photo-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.adm-view-upload {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  margin-top: 16px;
+}
+
+.adm-view-upload ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--error);
+}
+
+.adm-view-settings {
+  margin-top: 18px;
+  max-width: 460px;
+}
+
+.adm-view-settings fieldset {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.adm-view-settings fieldset label,
+.adm-view-settings .adm-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.adm-view-settings fieldset input,
+.adm-view-settings .adm-check input {
+  width: auto;
+  margin: 0;
+}
+
+.adm-view-preview {
+  max-width: 520px;
+}

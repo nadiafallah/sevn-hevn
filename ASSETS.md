@@ -18,3 +18,12 @@ Every image and brand file used on the site, and where it came from. Update this
 - The AI-generated images show designs and hardware that resemble well-known houses (for example a quilted bag with an interlocking-C clasp). They are labelled as AI-generated and are never named with a brand on the site. For the public launch, consider replacing them with real photography of genuine items, or editorial images without recognisable third-party logos.
 - No competitor photography (including VIVENT) has been used.
 - Real product photos go in Supabase Storage / `public/images/items/` — see README → "Adding products". Record their source here if they are not your own photos.
+
+## 360° demonstration samples (preview branch `feat/product-360` only)
+
+- **Where they live:** `public/showcase/` and `src/data/showcase.ts`. They load only on the protected Vercel preview of that branch, or locally with `SHOWCASE_PREVIEW=true`, and are never part of production.
+- **What they are:** openly licensed 3D models (Khronos glTF Sample Assets, CC BY 4.0; Poly Haven, CC0). The gallery images and the photo-spin frames are renders of those models.
+- **Credits:** each sample's page shows its author and licence, as CC BY requires.
+- **Full table and recipe:** `scripts/showcase/README.md`.
+- **Brand content:** no brand-owned photographs or models are used.
+

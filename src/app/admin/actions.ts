@@ -14,6 +14,7 @@ import { clearSessionCookies, currentStaff, requireOwner, requireStaff, setSessi
 import { fromDubaiLocal, knowledgeTopics, languageCode, staffSettableStatuses } from "@/lib/admin/labels";
 import { CATALOG_TAG } from "@/lib/catalog";
 import { PRODUCT_IMAGES_BUCKET } from "@/lib/supabase";
+import { PRODUCT_MEDIA_BUCKET } from "@/lib/views";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────────
 
@@ -484,12 +485,102 @@ export async function deleteProduct(form: FormData) {
   const ref = productRef(form);
   if (str(form, "confirm", 20) !== "DELETE") back(`/admin/products/${ref}`, { error: "confirm_delete" });
   let paths: string[] = [];
+  // 360° files first: deleting the piece removes their rows. (Before the 360° migration this
+  // function doesn't exist yet, so there is nothing to remove.)
+  const media = await rpc<string[]>(ctx.api, "admin_view_files", { p_ref: ref }, ctx.token).catch(() => [] as string[]);
   try {
     paths = await rpc<string[]>(ctx.api, "admin_delete_product", { p_ref: ref }, ctx.token);
   } catch (e) {
     back(`/admin/products/${ref}`, { error: codeOf(e) });
   }
   await storageRemove(ctx.api, PRODUCT_IMAGES_BUCKET, paths, ctx.token).catch(() => console.error("[admin] product photo files could not be removed"));
+  await storageRemove(ctx.api, PRODUCT_MEDIA_BUCKET, media, ctx.token).catch(() => console.error("[admin] 360° files could not be removed"));
   refreshCatalogue();
   back("/admin/products", { ok: "product_deleted" });
+}
+
+// ── 360° view (migration 20261012120000) ─────────────────────────────────────────────
+const mediaId = (f: FormData) => {
+  const v = Number(str(f, "media", 20));
+  return Number.isInteger(v) && v > 0 ? v : 0;
+};
+
+export async function moveViewMedia(form: FormData) {
+  const ctx = await requireOwner();
+  const ref = productRef(form);
+  const delta = str(form, "delta", 2) === "-1" ? -1 : 1;
+  try {
+    await rpc(ctx.api, "admin_move_view_media", { p_id: mediaId(form), p_delta: delta }, ctx.token);
+  } catch (e) {
+    back(`/admin/products/${ref}`, { error: codeOf(e) });
+  }
+  refreshCatalogue();
+  back(`/admin/products/${ref}#view`, { ok: "view_media_moved" });
+}
+
+export async function removeViewMedia(form: FormData) {
+  const ctx = await requireOwner();
+  const ref = productRef(form);
+  let paths: string[] = [];
+  try {
+    paths = await rpc<string[]>(ctx.api, "admin_delete_view_media", { p_id: mediaId(form) }, ctx.token);
+  } catch (e) {
+    back(`/admin/products/${ref}`, { error: codeOf(e) });
+  }
+  await storageRemove(ctx.api, PRODUCT_MEDIA_BUCKET, paths, ctx.token).catch(() => console.error("[admin] 360° file could not be removed"));
+  refreshCatalogue();
+  back(`/admin/products/${ref}#view`, { ok: "view_media_removed" });
+}
+
+export async function reverseViewFrames(form: FormData) {
+  const ctx = await requireOwner();
+  const ref = productRef(form);
+  try {
+    await rpc(ctx.api, "admin_reverse_view_frames", { p_ref: ref }, ctx.token);
+  } catch (e) {
+    back(`/admin/products/${ref}`, { error: codeOf(e) });
+  }
+  refreshCatalogue();
+  back(`/admin/products/${ref}#view`, { ok: "view_frames_reversed" });
+}
+
+export async function removeViewModel(form: FormData) {
+  const ctx = await requireOwner();
+  const ref = productRef(form);
+  let path: string | null = null;
+  try {
+    path = await rpc<string | null>(ctx.api, "admin_clear_view_model", { p_ref: ref }, ctx.token);
+  } catch (e) {
+    back(`/admin/products/${ref}`, { error: codeOf(e) });
+  }
+  if (path) await storageRemove(ctx.api, PRODUCT_MEDIA_BUCKET, [path], ctx.token).catch(() => console.error("[admin] 3D model file could not be removed"));
+  refreshCatalogue();
+  back(`/admin/products/${ref}#view`, { ok: "view_model_removed" });
+}
+
+export async function saveView(form: FormData) {
+  const ctx = await requireOwner();
+  const ref = productRef(form);
+  const kind = str(form, "kind", 10) === "model" ? "model" : "spin";
+  const start = Number(str(form, "start_frame", 3) || "1") - 1;
+  try {
+    await rpc(
+      ctx.api,
+      "admin_save_view",
+      {
+        p_ref: ref,
+        p_fields: {
+          kind,
+          start_frame: Number.isInteger(start) && start >= 0 ? start : 0,
+          open_animation: str(form, "open_animation", 100),
+          enabled: form.get("enabled") === "on",
+        },
+      },
+      ctx.token,
+    );
+  } catch (e) {
+    back(`/admin/products/${ref}#view`, { error: codeOf(e) });
+  }
+  refreshCatalogue();
+  back(`/admin/products/${ref}#view`, { ok: "view_saved" });
 }

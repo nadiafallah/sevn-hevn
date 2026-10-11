@@ -68,6 +68,14 @@ export const indexingEnabled =
   process.env.SITE_INDEXING === "true" &&
   (process.env.VERCEL_ENV === undefined || process.env.VERCEL_ENV === "production");
 
+/**
+ * Demonstration samples for the 360° view (src/data/showcase.ts): only on the protected Vercel
+ * preview of the feat/product-360 branch, or locally with SHOWCASE_PREVIEW=true. Never on production.
+ */
+export const showcaseEnabled =
+  process.env.VERCEL_ENV !== "production" &&
+  (process.env.SHOWCASE_PREVIEW === "true" || (process.env.VERCEL_ENV === "preview" && process.env.VERCEL_GIT_COMMIT_REF === "feat/product-360"));
+
 /** Demo records exist only to test cart behaviour locally. Never on production. */
 export const demoInventoryEnabled =
   process.env.DEMO_INVENTORY === "true" && process.env.VERCEL_ENV !== "production";
