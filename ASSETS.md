@@ -11,6 +11,7 @@ Every image and brand file used on the site, and where it came from. Update this
 | `public/images/editorial/bag-cognac.jpg` | Brand PDF, marketing example (cropped to remove the burned-in wordmark and caption) | AI-generated editorial | Same as above. |
 | `public/images/editorial/watch-gold-rectangular.jpg`, `loafer-cobalt-suede.jpg` | Homepage PDF, category images (1122×1402) | AI-generated editorial | Same as above. |
 | `public/og-image.jpg` | 1200×630 crop of the hero image | Social sharing image | — |
+| `public/images/hero/bag-cognac-cutout.png` | `bag-cognac.jpg` (brand PDF, AI-generated) with the background removed locally by rembg 2.0.61 (MIT) and the isnet-general-use model; trimmed to 791×805 | AI-generated editorial, cut out | Homepage hero stage only, always with the “AI-generated editorial image” line. Shape, colour and hardware are unchanged. Replace with a cut-out of a real piece via `src/data/hero.ts`. |
 
 ## Notes
 

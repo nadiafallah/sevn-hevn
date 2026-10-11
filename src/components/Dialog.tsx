@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useI18n } from "@/i18n/I18nProvider";
 
 type Variant = "drawer" | "drawer-left" | "center" | "wide";
@@ -10,6 +10,8 @@ type Variant = "drawer" | "drawer-left" | "center" | "wide";
  * showModal() gives focus containment, an inert background and Escape handling;
  * the browser returns focus to the triggering element on close.
  * Background scrolling is locked in CSS (html:has(dialog[open])).
+ * Closing plays a short exit (skipped with reduced motion) before the dialog closes; the content
+ * stays mounted until then.
  */
 export function Dialog({
   open,
@@ -33,10 +35,14 @@ export function Dialog({
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const { t } = useI18n();
+  // Content stays mounted while the exit animation plays.
+  const [shown, setShown] = useState(open);
+  if (open && !shown) setShown(true);
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
+    if (open) delete dialog.dataset.closing;
     if (open && !dialog.open) {
       dialog.showModal();
       dialog.querySelector(".dlg__body")?.scrollTo?.({ top: 0 });
@@ -48,7 +54,20 @@ export function Dialog({
         }
       });
     } else if (!open && dialog.open) {
-      dialog.close();
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      dialog.dataset.closing = "";
+      const timer = window.setTimeout(
+        () => {
+          delete dialog.dataset.closing;
+          dialog.close();
+          setShown(false);
+          // When another panel took over, keep focus inside it.
+          const top = Array.from(document.querySelectorAll<HTMLDialogElement>("dialog[open]")).pop();
+          if (top && !top.contains(document.activeElement)) top.querySelector<HTMLElement>("[autofocus], .dlg__close")?.focus();
+        },
+        reduce ? 0 : 260,
+      );
+      return () => window.clearTimeout(timer);
     }
   }, [open]);
 
@@ -63,6 +82,7 @@ export function Dialog({
       }}
       onClose={() => {
         if (open) onClose();
+        setShown(false);
       }}
       onClick={(e) => {
         // Clicks on the backdrop target the <dialog> element itself.
@@ -83,8 +103,8 @@ export function Dialog({
             </svg>
           </button>
         </header>
-        <div className="dlg__body">{open ? children : null}</div>
-        {footer && open && <footer className="dlg__foot">{footer}</footer>}
+        <div className="dlg__body">{shown ? children : null}</div>
+        {footer && shown && <footer className="dlg__foot">{footer}</footer>}
       </div>
     </dialog>
   );

@@ -48,7 +48,17 @@ export function RevealObserver() {
       { rootMargin: "0px 0px -8% 0px", threshold: 0.05 },
     );
     els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+
+    // Looping details (the button glint) rest while their section is off screen.
+    const away = new IntersectionObserver((entries) => {
+      for (const e of entries) (e.target as HTMLElement).toggleAttribute("data-offscreen", !e.isIntersecting);
+    });
+    document.querySelectorAll("main > section, .site-footer").forEach((el) => away.observe(el));
+
+    return () => {
+      io.disconnect();
+      away.disconnect();
+    };
   }, [pathname]);
   return null;
 }

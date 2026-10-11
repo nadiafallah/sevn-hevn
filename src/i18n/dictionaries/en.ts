@@ -29,7 +29,9 @@ export const en = {
   },
 
   home: {
-    heroAlt: "An emerald top-handle bag and a black quilted shoulder bag on a travertine plinth in warm light",
+    heroAlt: "Cognac leather top-handle bag with contrast stitching and gold-tone hardware",
+    featuredPiece: "Featured piece",
+    viewPiece: "View the piece",
     aiImage: "AI-generated editorial image",
     aiImageShort: "AI editorial image",
     heroEyebrow: "Bags · Watches · Shoes · Accessories",
@@ -50,7 +52,7 @@ export const en = {
     categoryTitle: "Begin with a *category.*",
     allPieces: "All pieces",
     doors: {
-      bags: { note: "Top-handle, shoulder, clutches and travel", alt: "Cognac leather top-handle bag on a travertine plinth" },
+      bags: { note: "Top-handle, shoulder, clutches and travel", alt: "Emerald grained-leather top-handle bag on a travertine plinth" },
       watches: { note: "Contemporary and vintage, by reference and year", alt: "Rectangular gold-tone watch on a dark leather strap" },
       shoes: { note: "Loafers, mules, sandals and more", alt: "Cobalt suede loafers with gold-tone detail" },
     },
