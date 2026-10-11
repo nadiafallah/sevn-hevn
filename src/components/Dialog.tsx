@@ -22,6 +22,7 @@ export function Dialog({
   children,
   footer,
   hideTitle = false,
+  className,
 }: {
   open: boolean;
   onClose: () => void;
@@ -31,6 +32,7 @@ export function Dialog({
   children: ReactNode;
   footer?: ReactNode;
   hideTitle?: boolean;
+  className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -74,7 +76,7 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
-      className={`dlg dlg--${variant}`}
+      className={`dlg dlg--${variant}${className ? ` ${className}` : ""}`}
       aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();

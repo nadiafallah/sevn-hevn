@@ -1,11 +1,13 @@
 import "server-only";
 import { cache } from "react";
-import { demoInventoryEnabled } from "@/config/site";
+import { demoInventoryEnabled, showcaseEnabled } from "@/config/site";
 import { demoItems } from "@/data/demo";
 import { editorialPreviews } from "@/data/editorial";
+import { showcaseItems } from "@/data/showcase";
 import { products } from "@/data/products";
 import { isCategoryId } from "@/data/taxonomy";
 import type { Condition, Item, ItemStatus } from "@/data/types";
+import { attachView, type MediaRow, type ViewRow } from "@/lib/views";
 import { publicImageUrl, supabaseReadConfig } from "@/lib/supabase";
 
 const REF_PATTERN = /^[A-Za-z0-9-]{2,40}$/;
@@ -91,6 +93,30 @@ function fromRow(url: string, r: ProductRow): Item | null {
 }
 
 /**
+ * 360° views of published pieces, read separately so the catalogue keeps working on a database
+ * without the 360° tables (any error means "no views"). Only switched-on, complete views are used.
+ */
+async function fetchViews(url: string, key: string, fresh: boolean) {
+  const get = async <T,>(table: string, query: Record<string, string>): Promise<T[]> => {
+    const res = await fetch(`${url}/rest/v1/${table}?${new URLSearchParams(query)}`, {
+      headers: { apikey: key, accept: "application/json" },
+      signal: AbortSignal.timeout(8000),
+      ...(fresh ? { cache: "no-store" as const } : { next: { revalidate: CATALOG_REFRESH_SECONDS, tags: [CATALOG_TAG] } }),
+    });
+    return res.ok ? ((await res.json()) as T[]) : [];
+  };
+  try {
+    const [views, media] = await Promise.all([
+      get<ViewRow>("product_views", { select: "product_ref,kind,start_frame,reverse,model_path,model_bytes,open_animation", enabled: "is.true" }),
+      get<MediaRow>("product_view_media", { select: "product_ref,kind,storage_path,zoom_path,width,height,alt", order: "position.asc,id.asc" }),
+    ]);
+    return { views, media };
+  } catch {
+    return { views: [], media: [] };
+  }
+}
+
+/**
  * Genuine inventory: Supabase when configured (published rows only — enforced by RLS and by the
  * filter below), otherwise the static file src/data/products.ts for offline development.
  * Errors are thrown rather than returning an empty list, so a failed refresh keeps serving the
@@ -112,7 +138,10 @@ async function fetchGenuine(fresh: boolean): Promise<Item[]> {
   });
   if (!res.ok) throw new Error(`[catalog] Supabase catalogue request failed with HTTP ${res.status}`);
   const rows = (await res.json()) as ProductRow[];
-  return rows.flatMap((r) => fromRow(cfg.url, r) ?? []);
+  const items = rows.flatMap((r) => fromRow(cfg.url, r) ?? []);
+  if (!items.length) return items;
+  const { views, media } = await fetchViews(cfg.url, cfg.key, fresh);
+  return items.map((it) => attachView(it, cfg.url, views.find((v) => v.product_ref === it.ref), media));
 }
 
 /**
@@ -140,6 +169,7 @@ function build(genuine: Item[]): Item[] {
   const seen = new Set<string>();
   const all = [
     ...genuine.map((p) => normalise(p)),
+    ...(showcaseEnabled ? showcaseItems.map((p) => normalise({ ...p, status: "editorial_preview" })) : []),
     ...editorialPreviews.map((p) => normalise({ ...p, status: "editorial_preview" })),
     ...(demoInventoryEnabled ? demoItems.map((p) => normalise(p, true)) : []),
   ];
@@ -181,7 +211,9 @@ export async function getFeatured(limit = 4): Promise<Item[]> {
   const catalog = await getCatalog();
   const genuine = catalog.filter((i) => isGenuine(i) && i.featured && i.status !== "sold");
   if (genuine.length >= 3) return genuine.slice(0, limit);
-  return catalog.filter((i) => i.status === "editorial_preview" && i.featured).slice(0, limit);
+  // On the protected preview, the 360° samples lead the selection.
+  const previews = catalog.filter((i) => i.status === "editorial_preview" && i.featured);
+  return [...previews.filter((i) => i.showcase), ...previews.filter((i) => !i.showcase)].slice(0, limit);
 }
 
 export async function hasGenuineInventory() {

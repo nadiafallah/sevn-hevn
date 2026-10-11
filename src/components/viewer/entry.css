@@ -1,0 +1,111 @@
+/* 360° entry points: the card button, the viewer panel and the gallery thumbnail and colours.
+   Loaded with the cards (the viewer's own styles load only when it opens). */
+.card {
+  position: relative;
+}
+
+.card__360 {
+  position: absolute;
+  top: 12px;
+  inset-inline-end: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 1.75rem;
+  background: rgba(251, 248, 243, 0.94);
+  color: var(--espresso);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition:
+    background-color 0.25s var(--ease),
+    color 0.25s var(--ease);
+}
+
+@media (hover: hover) {
+  .card__360:hover {
+    background: var(--espresso);
+    color: var(--ivory);
+  }
+}
+
+.card__360:focus-visible {
+  outline-offset: 3px;
+}
+
+/* Narrow cards: the button moves to the photo's lower corner, clear of the status badge. */
+@media (max-width: 699px) {
+  .card {
+    container-type: inline-size;
+  }
+  .card__360 {
+    top: calc(125cqw - 42px);
+    inset-inline-end: 8px;
+    min-height: 32px;
+    padding: 0 10px;
+  }
+}
+
+.pv-dialog .dlg__body {
+  padding: 56px 24px 24px;
+}
+
+@media (max-width: 699px) {
+  .pv-dialog .dlg__body {
+    padding: 56px 16px 20px;
+  }
+}
+
+/* Product gallery: the viewer takes its natural height in place of the main photo. */
+.pd__main--view {
+  display: block;
+  height: auto;
+  max-height: none;
+  aspect-ratio: auto;
+  padding: 16px;
+}
+
+@media (max-width: 899px) {
+  .pd__main--view {
+    padding: 12px 12px 4px;
+  }
+}
+
+/* Product gallery: the 360° and inside thumbnails. */
+.pd__thumb--360 {
+  display: grid;
+  place-items: center;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  background: var(--ivory-deep);
+  color: var(--espresso);
+}
+
+.pd__colours {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.pd__colour {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 1.75rem;
+  background: transparent;
+  font-size: 0.8rem;
+}
+
+.pd__colour[aria-pressed="true"] {
+  border-color: var(--espresso);
+  background: var(--espresso);
+  color: var(--ivory);
+}
+

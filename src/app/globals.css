@@ -2768,9 +2768,14 @@ html:has(dialog[open]) .wa-float {
   display: flex;
   gap: 8px;
   padding: 12px;
+  /* Many photos (or photos plus 360°) scroll within the row; the panel never widens. */
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
 }
 
 .pd__thumb {
+  flex: 0 0 64px;
   width: 64px;
   padding: 0;
   border: 1px solid transparent;
@@ -2893,7 +2898,7 @@ html:has(dialog[open]) .wa-float {
 
 @media (max-width: 899px) {
   .pd {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .pd__main {
     height: auto;

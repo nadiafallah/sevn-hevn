@@ -9,17 +9,20 @@ const productImagePatterns = supabaseUrl
   ? [new URL("/storage/v1/object/public/product-images/**", supabaseUrl)]
   : [];
 
-// Private panel only: customer photos are shown through short-lived signed Storage links.
+// Customer photos (private panel) use short-lived signed Storage links; 360° media is public.
 const supabaseOrigin = supabaseUrl ? new URL(supabaseUrl).origin : "";
 
 // Everything is served from this origin; WhatsApp, email and Instagram are plain outbound links.
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  // 'wasm-unsafe-eval' lets the 3D viewer compile its WebAssembly helpers; it does not allow eval().
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob:${supabaseOrigin ? ` ${supabaseOrigin}` : ""}`,
   "font-src 'self'",
-  `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
+  // 3D models of real pieces are fetched straight from the product-media Storage bucket.
+  // and read their embedded textures through blob: URLs.
+  `connect-src 'self' blob: data:${supabaseOrigin ? ` ${supabaseOrigin}` : ""}${isDev ? " ws: wss:" : ""}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
