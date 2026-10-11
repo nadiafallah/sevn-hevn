@@ -8,7 +8,7 @@ The website has a virtual-assistant chat for customers and a private panel for t
 | Chat, shareable page | `https://www.sevnhevn.ae/chat` (same chat and conversation as the button) |
 | Private panel | `https://www.sevnhevn.ae/admin` |
 
-The chat speaks English and Arabic (Arabic is shown right to left). It always says it is a virtual assistant, and WhatsApp, phone and “Talk to a person” are always one tap away.
+The chat speaks English, Arabic, Russian and French (Arabic is shown right to left). It opens in the language of the page it is on, and the customer can switch at any time without losing the conversation. It always says it is a virtual assistant, and WhatsApp, phone and “Talk to a person” are always one tap away.
 
 ## 1. What the chat does
 
@@ -200,7 +200,7 @@ One record per phone number, with all of that customer’s requests and orders.
 This is the only policy text the chat may quote. Each entry has:
 
 - topic (shipping, returns, authenticity, warranty, payment, viewing, general);
-- language (English or Arabic);
+- language (English, Arabic, Russian or French);
 - an optional country;
 - title and text;
 - **source** and an optional source link;
@@ -210,8 +210,8 @@ Approving records your name and the time. **Editing an approved entry sends it b
 
 At launch, four English entries are approved. They repeat the interim notices already published on the website: shipping & delivery, returns, independent reseller, and editorial images.
 
-- In an Arabic conversation, an approved English entry is shown in English and clearly marked as English.
-- Add and approve Arabic versions to answer in Arabic.
+- In an Arabic, Russian or French conversation, an approved English entry is shown in English and clearly marked as English.
+- Add and approve versions in those languages to answer in them.
 - Replace the interim wording when the final policies are approved.
 
 ### 4.6 Test data
@@ -377,17 +377,20 @@ The migration is `supabase/migrations/20261006120000_concierge_crm.sql`. It is a
 
 New changes always go in a new migration file. Never edit an applied one.
 
+`supabase/migrations/20261011120000_concierge_languages.sql` (11 Oct 2026) lets the chat store Russian and French: it widens the language checks on the concierge tables and updates `concierge_start` and `concierge_save`, which used to store any language other than Arabic as English. It changes no data. Its rollback, `supabase/rollbacks/20261011120000_concierge_languages.down.sql`, relabels Russian and French rows as English and retires Russian and French knowledge entries before narrowing the checks again. Apply it as soon as the code that offers Russian and French is live. Until then, a Russian or French request is still saved, but marked English (the server logs “database refuses ru/fr”).
+
 ## 10. Tests
 
 | Command | What it checks |
 | --- | --- |
 | `npm run db:test` | All migrations on in-process Postgres 17: access rules for visitors, non-team accounts, staff and owner; order privacy; rate limits; idempotency; uploads; the notification outbox; the audit trail |
-| `npm run test:unit` | The conversation in English and Arabic: no re-asking, unknown price handling, approved-only policy text, order verification, AI failure fallback, phone and country checks |
+| `npm run test:unit` | The conversation in English, Arabic, Russian and French (switching language keeps the request): no re-asking, unknown price handling, approved-only policy text, order verification, AI failure fallback, phone and country checks |
 | `tests/e2e/run.sh` | A real browser against a production build on a local Postgres + PostgREST stack (`scripts/local-stack.mjs`, with stand-ins for Supabase Auth, Storage and SMTP). See the list below. |
 
 The `tests/e2e/run.sh` run checks:
 
 - desktop widget and mobile Arabic `/chat`, with a photo whose GPS data is removed;
+- the widget on the Russian site, switching to French mid-request;
 - reload persistence;
 - double submit;
 - upload limits;
@@ -403,7 +406,7 @@ It needs `brew install postgresql@17 postgrest`.
 ## 11. Next steps (prioritised)
 
 1. Connect e-mail (§5.1). This turns on e-mail alerts and order checks.
-2. Approve Arabic store-knowledge entries, then replace the interim policies with the final ones.
+2. Approve Arabic, Russian and French store-knowledge entries, then replace the interim policies with the final ones.
 3. Connect WhatsApp alerts (§5.2) if wanted.
 4. Real inventory in Supabase. Listed prices are then quoted with their date.
 5. Optional AI (§7), after setting a spend limit.

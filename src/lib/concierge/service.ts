@@ -5,7 +5,7 @@ import { site } from "@/config/site";
 import { findItem, getCatalog } from "@/lib/catalog";
 import { aiConfig, clientHash, conciergeServer, emailConfig, supabaseApi } from "./config";
 import { DbError, rpc, select, storageUpload } from "./db";
-import { begin, currentPrompt, handle, initialState, type Deps, type Input, type ItemInfo, type KnowledgeAnswer, type State, type VerifiedOrder } from "./engine";
+import { begin, currentPrompt, handle, initialState, type Deps, type Input, type ItemInfo, type KnowledgeAnswer, type State, type SubmitPayload, type VerifiedOrder } from "./engine";
 import { t, type Locale } from "./i18n";
 import type { ClientMessage, ClientReply } from "./types";
 import { aiDescribePhoto, aiExtract } from "./ai";
@@ -88,8 +88,8 @@ async function findKnowledge(topic: string, country: string | undefined, locale:
   const hit =
     (country ? pick(locale, country) : undefined) ??
     pick(locale, null) ??
-    (locale === "ar" ? ((country ? pick("en", country) : undefined) ?? pick("en", null)) : undefined);
-  return hit ? { title: hit.title, body: hit.body, english: locale === "ar" && hit.locale === "en" } : null;
+    (locale !== "en" ? ((country ? pick("en", country) : undefined) ?? pick("en", null)) : undefined);
+  return hit ? { title: hit.title, body: hit.body, english: locale !== "en" && hit.locale === "en" } : null;
 }
 
 function codeHash(db: Server, conversationId: string, code: string) {
@@ -108,7 +108,21 @@ function deps(db: Server, id: string, tokenHash: string): Deps {
     now: () => new Date(),
     lookupItem,
     knowledge: findKnowledge,
-    submit: (payload) => rpc<{ id: string; reference: string }>(db, "concierge_submit", { ...base, p_request: payload }),
+    async submit(payload) {
+      const send = (p: SubmitPayload) => rpc<{ id: string; reference: string }>(db, "concierge_submit", { ...base, p_request: p });
+      try {
+        return await send(payload);
+      } catch (e) {
+        // A database without migration 20261011120000 accepts only English and Arabic. Keep the
+        // request (marked English for the team) rather than lose it; nothing was saved by the
+        // refused attempt, so the same idempotency key is safe to reuse.
+        if ((payload.locale === "ru" || payload.locale === "fr") && e instanceof DbError && /(locale|preferred_language)_check/.test(e.message)) {
+          console.error("[concierge] database refuses ru/fr; request saved as English (apply migration 20261011120000)");
+          return send({ ...payload, locale: "en" });
+        }
+        throw e;
+      }
+    },
     orderVerification: emailConfig() !== null,
     async startOrderCheck(ref) {
       const code = String(randomInt(0, 1_000_000)).padStart(6, "0");

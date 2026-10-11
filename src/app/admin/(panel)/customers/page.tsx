@@ -3,7 +3,7 @@ import { select } from "@/lib/concierge/db";
 import { formatPhone } from "@/lib/concierge/phone";
 import { requireStaff } from "@/lib/admin/session";
 import { one, type SP } from "@/components/admin/Flash";
-import { methodLabels, when } from "@/lib/admin/labels";
+import { languageLabel, methodLabels, when } from "@/lib/admin/labels";
 
 export const metadata = { title: "Customers" };
 
@@ -43,7 +43,7 @@ export default async function Customers({ searchParams }: { searchParams: SP }) 
                   <td><Link href={`/admin/customers/${c.id}`}>{c.name || "Unnamed"}</Link>{c.is_test && <span className="adm-badge adm-badge--test">Test</span>}</td>
                   <td className="adm-ltr">{c.phone_e164 ? formatPhone(c.phone_e164) : "—"}</td>
                   <td>{c.email ?? "—"}</td>
-                  <td>{c.preferred_language === "ar" ? "Arabic" : "English"}</td>
+                  <td>{languageLabel(c.preferred_language)}</td>
                   <td>{c.preferred_contact ? methodLabels[c.preferred_contact] : "—"}</td>
                   <td>{c.requests[0]?.count ?? 0}</td>
                   <td>{c.orders[0]?.count ?? 0}</td>

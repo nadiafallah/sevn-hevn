@@ -77,7 +77,7 @@ As an alternative, the customer can choose **"Send from the website"** and give 
 
 ## Concierge chat and private panel
 
-A virtual-assistant chat (English and Arabic) takes customer requests, with photos, and stores them for the team. It opens from the **Concierge** button on every page and at `/chat`. The team works in a private panel at `/admin`, with owner and staff roles, notes, follow-ups, approved prices, orders and notifications. The chat never states a price, stock level, delivery promise or policy unless it comes from approved data.
+A virtual-assistant chat (English, Arabic, Russian and French) takes customer requests, with photos, and stores them for the team. It opens from the **Concierge** button on every page and at `/chat`. The team works in a private panel at `/admin`, with owner and staff roles, notes, follow-ups, approved prices, orders and notifications. The chat never states a price, stock level, delivery promise or policy unless it comes from approved data.
 
 Setup, roles, daily use, notification connections, order checks, optional AI, migrations and tests are all in [docs/CONCIERGE.md](docs/CONCIERGE.md).
 

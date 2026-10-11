@@ -144,6 +144,27 @@ test("submitting a request is idempotent and creates customer, request, outbox a
   assert.deepEqual(c, { n: 1, name: "Layla" });
 });
 
+test("Russian and French conversations keep their language through start, save and submit", async () => {
+  const db = await setup();
+  for (const [locale, body, phone] of [["ru", "Ищу сумку", "+33612345678"], ["fr", "Je cherche un sac", "+33612345679"]]) {
+    const token = randomUUID();
+    const id = (await as(db, "anon", "select public.concierge_start($1, $2, $3, 'widget', $4) as id", [KEY, sha(token), locale, `client-${locale}`])).rows[0].id;
+    const conv = { id, tokenHash: sha(token) };
+    await as(db, "anon", "select public.concierge_save($1, $2, $3, 0, $4, $5, $6, 'm1', $7)", [
+      KEY, conv.id, conv.tokenHash, { step: "menu" }, locale, JSON.stringify([{ role: "customer", body, locale }]), { ok: true },
+    ]);
+    const loaded = (await as(db, "anon", "select public.concierge_load($1, $2, $3) as c", [KEY, conv.id, conv.tokenHash])).rows[0].c;
+    assert.equal(loaded.locale, locale);
+    const res = await submit(db, conv, { locale, contact_phone: phone });
+    const [row] = (await db.query("select r.locale, c.preferred_language, m.locale as msg from public.requests r join public.customers c on c.id = r.customer_id join public.conversation_messages m on m.conversation_id = r.conversation_id where r.reference = $1", [res.reference])).rows;
+    assert.deepEqual(row, { locale, preferred_language: locale, msg: locale });
+  }
+  // Anything else still falls back to English; unknown languages are refused by the tables.
+  const other = (await as(db, "anon", "select public.concierge_start($1, $2, 'de', 'widget', 'client-de') as id", [KEY, sha(randomUUID())])).rows[0].id;
+  assert.equal((await db.query("select locale from public.conversations where id = $1", [other])).rows[0].locale, "en");
+  await rejects(db.query("update public.customers set preferred_language = 'de'"), /customers_preferred_language_check/);
+});
+
 test("requests are validated by the database", async () => {
   const db = await setup();
   const conv = await startConversation(db);

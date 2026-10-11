@@ -5,7 +5,7 @@ import { begin, handle, type Deps, type Input, type State, type SubmitPayload, t
 import { parsePhone } from "../src/lib/concierge/phone";
 import { matchCountry } from "../src/lib/concierge/countries";
 import { extract } from "../src/lib/concierge/detect";
-import { strings } from "../src/lib/concierge/i18n";
+import { locales, strings, type Locale } from "../src/lib/concierge/i18n";
 
 const NOW = new Date("2026-10-06T10:00:00Z");
 
@@ -31,7 +31,7 @@ function makeDeps(over: Partial<Deps> = {}) {
 }
 
 /** Plays a script of inputs and returns every turn. */
-async function play(deps: Deps, inputs: (Input | string)[], locale: "en" | "ar" = "en") {
+async function play(deps: Deps, inputs: (Input | string)[], locale: Locale = "en") {
   let state: State = begin(locale).state;
   const turns: Turn[] = [];
   for (const i of inputs) {
@@ -125,6 +125,71 @@ test("Arabic: right wording, numbers kept left-to-right, international destinati
   assert.equal(p.consent_text, strings.ar.ui.consent);
   assert.ok(run.last.assistant[0].includes("\u2066REQ-7K2M9Q\u2069"), "reference isolated as left-to-right");
   assert.ok(run.last.assistant[0].includes("\u2066+966 50 123 4567\u2069"), "phone isolated as left-to-right");
+});
+
+test("Russian: whole request in Russian, inflected country name understood", async () => {
+  const { deps, submitted } = makeDeps();
+  const run = await play(deps, [
+    "Ищу часы Rolex Daytona",
+    choice("skip"),
+    choice("skip"),
+    choice("other"),
+    "во Францию",
+    choice("skip"),
+    choice("skip"),
+    "+33 6 12 34 56 78",
+    choice("call"),
+    { type: "submit", consent: true },
+  ], "ru");
+  assert.match(run.turns[0].assistant[0], /Отмечено: Rolex · Daytona · Часы/);
+  const p = submitted[0];
+  assert.equal(p.locale, "ru");
+  assert.equal(p.destination_country, "FR");
+  assert.equal(p.destination_label, "Франция");
+  assert.equal(p.contact_method, "call");
+  assert.equal(p.consent_text, strings.ru.ui.consent);
+  assert.match(run.last.assistant[0], /REQ-7K2M9Q/);
+  assert.match(run.last.assistant[0], /свяжется с вами по телефону: \+33/);
+});
+
+test("French: whole request in French, with French typography", async () => {
+  const { deps, submitted } = makeDeps();
+  const run = await play(deps, [
+    "Je cherche une montre Cartier",
+    choice("skip"),
+    choice("skip"),
+    choice("other"),
+    "aux États-Unis",
+    choice("skip"),
+    "Camille",
+    "+1 202 555 0123",
+    choice("whatsapp"),
+    { type: "submit", consent: true },
+  ], "fr");
+  assert.match(run.turns[0].assistant[0], /C’est noté\u00a0: Cartier · Montres/);
+  const p = submitted[0];
+  assert.equal(p.locale, "fr");
+  assert.equal(p.destination_country, "US");
+  assert.equal(p.destination_label, "États-Unis");
+  assert.equal(p.contact_name, "Camille");
+  assert.equal(p.consent_text, strings.fr.ui.consent);
+  assert.match(run.last.assistant[0], /^Merci, Camille\. .*REQ-7K2M9Q.*sur WhatsApp/);
+});
+
+test("switching language mid-request keeps everything already said", async () => {
+  const { deps } = makeDeps();
+  const run = await play(deps, [choice("sourcing"), "Hermès Kelly 28 black", { type: "locale", value: "fr" }, { type: "locale", value: "ru" }]);
+  assert.equal(run.state.locale, "ru");
+  assert.equal(run.state.draft.brand, "Hermès");
+  assert.equal(run.state.draft.model, "Kelly");
+  assert.equal(run.turns[2].assistant[0], strings.fr.a.budget);
+  assert.equal(run.last.assistant[0], strings.ru.a.budget);
+});
+
+test("every language has the same wording keys as English", () => {
+  const shape = (o: unknown): unknown =>
+    typeof o === "object" && o !== null ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, shape(v)]).sort()) : typeof o;
+  for (const l of locales) assert.deepEqual(shape(strings[l]), shape(strings.en), `${l} matches English`);
 });
 
 test("contact details given once are not asked again in a new request", async () => {

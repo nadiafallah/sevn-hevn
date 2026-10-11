@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { site } from "@/config/site";
-import { dirOf, t, type Locale } from "@/lib/concierge/i18n";
+import { dirOf, isLocale, localeNames, locales, t } from "@/lib/concierge/i18n";
 import type { Choice, Prompt } from "@/lib/concierge/types";
 import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -14,12 +14,12 @@ import { preparePhoto, useConcierge, type ChatError } from "./useConcierge";
  * The SEVN HEVN concierge chat. One component and one conversation for both the floating widget
  * and the /chat page. Arabic is shown right-to-left; numbers, references and phone numbers stay
  * left-to-right. WhatsApp and phone stay one tap away at all times.
- * The chat speaks English and Arabic. It opens in Arabic on the Arabic site and in English
- * elsewhere (including the Russian and French sites); the customer can switch at any time.
+ * The chat speaks English, Arabic, Russian and French. It opens in the site's language; the
+ * customer can switch at any time without losing the conversation.
  */
 export function ConciergeChat({ variant, onClose, active = true }: { variant: "widget" | "page"; onClose?: () => void; active?: boolean }) {
   const { locale: siteLocale, t: siteText } = useI18n();
-  const chat = useConcierge(variant, active, siteLocale === "ar" ? "ar" : "en");
+  const chat = useConcierge(variant, active, isLocale(siteLocale) ? siteLocale : "en");
   const { locale, messages, prompt, status, error, pending } = chat;
   const L = t(locale);
   const uid = useId();
@@ -108,21 +108,6 @@ export function ConciergeChat({ variant, onClose, active = true }: { variant: "w
           <p className="cc__subtitle">{L.ui.subtitle}</p>
         </div>
         <div className="cc__tools">
-          <div className="cc__lang" role="group" aria-label={L.ui.language}>
-            {(["en", "ar"] as Locale[]).map((l) => (
-              <button
-                key={l}
-                type="button"
-                lang={l}
-                className="cc__lang-btn"
-                aria-pressed={locale === l}
-                disabled={busy}
-                onClick={() => chat.changeLocale(l)}
-              >
-                {l === "en" ? "English" : "العربية"}
-              </button>
-            ))}
-          </div>
           {onClose && (
             <button type="button" className="cc__icon" onClick={onClose} aria-label={L.ui.close}>
               <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
@@ -130,6 +115,23 @@ export function ConciergeChat({ variant, onClose, active = true }: { variant: "w
               </svg>
             </button>
           )}
+        </div>
+        {/* Its own row under the title, so all four languages fit at any width. */}
+        <div className="cc__lang" role="group" aria-label={L.ui.language}>
+          {locales.map((l) => (
+            <button
+              key={l}
+              type="button"
+              lang={l}
+              dir={dirOf(l)}
+              className="cc__lang-btn"
+              aria-pressed={locale === l}
+              disabled={busy}
+              onClick={() => chat.changeLocale(l)}
+            >
+              {localeNames[l]}
+            </button>
+          ))}
         </div>
       </header>
 

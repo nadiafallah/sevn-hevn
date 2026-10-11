@@ -1,6 +1,6 @@
 # Project status: SEVN HEVN
 
-Last updated: 10 October 2026
+Last updated: 11 October 2026
 
 ## Website languages (Oct 2026)
 
@@ -11,7 +11,7 @@ The public site is in English, Arabic (right-to-left), Russian and French. Engli
 | Pages, panels, forms, bag, policies, metadata and sitemap in four languages | done (`src/i18n/`) |
 | Language selector: utility bar (all screen sizes) and menu drawer | done; the choice is remembered in a cookie and the open panel, form fields and chat carry over |
 | Arabic typography and right-to-left layout | IBM Plex Sans Arabic and Noto Naskh Arabic, no letter-spacing on Arabic, logical CSS properties; the hero copy stays on the lit wall of the photograph |
-| Concierge chat | English and Arabic, as before; it opens in Arabic on the Arabic site and in English elsewhere. Russian and French chat wording is not written yet, and the chat database accepts only `en`/`ar` |
+| Concierge chat | English, Arabic, Russian and French (11 Oct 2026): it opens in the page's language and can be switched without losing the conversation. Migration `20261011120000_concierge_languages.sql` must be run in production; until then Russian and French requests are saved marked English |
 | Product text per language | not stored yet: database items show their English text in every language |
 | Native-speaker review of the Russian and French wording | recommended |
 
@@ -25,7 +25,7 @@ Built, tested and deployed. **Dormant until the one-time database setup is run.*
 
 | Part | State |
 | --- | --- |
-| Customer chat: widget on every page and `/chat`, English and Arabic (RTL) | in production code; hidden until the database setup is run (`/chat` honestly says “not available” with WhatsApp and phone) |
+| Customer chat: widget on every page and `/chat`, English, Arabic (RTL), Russian and French | in production code; hidden until the database setup is run (`/chat` honestly says “not available” with WhatsApp and phone) |
 | Private panel `/admin`: owner and staff roles, requests, customers, orders, knowledge, team, export, audit | in production code; sign-in grants access after the database setup |
 | Database migration `20261006120000_concierge_crm.sql` | **not applied yet**. The assistant’s Supabase connector refuses schema changes, so the owner must run it once in the SQL Editor (CONCIERGE.md §2.0). A tested file with the migration, server-key hash and owner entry is on the owner’s Desktop: `SEVN-HEVN-production-setup.sql`. |
 | Vercel env `CONCIERGE_SERVER_KEY`, `CRON_SECRET` (Production, Secret) | set 6 Oct 2026 |

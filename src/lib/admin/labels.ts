@@ -1,6 +1,7 @@
 /** Plain-English labels for the private panel. */
 import type { Condition } from "@/data/types";
 import { en } from "@/i18n/dictionaries/en";
+import { isLocale, localeEnglishNames, locales } from "@/lib/concierge/i18n";
 
 /** Item condition grades, worded as on the English website. */
 export const conditionLabels: Record<Condition, string> = en.ui.conditions;
@@ -13,6 +14,11 @@ export const requestStatusLabels: Record<string, string> = {
   converted: "Converted to an order",
   closed: "Closed",
 };
+
+/** The concierge's languages, for filters and selects. */
+export const chatLanguages = locales.map((code) => ({ code, label: localeEnglishNames[code] }));
+export const languageLabel = (code?: string | null) => (isLocale(code) ? localeEnglishNames[code] : (code ?? "—"));
+export const languageCode = (value: string | null | undefined) => (isLocale(value) ? value : null);
 
 export const staffSettableStatuses = ["new", "in_progress", "awaiting_approval", "awaiting_customer", "closed"];
 

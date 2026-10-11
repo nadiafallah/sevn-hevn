@@ -2,7 +2,7 @@ import Link from "next/link";
 import { rpc, select } from "@/lib/concierge/db";
 import { requireStaff } from "@/lib/admin/session";
 import { Flash, one, type SP } from "@/components/admin/Flash";
-import { requestStatusLabels, requestTypeLabels, reviewLabels, when } from "@/lib/admin/labels";
+import { chatLanguages, languageCode, languageLabel, requestStatusLabels, requestTypeLabels, reviewLabels, when } from "@/lib/admin/labels";
 
 export const metadata = { title: "Requests" };
 
@@ -31,7 +31,7 @@ export default async function Requests({ searchParams }: { searchParams: SP }) {
   const q = one(sp.q)?.slice(0, 80) ?? "";
   const status = one(sp.status) && requestStatusLabels[one(sp.status)!] ? one(sp.status)! : null;
   const type = one(sp.type) && requestTypeLabels[one(sp.type)!] ? one(sp.type)! : null;
-  const locale = one(sp.lang) === "ar" || one(sp.lang) === "en" ? one(sp.lang)! : null;
+  const locale = languageCode(one(sp.lang));
   const assignee = /^[0-9a-f-]{36}$/.test(one(sp.assignee) ?? "") ? one(sp.assignee)! : null;
   const destination = /^[A-Z]{2}$/.test(one(sp.dest) ?? "") ? one(sp.dest)! : null;
   const review = one(sp.review) === "1";
@@ -107,8 +107,11 @@ export default async function Requests({ searchParams }: { searchParams: SP }) {
           Language
           <select name="lang" defaultValue={locale ?? ""}>
             <option value="">Any</option>
-            <option value="en">English</option>
-            <option value="ar">Arabic</option>
+            {chatLanguages.map((l) => (
+              <option key={l.code} value={l.code}>
+                {l.label}
+              </option>
+            ))}
           </select>
         </label>
         <label>
@@ -156,7 +159,7 @@ export default async function Requests({ searchParams }: { searchParams: SP }) {
                     <span className="adm-muted adm-ltr">{r.contact_phone}</span>
                   </td>
                   <td>
-                    <span className="adm-muted">{requestTypeLabels[r.type]} · {r.locale === "ar" ? "Arabic" : "English"}{r.destination_label ? ` · ${r.destination_label}` : ""}</span>
+                    <span className="adm-muted">{requestTypeLabels[r.type]} · {languageLabel(r.locale)}{r.destination_label ? ` · ${r.destination_label}` : ""}</span>
                     <br />
                     <span dir="auto">{r.summary}</span>
                     {r.needs_review && <span className="adm-badge adm-badge--review">Confirm: {reviewLabels[r.needs_review]}</span>}

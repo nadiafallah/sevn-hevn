@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import type { AiExtraction } from "./engine";
-import type { Locale } from "./i18n";
+import { localeEnglishNames, type Locale } from "./i18n";
 import type { aiConfig } from "./config";
 
 /**
@@ -62,7 +62,7 @@ export async function aiExtract(cfg: Config, text: string, locale: Locale): Prom
       output_config: { effort: "low", format: betaZodOutputFormat(ExtractionSchema) },
       system: EXTRACT_SYSTEM,
       messages: [
-        { role: "user", content: `Conversation language: ${locale === "ar" ? "Arabic" : "English"}\n<customer_message>\n${text.slice(0, 1000)}\n</customer_message>` },
+        { role: "user", content: `Conversation language: ${localeEnglishNames[locale]}\n<customer_message>\n${text.slice(0, 1000)}\n</customer_message>` },
       ],
     });
     if (msg.stop_reason === "refusal" || !msg.parsed_output) return null;
@@ -98,7 +98,7 @@ export async function aiDescribePhoto(cfg: Config, jpeg: Uint8Array, locale: Loc
           role: "user",
           content: [
             { type: "image", source: { type: "base64", media_type: "image/jpeg", data: Buffer.from(jpeg).toString("base64") } },
-            { type: "text", text: `Language for the description: ${locale === "ar" ? "Arabic" : "English"}.` },
+            { type: "text", text: `Language for the description: ${localeEnglishNames[locale]}.` },
           ],
         },
       ],
