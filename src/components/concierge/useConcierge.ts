@@ -50,8 +50,8 @@ function writeStored(v: Stored | null) {
 
 const newId = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/[^A-Za-z0-9_-]/g, "");
 
-export function useConcierge(source: "widget" | "page", active: boolean) {
-  const [locale, setLocale] = useState<Locale>("en");
+export function useConcierge(source: "widget" | "page", active: boolean, preferred: Locale = "en") {
+  const [locale, setLocale] = useState<Locale>(preferred);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "busy" | "unavailable">("loading");
@@ -72,8 +72,8 @@ export function useConcierge(source: "widget" | "page", active: boolean) {
     if (!active || booted.current) return;
     booted.current = true;
     const stored = readStored();
-    // English unless the customer chose Arabic earlier in this conversation.
-    const l = stored?.locale ?? "en";
+    // The site's language (Arabic or English) unless the customer switched earlier in this conversation.
+    const l = stored?.locale ?? preferred;
     setLocale(l);
     (async () => {
       try {
@@ -116,7 +116,7 @@ export function useConcierge(source: "widget" | "page", active: boolean) {
         setError("start_failed");
       }
     })();
-  }, [active, showIntro, bootAttempt]);
+  }, [active, showIntro, bootAttempt, preferred]);
 
   const retryStart = useCallback(() => {
     booted.current = false;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useI18n } from "@/i18n/I18nProvider";
 import { ArrowIcon } from "./icons";
 
 /**
@@ -9,12 +10,15 @@ import { ArrowIcon } from "./icons";
  */
 export function EditRail({ label, children }: { label: string; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
+  const { t } = useI18n();
   const [edges, setEdges] = useState({ start: true, end: false });
 
   const update = useCallback(() => {
     const el = ref.current;
     if (!el) return;
-    setEdges({ start: el.scrollLeft < 8, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 8 });
+    // In right-to-left pages scrollLeft runs from 0 towards negative values.
+    const x = Math.abs(el.scrollLeft);
+    setEdges({ start: x < 8, end: x + el.clientWidth >= el.scrollWidth - 8 });
   }, []);
 
   useEffect(() => {
@@ -35,16 +39,17 @@ export function EditRail({ label, children }: { label: string; children: ReactNo
     const card = el.querySelector<HTMLElement>(":scope > *");
     const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollBy({ left: dir * ((card?.offsetWidth ?? el.clientWidth * 0.8) + gap), behavior: reduce ? "auto" : "smooth" });
+    const rtl = getComputedStyle(el).direction === "rtl" ? -1 : 1;
+    el.scrollBy({ left: rtl * dir * ((card?.offsetWidth ?? el.clientWidth * 0.8) + gap), behavior: reduce ? "auto" : "smooth" });
   }
 
   return (
     <div className="rail">
       <div className="rail__controls">
-        <button type="button" className="rail__btn rail__btn--prev" onClick={() => step(-1)} disabled={edges.start} aria-label="Previous pieces">
+        <button type="button" className="rail__btn rail__btn--prev" onClick={() => step(-1)} disabled={edges.start} aria-label={t.rail.prev}>
           <ArrowIcon size={16} />
         </button>
-        <button type="button" className="rail__btn" onClick={() => step(1)} disabled={edges.end} aria-label="More pieces">
+        <button type="button" className="rail__btn" onClick={() => step(1)} disabled={edges.end} aria-label={t.rail.next}>
           <ArrowIcon size={16} />
         </button>
       </div>

@@ -1,29 +1,41 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { indexingEnabled, site } from "@/config/site";
-import { categoryById, isCategoryId } from "@/data/taxonomy";
+import { isCategoryId } from "@/data/taxonomy";
+import { isLocale, languageAlternates, localePath } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionaries";
+import { fmt } from "@/i18n/format";
 import { getCatalog, getItem, isGenuine } from "@/lib/catalog";
+import { localizeItem } from "@/lib/localize";
 import { CollectionView } from "@/components/CollectionView";
 
-type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
+type Props = PageProps<"/[locale]/collection">;
 
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
-export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) return {};
+  const t = getDictionary(locale);
   const sp = await searchParams;
-  const item = await getItem(first(sp.item));
+  const found = await getItem(first(sp.item));
 
-  if (item) {
+  if (found) {
+    const item = localizeItem(found, locale);
     const title = item.brand ? `${item.brand} ${item.name}` : item.name;
     const genuine = isGenuine(item);
     const description = genuine
-      ? `${title}${item.modelReference ? `, ref. ${item.modelReference}` : ""}. ${item.description ?? ""} Enquire with SEVN HEVN in Dubai.`.trim()
-      : `Editorial preview: ${item.description ?? title}. AI-generated mood imagery, not an item for sale. Request a similar piece from SEVN HEVN in Dubai.`;
+      ? fmt(t.meta.itemDescription, { title, ref: item.modelReference ? fmt(t.meta.itemRef, { ref: item.modelReference }) : "", description: item.description ?? "" })
+          .replace(/\s+/g, " ")
+          .trim()
+      : fmt(t.meta.previewDescription, { description: item.description ?? title });
     const image = item.images[0];
-    const url = `/collection?item=${encodeURIComponent(item.ref)}`;
+    const path = `/collection?item=${encodeURIComponent(item.ref)}`;
+    const url = localePath(locale, path);
     return {
-      title: genuine ? title : `${title} — Editorial preview`,
+      title: genuine ? title : fmt(t.meta.previewTitle, { title }),
       description,
-      alternates: { canonical: genuine ? url : "/collection" },
+      alternates: genuine ? { canonical: url, languages: languageAlternates(path) } : { canonical: localePath(locale, "/collection"), languages: languageAlternates("/collection") },
       // Editorial previews are not items; keep them out of search results.
       robots: indexingEnabled && genuine ? { index: true, follow: true } : { index: false, follow: true },
       openGraph: {
@@ -37,22 +49,27 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   }
 
   const cat = first(sp.category);
-  const label = isCategoryId(cat) ? categoryById[cat].label : null;
-  const title = label ? `${label} — Collection` : "The Collection";
+  const label = isCategoryId(cat) ? t.ui.categories[cat] : null;
+  const title = label ? fmt(t.meta.categoryTitle, { category: label }) : t.meta.collectionTitle;
+  const path = label ? `/collection?category=${cat}` : "/collection";
   return {
     title,
-    description: `${label ?? "Bags, watches, shoes and accessories"} at SEVN HEVN, Dubai. Browse the collection, enquire on WhatsApp or request a piece we don’t list.`,
-    alternates: { canonical: label ? `/collection?category=${cat}` : "/collection" },
-    openGraph: { title: `${title} | SEVN HEVN`, url: "/collection", images: ["/og-image.jpg"] },
+    description: fmt(t.meta.collectionDescription, { subject: label ?? t.meta.collectionSubject }),
+    alternates: { canonical: localePath(locale, path), languages: languageAlternates(path) },
+    openGraph: { title: `${title} | SEVN HEVN`, url: localePath(locale, path), images: ["/og-image.jpg"] },
   };
 }
 
-export default async function CollectionPage({ searchParams }: Props) {
+export default async function CollectionPage({ params, searchParams }: Props) {
+  const { locale } = await params;
+  if (!isLocale(locale)) notFound();
   const sp = await searchParams;
-  const items = await getCatalog();
-  const item = await getItem(first(sp.item));
+  const items = (await getCatalog()).map((i) => localizeItem(i, locale));
+  const found = await getItem(first(sp.item));
+  const item = found ? localizeItem(found, locale) : undefined;
 
   // Product structured data only for genuine, non-demo items — never editorial previews.
+  // Name, brand, reference, price and currency are the same in every language.
   const jsonLd =
     item && isGenuine(item)
       ? {
@@ -60,6 +77,7 @@ export default async function CollectionPage({ searchParams }: Props) {
           "@type": "Product",
           name: item.brand ? `${item.brand} ${item.name}` : item.name,
           sku: item.ref,
+          inLanguage: locale,
           ...(item.brand ? { brand: { "@type": "Brand", name: item.brand } } : {}),
           ...(item.modelReference ? { mpn: item.modelReference } : {}),
           ...(item.description ? { description: item.description } : {}),
@@ -71,7 +89,7 @@ export default async function CollectionPage({ searchParams }: Props) {
                   price: item.priceAED,
                   priceCurrency: "AED",
                   availability: "https://schema.org/InStock",
-                  url: `${site.url}/collection?item=${encodeURIComponent(item.ref)}`,
+                  url: `${site.url}${localePath(locale, `/collection?item=${encodeURIComponent(item.ref)}`)}`,
                   seller: { "@type": "Organization", name: site.name },
                 },
               }

@@ -4,8 +4,10 @@ import { useState } from "react";
 import { emailUrl, whatsappUrl } from "@/lib/whatsapp";
 import { track } from "@/lib/analytics";
 import { site } from "@/config/site";
+import { useI18n } from "@/i18n/I18nProvider";
+import { interpolate } from "@/i18n/rich";
 import { WhatsAppIcon } from "./icons";
-import { WebsiteSend, type SentEnquiry, type WebsiteSendRequest } from "./WebsiteSend";
+import { WebsiteSend, methodKey, type SentEnquiry, type WebsiteSendRequest } from "./WebsiteSend";
 
 /**
  * Shown after a form validates. Nothing has been sent at this point: the customer
@@ -28,33 +30,42 @@ export function Handoff({
   send?: WebsiteSendRequest;
   tone?: "light" | "dark";
 }) {
+  const { t } = useI18n();
+  const h = t.handoff;
   const [opened, setOpened] = useState(false);
   const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle");
   const [sent, setSent] = useState<SentEnquiry | null>(null);
+  const phone = (
+    <a href={site.contact.telHref} dir="ltr">
+      {site.contact.phoneDisplay}
+    </a>
+  );
 
   if (sent) {
     return (
       <div className="handoff" role="status" aria-live="polite">
-        <p className="eyebrow">Request received</p>
+        <p className="eyebrow">{h.receivedEyebrow}</p>
         <p className="handoff__lead">
-          Thank you. SEVN HEVN has received your request — reference <strong>{sent.reference}</strong>. We’ll reply personally by{" "}
-          {sent.method === "Email" ? "email" : sent.method === "Phone call" ? "phone" : "WhatsApp"} at {sent.contactValue}.
+          {interpolate(h.received, {
+            ref: (
+              <strong>
+                <bdi dir="ltr">{sent.reference}</bdi>
+              </strong>
+            ),
+            method: h.methodsInline[methodKey[sent.method]],
+            contact: <bdi dir="ltr">{sent.contactValue}</bdi>,
+          })}
         </p>
-        <p className="handoff__note">
-          Please quote the reference if you contact us about this request. For anything urgent, call{" "}
-          <a href={site.contact.telHref}>{site.contact.phoneDisplay}</a>.
-        </p>
+        <p className="handoff__note">{interpolate(h.quoteRef, { phone })}</p>
       </div>
     );
   }
 
   return (
     <div className="handoff" role="status" aria-live="polite">
-      <p className="eyebrow">Your message is ready</p>
-      <p className="handoff__lead">
-        Nothing has been sent yet. Open WhatsApp with your prepared message, then press <strong>Send</strong> there to reach our team.
-      </p>
-      <pre className="handoff__preview" tabIndex={0} aria-label="Prepared message">
+      <p className="eyebrow">{h.readyEyebrow}</p>
+      <p className="handoff__lead">{interpolate(h.readyLead, { send: <strong>{h.send}</strong> })}</p>
+      <pre className="handoff__preview" tabIndex={0} aria-label={h.preparedMessage} dir="auto">
         {message}
       </pre>
       <div className="handoff__actions">
@@ -68,17 +79,22 @@ export function Handoff({
             track("whatsapp_click", { source });
           }}
         >
-          <WhatsAppIcon size={18} /> Open WhatsApp to send
+          <WhatsAppIcon size={18} /> {h.openWhatsApp}
         </a>
         <a className="btn btn--line" href={emailUrl(emailSubject, message)} onClick={() => track("email_click", { source })}>
-          Email instead
+          {h.emailInstead}
         </a>
       </div>
       {opened && (
         <p className="handoff__note">
-          WhatsApp should have opened in a new tab or app. If it didn’t, email us at{" "}
-          <a href={site.contact.emailHref}>{site.contact.email}</a> or call{" "}
-          <a href={site.contact.telHref}>{site.contact.phoneDisplay}</a>.
+          {interpolate(h.opened, {
+            email: (
+              <a href={site.contact.emailHref} dir="ltr">
+                {site.contact.email}
+              </a>
+            ),
+            phone,
+          })}
         </p>
       )}
       {send && <WebsiteSend send={send} tone={tone} onSent={setSent} />}
@@ -95,10 +111,10 @@ export function Handoff({
             }
           }}
         >
-          {copied === "done" ? "Copied" : copied === "failed" ? "Copy unavailable — select the text above" : "Copy message"}
+          {copied === "done" ? h.copied : copied === "failed" ? h.copyFailed : h.copy}
         </button>
         <button type="button" className="link-btn" onClick={onEdit}>
-          Edit request
+          {h.edit}
         </button>
       </div>
     </div>

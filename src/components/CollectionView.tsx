@@ -3,8 +3,11 @@
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { Item } from "@/data/types";
-import { conditionLabels, statusLabels } from "@/data/types";
-import { categories, categoryById, isCategoryId } from "@/data/taxonomy";
+import { categories, isCategoryId } from "@/data/taxonomy";
+import { useI18n } from "@/i18n/I18nProvider";
+import { rich } from "@/i18n/rich";
+import type { Plural } from "@/i18n/format";
+import { formatAED } from "@/lib/format";
 import { track } from "@/lib/analytics";
 import { ItemCard } from "./ItemCard";
 import { Dialog } from "./Dialog";
@@ -12,24 +15,25 @@ import { ProductDetail } from "./ProductDetail";
 import { useSite } from "./SiteProvider";
 import { SearchIcon } from "./icons";
 
+// Amounts read the same in every language ("AED 20,000"); only the words around them are translated.
 const PRICE_BANDS = [
-  { id: "under-20k", label: "Under AED 20,000", test: (p: number) => p < 20_000 },
-  { id: "20k-50k", label: "AED 20,000 – 50,000", test: (p: number) => p >= 20_000 && p < 50_000 },
-  { id: "50k-100k", label: "AED 50,000 – 100,000", test: (p: number) => p >= 50_000 && p < 100_000 },
-  { id: "100k-plus", label: "AED 100,000 and above", test: (p: number) => p >= 100_000 },
-];
+  { id: "under-20k", kind: "under", a: 20_000, test: (p: number) => p < 20_000 },
+  { id: "20k-50k", kind: "between", a: 20_000, b: 50_000, test: (p: number) => p >= 20_000 && p < 50_000 },
+  { id: "50k-100k", kind: "between", a: 50_000, b: 100_000, test: (p: number) => p >= 50_000 && p < 100_000 },
+  { id: "100k-plus", kind: "above", a: 100_000, test: (p: number) => p >= 100_000 },
+] as const;
 
 const FILTER_KEYS = ["category", "designer", "availability", "condition", "price"] as const;
 
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+type Words = { results: Plural; previews: Plural; resultsBoth: string };
 
 /** Editorial previews are not for sale, so they are never counted as "pieces". */
-function resultCount(list: Item[]) {
+function resultCount(list: Item[], w: Words, plural: (n: number, forms: Plural) => string) {
   const previews = list.filter((i) => i.status === "editorial_preview").length;
   const pieces = list.length - previews;
-  if (previews === 0) return plural(pieces, "piece", "pieces");
-  const p = plural(previews, "editorial preview", "editorial previews");
-  return pieces === 0 ? p : `${plural(pieces, "piece", "pieces")} · ${p}`;
+  if (previews === 0) return plural(pieces, w.results);
+  const p = plural(previews, w.previews);
+  return pieces === 0 ? p : w.resultsBoth.replace("{pieces}", plural(pieces, w.results)).replace("{previews}", p);
 }
 type FilterKey = (typeof FILTER_KEYS)[number];
 
@@ -37,15 +41,18 @@ function normalise(s: string) {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
-function haystack(item: Item) {
+/** Searchable text: the shown wording, the English wording (searchText) and the category name. */
+function haystack(item: Item, categoryName?: string) {
   return normalise(
-    [item.name, item.brand, item.modelReference, item.ref, item.colour, item.material, item.subcategory, categoryById[item.category]?.label, item.description].filter(Boolean).join(" "),
+    [item.name, item.brand, item.modelReference, item.ref, item.colour, item.material, item.subcategory, categoryName, item.category, item.description, item.searchText].filter(Boolean).join(" "),
   );
 }
 
 export function CollectionView({ items }: { items: Item[] }) {
   const params = useSearchParams();
   const { openPanel } = useSite();
+  const { t, fmt, plural } = useI18n();
+  const c = t.collection;
   const searchId = useId();
   const resultsRef = useRef<HTMLParagraphElement>(null);
 
@@ -90,11 +97,17 @@ export function CollectionView({ items }: { items: Item[] }) {
       designer: uniq(items.map((i) => i.brand))
         .sort()
         .map((b) => ({ id: b, label: b })),
-      availability: uniq(items.map((i) => i.status)).map((s) => ({ id: s, label: statusLabels[s] })),
-      condition: uniq(items.map((i) => i.condition)).map((c) => ({ id: c, label: conditionLabels[c] })),
-      price: priced.length >= 2 ? PRICE_BANDS.filter((b) => priced.some((i) => b.test(i.priceAED!))).map(({ id, label }) => ({ id, label })) : [],
+      availability: uniq(items.map((i) => i.status)).map((s) => ({ id: s, label: t.statuses[s] })),
+      condition: uniq(items.map((i) => i.condition)).map((k) => ({ id: k, label: t.conditions[k] })),
+      price:
+        priced.length >= 2
+          ? PRICE_BANDS.filter((b) => priced.some((i) => b.test(i.priceAED!))).map((b) => ({
+              id: b.id,
+              label: fmt(c.priceBands[b.kind], { a: formatAED(b.a), b: "b" in b ? b.b.toLocaleString("en-US") : "" }),
+            }))
+          : [],
     };
-  }, [items]);
+  }, [items, t, c, fmt]);
 
   const hasPrices = options.price.length > 0;
 
@@ -108,7 +121,7 @@ export function CollectionView({ items }: { items: Item[] }) {
       if (selected.condition && i.condition !== selected.condition) return false;
       if (band && !(i.priceAED && band.test(i.priceAED))) return false;
       if (terms.length) {
-        const h = haystack(i);
+        const h = haystack(i, isCategoryId(i.category) ? t.categories[i.category] : undefined);
         if (!terms.every((t) => h.includes(t))) return false;
       }
       return true;
@@ -127,7 +140,7 @@ export function CollectionView({ items }: { items: Item[] }) {
       if (sort === "newest") return (b.listedAt ?? "").localeCompare(a.listedAt ?? "");
       return rank(a) - rank(b);
     });
-  }, [items, query, selected.category, selected.designer, selected.availability, selected.condition, selected.price, sort]);
+  }, [items, query, selected.category, selected.designer, selected.availability, selected.condition, selected.price, sort, t]);
 
   const hasGenuine = items.some((i) => i.status !== "editorial_preview" && !i.demo);
   const activeFilters = FILTER_KEYS.filter((k) => selected[k]);
@@ -186,33 +199,28 @@ export function CollectionView({ items }: { items: Item[] }) {
     else navigate((p) => p.delete("item"), "replace");
   }
 
-  const categoryLabel = isCategoryId(selected.category) ? categoryById[selected.category].label : null;
+  const categoryId = isCategoryId(selected.category) ? selected.category : null;
+  const categoryLabel = categoryId ? t.categories[categoryId] : null;
   const selectGroups: { key: Exclude<FilterKey, "category">; label: string }[] = [
-    { key: "designer", label: "Designer" },
-    { key: "availability", label: "Availability" },
-    { key: "condition", label: "Condition" },
-    { key: "price", label: "Price" },
+    { key: "designer", label: c.filters.designer },
+    { key: "availability", label: c.filters.availability },
+    { key: "condition", label: c.filters.condition },
+    { key: "price", label: c.filters.price },
   ];
+  const count = resultCount(results, c, plural);
 
   return (
     <>
       <div className="coll-head container">
         <div className="coll-head__title">
-          <p className="eyebrow">SEVN HEVN · {categoryLabel ?? "All pieces"}</p>
-          <h1 className="display display--sm">
-            {categoryLabel ?? (
-              <>
-                The <em>Collection</em>
-              </>
-            )}
-          </h1>
+          <p className="eyebrow">{fmt(c.eyebrow, { label: categoryLabel ?? c.allPieces })}</p>
+          <h1 className="display display--sm">{categoryLabel ?? rich(c.title)}</h1>
         </div>
         {!hasGenuine && (
           <p className="coll-head__note">
-            Listings of available pieces will appear here, with real photographs, condition and prices. Until then, the images below are AI-generated editorial previews — not items
-            for sale.{" "}
+            {c.note}{" "}
             <button type="button" className="link-btn" onClick={() => openPanel({ type: "sourcing" })}>
-              Looking for something specific? Request a piece.
+              {c.noteLink}
             </button>
           </p>
         )}
@@ -222,9 +230,9 @@ export function CollectionView({ items }: { items: Item[] }) {
         <div className="container">
           <div className="notice" role="status">
             <p>
-              We couldn’t find the piece “{itemRef}”. It may have been sold or removed.{" "}
-              <button type="button" className="link-btn" onClick={() => openPanel({ type: "sourcing", prefill: { details: `Reference ${itemRef}` } })}>
-                Ask us about it
+              {fmt(c.notFound, { ref: itemRef })}{" "}
+              <button type="button" className="link-btn" onClick={() => openPanel({ type: "sourcing", prefill: { details: fmt(c.referencePrefill, { ref: itemRef }) } })}>
+                {c.askAbout}
               </button>
             </p>
           </div>
@@ -233,13 +241,13 @@ export function CollectionView({ items }: { items: Item[] }) {
 
       <div className="coll-bar">
         <div className="container coll-bar__inner">
-          <nav aria-label="Categories" className="coll-tabs">
+          <nav aria-label={t.nav.categories} className="coll-tabs">
             <button type="button" aria-pressed={!selected.category} onClick={() => setFilter("category", "")}>
-              All
+              {c.all}
             </button>
-            {categories.map((c) => (
-              <button key={c.id} type="button" aria-pressed={selected.category === c.id} onClick={() => setFilter("category", c.id)}>
-                {c.label}
+            {categories.map((cat) => (
+              <button key={cat.id} type="button" aria-pressed={selected.category === cat.id} onClick={() => setFilter("category", cat.id)}>
+                {t.categories[cat.id]}
               </button>
             ))}
           </nav>
@@ -247,10 +255,10 @@ export function CollectionView({ items }: { items: Item[] }) {
           <div className="coll-tools">
             <form role="search" className="coll-search" onSubmit={(e) => e.preventDefault()}>
               <label htmlFor={searchId} className="visually-hidden">
-                Search the collection
+                {c.searchLabel}
               </label>
               <SearchIcon size={18} />
-              <input id={searchId} type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" maxLength={80} enterKeyHint="search" />
+              <input id={searchId} type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={c.searchPlaceholder} maxLength={80} enterKeyHint="search" dir="auto" />
             </form>
 
             {selectGroups
@@ -259,7 +267,7 @@ export function CollectionView({ items }: { items: Item[] }) {
                 <label key={g.key} className="coll-select">
                   <span className="visually-hidden">{g.label}</span>
                   <select value={selected[g.key]} onChange={(e) => setFilter(g.key, e.target.value)}>
-                    <option value="">{g.label}: all</option>
+                    <option value="">{fmt(c.filterAll, { label: g.label })}</option>
                     {options[g.key].map((o) => (
                       <option key={o.id} value={o.id}>
                         {o.label}
@@ -271,12 +279,12 @@ export function CollectionView({ items }: { items: Item[] }) {
 
             {(hasPrices || items.some((i) => i.listedAt)) && (
               <label className="coll-select">
-                <span className="visually-hidden">Sort</span>
+                <span className="visually-hidden">{c.sort}</span>
                 <select value={sort} onChange={(e) => setFilter("sort", e.target.value)}>
-                  <option value="">Sort: featured</option>
-                  {items.some((i) => i.listedAt) && <option value="newest">Newest</option>}
-                  {hasPrices && <option value="price-asc">Price: low to high</option>}
-                  {hasPrices && <option value="price-desc">Price: high to low</option>}
+                  <option value="">{c.sortFeatured}</option>
+                  {items.some((i) => i.listedAt) && <option value="newest">{c.newest}</option>}
+                  {hasPrices && <option value="price-asc">{c.priceAsc}</option>}
+                  {hasPrices && <option value="price-desc">{c.priceDesc}</option>}
                 </select>
               </label>
             )}
@@ -287,12 +295,11 @@ export function CollectionView({ items }: { items: Item[] }) {
       <section className="container coll-results" aria-labelledby="results-count">
         <div className="coll-results__meta">
           <p id="results-count" ref={resultsRef} aria-live="polite">
-            {resultCount(results)}
-            {query.trim() && <> for “{query.trim()}”</>}
+            {query.trim() ? fmt(c.resultsFor, { results: count, query: query.trim() }) : count}
           </p>
           {(activeFilters.length > 0 || query) && (
             <button type="button" className="link-btn" onClick={clearAll}>
-              Clear all
+              {c.clearAll}
             </button>
           )}
         </div>
@@ -305,10 +312,8 @@ export function CollectionView({ items }: { items: Item[] }) {
           </div>
         ) : (
           <div className="empty">
-            <h2 className="h3">{categoryLabel && !query.trim() && activeFilters.length === 1 ? `No ${categoryLabel.toLowerCase()} listed yet.` : "Nothing here matches — yet."}</h2>
-            <p>
-              Tell us what you’re looking for and our team will see what’s possible. We’ll prepare a WhatsApp message with your request for you to send.
-            </p>
+            <h2 className="h3">{categoryId && !query.trim() && activeFilters.length === 1 ? c.emptyCategory[categoryId] : c.emptyTitle}</h2>
+            <p>{c.emptyText}</p>
             <div className="stack-actions">
               <button
                 type="button"
@@ -320,17 +325,17 @@ export function CollectionView({ items }: { items: Item[] }) {
                   })
                 }
               >
-                Request this piece
+                {c.requestThis}
               </button>
               <button type="button" className="btn btn--line" onClick={clearAll}>
-                Clear filters
+                {c.clearFilters}
               </button>
             </div>
           </div>
         )}
       </section>
 
-      <Dialog open={!!openItem} onClose={close} title={openItem ? (openItem.brand ? `${openItem.brand} ${openItem.name}` : openItem.name) : "Piece"} variant="wide" hideTitle>
+      <Dialog open={!!openItem} onClose={close} title={openItem ? (openItem.brand ? `${openItem.brand} ${openItem.name}` : openItem.name) : c.piece} variant="wide" hideTitle>
         {openItem && <ProductDetail item={openItem} />}
       </Dialog>
 

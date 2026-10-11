@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { findItem, getCatalog, isGenuine } from "@/lib/catalog";
 import { formatAED, maxQuantity } from "@/lib/format";
 import { getPaymentProvider, type CheckoutLine } from "@/lib/payments";
+import { isLocale, localePath } from "@/i18n/config";
 
 export const dynamic = "force-dynamic";
 
-type Issue = { ref: string; code: "not_found" | "not_for_sale" | "demo_item" | "insufficient_stock" | "invalid_quantity"; message: string };
+/** `message` is English for logs; the site shows its own wording for `code` in the visitor's language. */
+type Issue = { ref: string; code: "not_found" | "not_for_sale" | "demo_item" | "insufficient_stock" | "invalid_quantity"; message: string; max?: number };
 
 const MAX_LINES = 20;
 const MAX_BODY_BYTES = 4_000;
@@ -51,7 +53,7 @@ export async function POST(request: Request) {
       continue;
     }
     if (!Number.isInteger(qty) || qty < 1 || qty > maxQuantity(item)) {
-      issues.push({ ref: item.ref, code: "invalid_quantity", message: `Only ${maxQuantity(item)} can be ordered.` });
+      issues.push({ ref: item.ref, code: "invalid_quantity", message: `Only ${maxQuantity(item)} can be ordered.`, max: maxQuantity(item) });
       continue;
     }
     if ((item.stock ?? 0) < qty) {
@@ -79,11 +81,13 @@ export async function POST(request: Request) {
   }
 
   const origin = new URL(request.url).origin;
+  const lang = (body as { locale?: unknown })?.locale;
+  const collection = localePath(isLocale(lang) ? lang : "en", "/collection");
   const session = await provider.createCheckoutSession({
     lines,
     totalAED,
-    successUrl: `${origin}/collection?checkout=return`,
-    cancelUrl: `${origin}/collection?checkout=cancelled`,
+    successUrl: `${origin}${collection}?checkout=return`,
+    cancelUrl: `${origin}${collection}?checkout=cancelled`,
     idempotencyKey: crypto.randomUUID(),
   });
   return NextResponse.json({ redirectUrl: session.redirectUrl });

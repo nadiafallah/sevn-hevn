@@ -1,3 +1,4 @@
+import type { Locale } from "@/i18n/config";
 import type { CategoryId } from "./taxonomy";
 
 /**
@@ -62,21 +63,31 @@ export interface Item {
   editorialNote?: string;
   /** One-line mood caption for editorial previews (from the homepage concept). */
   tagline?: string;
+  /**
+   * Descriptive text in other languages (Arabic, Russian, French). Brand, model reference, price,
+   * stock, year and condition grade are never translated. Missing fields fall back to English.
+   */
+  translations?: Partial<Record<Exclude<Locale, "en">, ItemText>>;
+  /** Set by localizeItem: the English and translated wording, so search works in either. */
+  searchText?: string;
 }
 
-export const conditionLabels: Record<Condition, string> = {
-  new: "New",
-  unworn: "Unworn",
-  excellent: "Excellent",
-  very_good: "Very good",
-  good: "Good",
-  fair: "Fair",
-};
-
-export const statusLabels: Record<ItemStatus, string> = {
-  editorial_preview: "Editorial preview",
-  enquiry_only: "Enquire",
-  available: "Available",
-  reserved: "Reserved",
-  sold: "Sold",
-};
+/** The translatable, descriptive fields of an item. */
+export interface ItemText {
+  name?: string;
+  description?: string;
+  tagline?: string;
+  editorialNote?: string;
+  subcategory?: string;
+  colour?: string;
+  material?: string;
+  conditionNotes?: string;
+  size?: string;
+  dimensions?: string;
+  included?: string[];
+  authentication?: string;
+  delivery?: string;
+  returns?: string;
+  /** Image descriptions, in the same order as `images`. */
+  imageAlts?: string[];
+}

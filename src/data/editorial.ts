@@ -6,6 +6,11 @@ import type { Item } from "./types";
  * cannot be added to the bag and are excluded from Product structured data.
  */
 const note = "AI-generated editorial image. Not a listed item — ask us to source something similar.";
+const notes = {
+  ar: "صورة تحريرية مولّدة بالذكاء الاصطناعي، وليست قطعة معروضة — اطلب منا البحث لك عن قطعة مشابهة.",
+  ru: "Редакционное изображение, созданное ИИ. Это не товар из коллекции — попросите нас подобрать что-то похожее.",
+  fr: "Image éditoriale générée par IA. Ce n’est pas une pièce présentée — demandez-nous d’en trouver une similaire.",
+};
 
 export const editorialPreviews: Item[] = [
   {
@@ -19,6 +24,29 @@ export const editorialPreviews: Item[] = [
     images: [{ src: "/images/editorial/bag-emerald.jpg", width: 1122, height: 1402, alt: "Emerald green grained-leather top-handle bag with gold-tone hardware on a travertine plinth" }],
     featured: true,
     editorialNote: note,
+    translations: {
+      ar: {
+        name: "زمرّد",
+        tagline: "رؤية جريئة.",
+        description: "حقيبة بمقبض علوي وتصميم متماسك من جلد محبّب بلون الزمرد العميق مع إكسسوارات ذهبية اللون.",
+        editorialNote: notes.ar,
+        imageAlts: ["حقيبة بمقبض علوي من جلد محبّب بلون الزمرد مع إكسسوارات ذهبية اللون على قاعدة من الترافرتين"],
+      },
+      ru: {
+        name: "Изумруд",
+        tagline: "Смелый взгляд.",
+        description: "Структурированная сумка с верхней ручкой из зернистой кожи глубокого изумрудного цвета с фурнитурой золотистого тона.",
+        editorialNote: notes.ru,
+        imageAlts: ["Изумрудная сумка с верхней ручкой из зернистой кожи с золотистой фурнитурой на травертиновом постаменте"],
+      },
+      fr: {
+        name: "Émeraude",
+        tagline: "Un parti pris audacieux.",
+        description: "Un sac à poignée structuré en cuir grainé vert émeraude profond, aux finitions dorées.",
+        editorialNote: notes.fr,
+        imageAlts: ["Sac à poignée en cuir grainé vert émeraude aux finitions dorées, posé sur un socle en travertin"],
+      },
+    },
   },
   {
     ref: "ED-COBALT",
@@ -31,6 +59,29 @@ export const editorialPreviews: Item[] = [
     images: [{ src: "/images/editorial/bag-cobalt.jpg", width: 1122, height: 1402, alt: "Cobalt blue leather shoulder bag with a gold-tone clasp on a travertine plinth" }],
     featured: true,
     editorialNote: note,
+    translations: {
+      ar: {
+        name: "كوبالت",
+        tagline: "لمسة أكثر من اللون.",
+        description: "حقيبة كتف صغيرة من جلد بلون الأزرق الكوبالتي الزاهي مع مشبك منحوت ذهبي اللون.",
+        editorialNote: notes.ar,
+        imageAlts: ["حقيبة كتف جلدية بالأزرق الكوبالتي مع مشبك ذهبي اللون على قاعدة من الترافرتين"],
+      },
+      ru: {
+        name: "Кобальт",
+        tagline: "Чуть больше цвета.",
+        description: "Компактная сумка на плечо из насыщенной кожи цвета кобальт со скульптурной застёжкой золотистого тона.",
+        editorialNote: notes.ru,
+        imageAlts: ["Кожаная сумка на плечо цвета кобальт с золотистой застёжкой на травертиновом постаменте"],
+      },
+      fr: {
+        name: "Cobalt",
+        tagline: "Un peu plus de couleur.",
+        description: "Un sac porté épaule compact en cuir bleu cobalt intense, au fermoir doré sculpté.",
+        editorialNote: notes.fr,
+        imageAlts: ["Sac porté épaule en cuir bleu cobalt au fermoir doré, posé sur un socle en travertin"],
+      },
+    },
   },
   {
     ref: "ED-ROSE",
@@ -43,6 +94,29 @@ export const editorialPreviews: Item[] = [
     images: [{ src: "/images/editorial/bag-rose.jpg", width: 1122, height: 1402, alt: "Rose pink grained-leather top-handle bag with gold-tone padlock on a travertine plinth" }],
     featured: true,
     editorialNote: note,
+    translations: {
+      ar: {
+        name: "وردي",
+        tagline: "حضور أكثر رقّة.",
+        description: "حضور أكثر رقّة: حقيبة بمقبض علوي باللون الوردي مع إكسسوارات ذهبية اللون.",
+        editorialNote: notes.ar,
+        imageAlts: ["حقيبة بمقبض علوي من جلد محبّب باللون الوردي مع قفل ذهبي اللون على قاعدة من الترافرتين"],
+      },
+      ru: {
+        name: "Роза",
+        tagline: "Мягкий акцент.",
+        description: "Мягкий акцент: розовая сумка с верхней ручкой и фурнитурой золотистого тона.",
+        editorialNote: notes.ru,
+        imageAlts: ["Розовая сумка с верхней ручкой из зернистой кожи с золотистым замочком на травертиновом постаменте"],
+      },
+      fr: {
+        name: "Rose",
+        tagline: "Une affirmation tout en douceur.",
+        description: "Une affirmation tout en douceur : un sac à poignée rose poudré aux finitions dorées.",
+        editorialNote: notes.fr,
+        imageAlts: ["Sac à poignée en cuir grainé rose orné d’un cadenas doré, posé sur un socle en travertin"],
+      },
+    },
   },
   {
     ref: "ED-COGNAC",
@@ -55,6 +129,29 @@ export const editorialPreviews: Item[] = [
     images: [{ src: "/images/editorial/bag-cognac.jpg", width: 1122, height: 1028, alt: "Cognac brown leather top-handle bag with contrast stitching on a travertine plinth" }],
     featured: true,
     editorialNote: note,
+    translations: {
+      ar: {
+        name: "كونياك",
+        tagline: "دافئة، هادئة، خالدة.",
+        description: "جلد دافئ بلون الكونياك، وخياطة متباينة، وقفل دوّار ذهبي اللون بأناقة هادئة.",
+        editorialNote: notes.ar,
+        imageAlts: ["حقيبة جلدية بنية بلون الكونياك بمقبض علوي وخياطة متباينة على قاعدة من الترافرتين"],
+      },
+      ru: {
+        name: "Коньяк",
+        tagline: "Тёплая, сдержанная, вне времени.",
+        description: "Тёплая кожа коньячного цвета, контрастная строчка и сдержанный поворотный замок золотистого тона.",
+        editorialNote: notes.ru,
+        imageAlts: ["Коричневая кожаная сумка коньячного цвета с верхней ручкой и контрастной строчкой на травертиновом постаменте"],
+      },
+      fr: {
+        name: "Cognac",
+        tagline: "Chaleureux, discret, intemporel.",
+        description: "Un cuir cognac chaleureux, des surpiqûres contrastées et un fermoir tournant doré tout en discrétion.",
+        editorialNote: notes.fr,
+        imageAlts: ["Sac à poignée en cuir cognac aux surpiqûres contrastées, posé sur un socle en travertin"],
+      },
+    },
   },
   {
     ref: "ED-GOLD-WATCH",
@@ -67,6 +164,29 @@ export const editorialPreviews: Item[] = [
     images: [{ src: "/images/editorial/watch-gold-rectangular.jpg", width: 1122, height: 1402, alt: "Rectangular gold-tone wristwatch with Roman numeral dial on a dark brown leather strap" }],
     featured: true,
     editorialNote: note,
+    translations: {
+      ar: {
+        name: "ساعة ذهبية مستطيلة",
+        tagline: "كلاسيكية، رفيعة، ودقيقة.",
+        description: "علبة مستطيلة رفيعة بلون ذهبي مع أرقام رومانية على سوار من الجلد البني الداكن.",
+        editorialNote: notes.ar,
+        imageAlts: ["ساعة يد مستطيلة بلون ذهبي بميناء بأرقام رومانية على سوار من الجلد البني الداكن"],
+      },
+      ru: {
+        name: "Золотистые прямоугольные часы",
+        tagline: "Классика: тонкая и точная.",
+        description: "Тонкий прямоугольный корпус золотистого тона с римскими цифрами на тёмно-коричневом кожаном ремешке.",
+        editorialNote: notes.ru,
+        imageAlts: ["Прямоугольные наручные часы золотистого тона с римскими цифрами на тёмно-коричневом кожаном ремешке"],
+      },
+      fr: {
+        name: "Montre rectangulaire dorée",
+        tagline: "Un classique, fin et précis.",
+        description: "Un boîtier rectangulaire fin et doré, à chiffres romains, sur un bracelet en cuir brun foncé.",
+        editorialNote: notes.fr,
+        imageAlts: ["Montre-bracelet rectangulaire dorée, cadran à chiffres romains, sur un bracelet en cuir brun foncé"],
+      },
+    },
   },
   {
     ref: "ED-LOAFER",
@@ -79,5 +199,28 @@ export const editorialPreviews: Item[] = [
     images: [{ src: "/images/editorial/loafer-cobalt-suede.jpg", width: 1122, height: 1402, alt: "Pair of cobalt blue suede loafers with gold-tone bit detail on a travertine plinth" }],
     featured: true,
     editorialNote: note,
+    translations: {
+      ar: {
+        name: "لوفر شامواه كوبالتي",
+        tagline: "اللون، من الأرض إلى الأعلى.",
+        description: "حذاء لوفر من الشامواه بالأزرق الكوبالتي مع تفصيل لجام ذهبي اللون.",
+        editorialNote: notes.ar,
+        imageAlts: ["زوج من أحذية اللوفر من الشامواه بالأزرق الكوبالتي مع تفصيل ذهبي اللون على قاعدة من الترافرتين"],
+      },
+      ru: {
+        name: "Замшевые лоферы цвета кобальт",
+        tagline: "Цвет — с самого начала.",
+        description: "Замшевые лоферы цвета кобальт с золотистой деталью-пряжкой.",
+        editorialNote: notes.ru,
+        imageAlts: ["Пара замшевых лоферов цвета кобальт с золотистой пряжкой на травертиновом постаменте"],
+      },
+      fr: {
+        name: "Mocassin en daim cobalt",
+        tagline: "La couleur, dès le premier pas.",
+        description: "Des mocassins en daim bleu cobalt ornés d’un mors doré.",
+        editorialNote: notes.fr,
+        imageAlts: ["Paire de mocassins en daim bleu cobalt ornés d’un mors doré, posés sur un socle en travertin"],
+      },
+    },
   },
 ];

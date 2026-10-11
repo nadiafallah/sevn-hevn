@@ -1,36 +1,34 @@
 "use client";
 
-import { useId, useRef, useState, type FormEvent } from "react";
-import { categories } from "@/data/taxonomy";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { categories, isCategoryId } from "@/data/taxonomy";
 import { site } from "@/config/site";
+import { useI18n } from "@/i18n/I18nProvider";
+import { CARRY_EVENT, takeCarriedForm, type Carry } from "@/i18n/carry";
 import { sourcingMessage } from "@/lib/whatsapp";
 import { track } from "@/lib/analytics";
 import type { SourcingPrefill } from "./SiteProvider";
 import { Handoff } from "./Handoff";
-import { contactMethods } from "./WebsiteSend";
+import { contactMethods, methodKey, type ContactMethod } from "./WebsiteSend";
 
-const budgets = [
-  "Under AED 20,000",
-  "AED 20,000 – 50,000",
-  "AED 50,000 – 100,000",
-  "AED 100,000 – 250,000",
-  "Above AED 250,000",
-  "Prefer to discuss",
-];
-
-const categoryLabel = (id: string) => categories.find((c) => c.id === id)?.label ?? id;
+const budgetIds = ["under-20k", "20k-50k", "50k-100k", "100k-250k", "250k-plus", "discuss"] as const;
+const timingIds = ["asap", "months", "none"] as const;
 
 type Errors = Partial<Record<"category" | "describe" | "contactValue", string>>;
+type Values = { category: string; brand: string; model: string; details: string; budget: string; timing: string; name: string; contactValue: string };
+type Carried = { values: Values; method: ContactMethod; prepared: boolean };
 
-export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPrefill; tone?: "light" | "dark" }) {
+export function SourcingForm({ prefill, tone = "light", carryKey }: { prefill?: SourcingPrefill; tone?: "light" | "dark"; carryKey?: string }) {
+  const { t, locale } = useI18n();
+  const f = t.forms;
   const uid = useId();
   const formRef = useRef<HTMLFormElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const [errors, setErrors] = useState<Errors>({});
-  const [message, setMessage] = useState<string | null>(null);
-  const [method, setMethod] = useState<(typeof contactMethods)[number]>("WhatsApp");
-  const [values, setValues] = useState(() => ({
-    category: prefill?.category ?? "",
+  const [prepared, setPrepared] = useState(false);
+  const [method, setMethod] = useState<ContactMethod>("WhatsApp");
+  const [values, setValues] = useState<Values>(() => ({
+    category: isCategoryId(prefill?.category) ? prefill.category : "",
     brand: prefill?.brand ?? "",
     model: prefill?.model ?? "",
     details: prefill?.details ?? "",
@@ -40,16 +38,41 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
     contactValue: "",
   }));
 
-  const set = (k: keyof typeof values) => (e: { target: { value: string } }) => setValues((v) => ({ ...v, [k]: e.target.value }));
+  // Language change: hand the typed fields over to the page in the new language, and take them back.
+  const latest = useRef<Carried>({ values, method, prepared });
+  useEffect(() => {
+    latest.current = { values, method, prepared };
+  }, [values, method, prepared]);
+  useEffect(() => {
+    if (!carryKey) return;
+    const back = takeCarriedForm<Carried>(carryKey);
+    if (back?.values) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setValues((v) => ({ ...v, ...back.values }));
+      if (contactMethods.includes(back.method)) setMethod(back.method);
+      setPrepared(!!back.prepared);
+    }
+    const give = (e: Event) => {
+      (e as CustomEvent<Carry>).detail.forms[carryKey] = latest.current;
+    };
+    window.addEventListener(CARRY_EVENT, give);
+    return () => window.removeEventListener(CARRY_EVENT, give);
+  }, [carryKey]);
+
+  const set = (k: keyof Values) => (e: { target: { value: string } }) => setValues((v) => ({ ...v, [k]: e.target.value }));
+  const label = {
+    category: (id: string) => (isCategoryId(id) ? t.categories[id] : id),
+    budget: (id: string) => f.budgets[id as (typeof budgetIds)[number]] ?? id,
+    timing: (id: string) => f.timings[id as (typeof timingIds)[number]] ?? id,
+  };
 
   function validate(): Errors {
     const e: Errors = {};
-    if (!values.category) e.category = "Choose a category.";
-    if (!values.brand.trim() && !values.model.trim() && !values.details.trim())
-      e.describe = "Tell us the designer, model or a few details about the piece.";
+    if (!values.category) e.category = f.errors.category;
+    if (!values.brand.trim() && !values.model.trim() && !values.details.trim()) e.describe = f.errors.describe;
     const cv = values.contactValue.trim();
-    if (cv && method === "Email" && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cv)) e.contactValue = "Enter a valid email address.";
-    if (cv && method !== "Email" && !/^\+?[\d\s()-]{7,20}$/.test(cv)) e.contactValue = "Enter a valid phone number, including country code.";
+    if (cv && method === "Email" && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cv)) e.contactValue = f.errors.email;
+    if (cv && method !== "Email" && !/^\+?[\d\s()-]{7,20}$/.test(cv)) e.contactValue = f.errors.phone;
     return e;
   }
 
@@ -61,33 +84,39 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
       requestAnimationFrame(() => summaryRef.current?.focus());
       return;
     }
-    setMessage(
-      sourcingMessage({
-        ...values,
-        category: categoryLabel(values.category),
-        contactMethod: method,
-        relatedRef: prefill?.relatedRef,
-      }),
-    );
+    setPrepared(true);
     track("sourcing_prepared", { category: values.category });
   }
 
-  if (message) {
+  if (prepared) {
+    const message = sourcingMessage(
+      {
+        ...values,
+        category: label.category(values.category),
+        budget: label.budget(values.budget),
+        timing: label.timing(values.timing),
+        contactMethod: f.methods[methodKey[method]],
+        relatedRef: prefill?.relatedRef,
+      },
+      t.messages,
+      locale,
+    );
     return (
       <Handoff
         message={message}
-        emailSubject="Private sourcing request"
+        emailSubject={t.handoff.sourcingSubject}
         source="sourcing"
         tone={tone}
         send={{
           kind: "sourcing",
-          request: { category: categoryLabel(values.category), brand: values.brand, model: values.model, details: values.details, budget: values.budget, timing: values.timing, name: values.name },
+          // Ids, not labels: the team's record is written in English on the server.
+          request: { category: values.category, brand: values.brand, model: values.model, details: values.details, budget: values.budget, timing: values.timing, name: values.name },
           relatedRef: prefill?.relatedRef,
           contactMethod: method,
           contactValue: values.contactValue.trim(),
         }}
         onEdit={() => {
-          setMessage(null);
+          setPrepared(false);
           requestAnimationFrame(() => formRef.current?.querySelector<HTMLElement>("select, input")?.focus());
         }}
       />
@@ -100,13 +129,14 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
   return (
     <form ref={formRef} className={`form form--${tone}`} onSubmit={onSubmit} noValidate aria-describedby={id("help")}>
       <p id={id("help")} className="form__help">
-        Fields marked <span aria-hidden="true">*</span>
-        <span className="visually-hidden">with an asterisk</span> are required. Submitting prepares a WhatsApp message — you send it yourself.
+        {f.requiredBefore} <span aria-hidden="true">*</span>
+        <span className="visually-hidden">{f.requiredSr}</span>
+        {f.requiredAfter}
       </p>
 
       {errorList.length > 0 && (
         <div ref={summaryRef} className="form__summary" role="alert" tabIndex={-1}>
-          <p>Please check the following:</p>
+          <p>{f.checkFollowing}</p>
           <ul>
             {errorList.map((m) => (
               <li key={m}>{m}</li>
@@ -118,7 +148,7 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
       <div className="form__grid">
         <div className="field">
           <label htmlFor={id("category")}>
-            Category <span aria-hidden="true">*</span>
+            {f.category} <span aria-hidden="true">*</span>
           </label>
           <select
             id={id("category")}
@@ -128,10 +158,10 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
             aria-invalid={!!errors.category}
             aria-describedby={errors.category ? id("category-err") : undefined}
           >
-            <option value="">Select</option>
+            <option value="">{f.select}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.label}
+                {t.categories[c.id]}
               </option>
             ))}
           </select>
@@ -143,7 +173,7 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
         </div>
 
         <div className="field">
-          <label htmlFor={id("brand")}>Designer or house</label>
+          <label htmlFor={id("brand")}>{f.designer}</label>
           <input
             id={id("brand")}
             list={id("brands")}
@@ -151,7 +181,8 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
             onChange={set("brand")}
             autoComplete="off"
             maxLength={80}
-            placeholder="e.g. Hermès, Rolex"
+            dir="auto"
+            placeholder={f.designerPlaceholder}
             aria-invalid={!!errors.describe}
             aria-describedby={errors.describe ? id("describe-err") : undefined}
           />
@@ -163,26 +194,28 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
         </div>
 
         <div className="field field--wide">
-          <label htmlFor={id("model")}>Model or reference</label>
+          <label htmlFor={id("model")}>{f.model}</label>
           <input
             id={id("model")}
             value={values.model}
             onChange={set("model")}
             maxLength={120}
-            placeholder="e.g. Kelly 25, Royal Oak 15500ST"
+            dir="auto"
+            placeholder={f.modelPlaceholder}
             aria-invalid={!!errors.describe}
             aria-describedby={errors.describe ? id("describe-err") : undefined}
           />
         </div>
 
         <div className="field field--wide">
-          <label htmlFor={id("details")}>Colour, size, year or other details</label>
+          <label htmlFor={id("details")}>{f.details}</label>
           <textarea
             id={id("details")}
             value={values.details}
             onChange={set("details")}
             rows={3}
             maxLength={600}
+            dir="auto"
             aria-invalid={!!errors.describe}
             aria-describedby={errors.describe ? id("describe-err") : undefined}
           />
@@ -194,37 +227,41 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
         </div>
 
         <div className="field">
-          <label htmlFor={id("budget")}>Approximate budget</label>
+          <label htmlFor={id("budget")}>{f.budget}</label>
           <select id={id("budget")} value={values.budget} onChange={set("budget")}>
-            <option value="">Select</option>
-            {budgets.map((b) => (
-              <option key={b}>{b}</option>
+            <option value="">{f.select}</option>
+            {budgetIds.map((b) => (
+              <option key={b} value={b}>
+                {f.budgets[b]}
+              </option>
             ))}
           </select>
         </div>
 
         <div className="field">
-          <label htmlFor={id("timing")}>Timing</label>
+          <label htmlFor={id("timing")}>{f.timing}</label>
           <select id={id("timing")} value={values.timing} onChange={set("timing")}>
-            <option value="">Select</option>
-            <option>As soon as possible</option>
-            <option>Within 1–3 months</option>
-            <option>No fixed timing</option>
+            <option value="">{f.select}</option>
+            {timingIds.map((x) => (
+              <option key={x} value={x}>
+                {f.timings[x]}
+              </option>
+            ))}
           </select>
         </div>
 
         <div className="field">
-          <label htmlFor={id("name")}>Your name</label>
-          <input id={id("name")} value={values.name} onChange={set("name")} autoComplete="name" maxLength={80} />
+          <label htmlFor={id("name")}>{f.name}</label>
+          <input id={id("name")} value={values.name} onChange={set("name")} autoComplete="name" maxLength={80} dir="auto" />
         </div>
 
         <fieldset className="field field--choice">
-          <legend>Preferred contact</legend>
+          <legend>{f.preferredContact}</legend>
           <div className="choice-row">
             {contactMethods.map((m) => (
               <label key={m} className="choice">
                 <input type="radio" name={id("method")} value={m} checked={method === m} onChange={() => setMethod(m)} />
-                <span>{m}</span>
+                <span>{f.methods[methodKey[m]]}</span>
               </label>
             ))}
           </div>
@@ -232,12 +269,13 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
 
         <div className="field field--wide">
           <label htmlFor={id("contact")}>
-            {method === "Email" ? "Email address" : "Phone number"} <span className="field__optional">(optional)</span>
+            {method === "Email" ? f.emailAddress : f.phoneNumber} <span className="field__optional">{f.optional}</span>
           </label>
           <input
             id={id("contact")}
             type={method === "Email" ? "email" : "tel"}
             autoComplete={method === "Email" ? "email" : "tel"}
+            dir="ltr"
             value={values.contactValue}
             onChange={set("contactValue")}
             maxLength={120}
@@ -250,7 +288,7 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
             </p>
           ) : (
             <p className="field__hint" id={id("contact-hint")}>
-              Only needed if you’d like us to reply somewhere other than WhatsApp.
+              {f.contactHint}
             </p>
           )}
         </div>
@@ -258,11 +296,9 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
 
       <div className="form__actions">
         <button type="submit" className={`btn ${tone === "dark" ? "btn--light" : "btn--dark"}`}>
-          Prepare WhatsApp message
+          {f.prepare}
         </button>
-        <p className="form__fine">
-          We’ll reply personally. We can’t promise every piece can be found, but we will tell you honestly what is possible.
-        </p>
+        <p className="form__fine">{f.fine}</p>
       </div>
     </form>
   );

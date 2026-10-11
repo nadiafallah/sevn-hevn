@@ -5,6 +5,7 @@ import { site } from "@/config/site";
 import { dirOf, t, type Locale } from "@/lib/concierge/i18n";
 import type { Choice, Prompt } from "@/lib/concierge/types";
 import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
+import { useI18n } from "@/i18n/I18nProvider";
 import { track } from "@/lib/analytics";
 import { useSite } from "../SiteProvider";
 import { preparePhoto, useConcierge, type ChatError } from "./useConcierge";
@@ -13,9 +14,12 @@ import { preparePhoto, useConcierge, type ChatError } from "./useConcierge";
  * The SEVN HEVN concierge chat. One component and one conversation for both the floating widget
  * and the /chat page. Arabic is shown right-to-left; numbers, references and phone numbers stay
  * left-to-right. WhatsApp and phone stay one tap away at all times.
+ * The chat speaks English and Arabic. It opens in Arabic on the Arabic site and in English
+ * elsewhere (including the Russian and French sites); the customer can switch at any time.
  */
 export function ConciergeChat({ variant, onClose, active = true }: { variant: "widget" | "page"; onClose?: () => void; active?: boolean }) {
-  const chat = useConcierge(variant, active);
+  const { locale: siteLocale, t: siteText } = useI18n();
+  const chat = useConcierge(variant, active, siteLocale === "ar" ? "ar" : "en");
   const { locale, messages, prompt, status, error, pending } = chat;
   const L = t(locale);
   const uid = useId();
@@ -40,7 +44,7 @@ export function ConciergeChat({ variant, onClose, active = true }: { variant: "w
     setConsent(false);
   }, [prompt?.kind]);
 
-  const wa = whatsappUrl(generalMessage());
+  const wa = whatsappUrl(generalMessage(siteText.messages));
 
   function submitText(e?: FormEvent) {
     e?.preventDefault();

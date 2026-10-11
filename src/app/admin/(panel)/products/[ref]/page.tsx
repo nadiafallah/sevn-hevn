@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { categoryById, isCategoryId } from "@/data/taxonomy";
-import { conditionLabels, type Condition } from "@/data/types";
+import type { Condition } from "@/data/types";
 import { select } from "@/lib/concierge/db";
 import { requireStaff } from "@/lib/admin/session";
 import { Flash, one, type SP } from "@/components/admin/Flash";
 import { ProductFields } from "@/components/admin/ProductFields";
 import { ProductPhotoUpload } from "@/components/admin/ProductPhotoUpload";
-import { money, when } from "@/lib/admin/labels";
+import { conditionLabels, money, when } from "@/lib/admin/labels";
 import { PRODUCT_PHOTO_LIMIT, PRODUCT_SELECT, productImageUrl, productStatusLabel, type PanelProduct } from "@/lib/admin/products";
 import { deleteProduct, removeProductPhoto, saveProduct, setMainProductPhoto, setProductPublished } from "../../../actions";
 

@@ -4,17 +4,19 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
 import { track } from "@/lib/analytics";
+import { useI18n } from "@/i18n/I18nProvider";
 import { WhatsAppIcon } from "./icons";
 
 /** Persistent WhatsApp entry point. Hidden while any panel is open (see CSS). */
 export function WhatsAppFloat() {
+  const { t } = useI18n();
   return (
     <a
       className="wa-float"
-      href={whatsappUrl(generalMessage())}
+      href={whatsappUrl(generalMessage(t.messages))}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Chat with SEVN HEVN on WhatsApp"
+      aria-label={t.chrome.whatsapp}
       onClick={() => track("whatsapp_click", { source: "float" })}
     >
       <WhatsAppIcon size={24} />

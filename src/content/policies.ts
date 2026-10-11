@@ -1,66 +1,16 @@
 /**
- * Interim customer information. These are NOT final business policies.
- * They describe only what is true today. Replace each `body` with the approved final
- * policy text once the business confirms it, and set `final: true`.
+ * Interim customer information. These are NOT final business policies; they describe only what is
+ * true today. The wording, in every language, lives in the dictionaries (`ui.policies`) under
+ * src/i18n/dictionaries/. Replace it with the approved final policy text once the business confirms
+ * it, and set the policy to final here.
  */
 export type PolicyId = "shipping" | "returns" | "privacy" | "terms";
 
-export interface Policy {
-  id: PolicyId;
-  title: string;
-  final: boolean;
-  body: string[];
+export const policyIds: PolicyId[] = ["shipping", "returns", "privacy", "terms"];
+
+/** Final (approved) policies show no "interim notice" tag. */
+export const policyFinal: Record<PolicyId, boolean> = { shipping: false, returns: false, privacy: false, terms: false };
+
+export function isPolicyId(id: string): id is PolicyId {
+  return (policyIds as string[]).includes(id);
 }
-
-export const policies: Policy[] = [
-  {
-    id: "shipping",
-    title: "Shipping & delivery",
-    final: false,
-    body: [
-      "Our delivery policy is being finalised and will be published here.",
-      "Until then, no online orders are taken. For any piece, delivery options, timing and any costs are confirmed with you personally — on WhatsApp, by phone or by email — before you agree to a purchase.",
-      "We do not promise immediate or worldwide delivery for every piece.",
-    ],
-  },
-  {
-    id: "returns",
-    title: "Returns & refunds",
-    final: false,
-    body: [
-      "Our returns and refunds policy is being finalised and will be published here before online purchases open.",
-      "For any piece you are considering, please ask us about return eligibility before purchase — the terms that apply will be confirmed to you in writing.",
-    ],
-  },
-  {
-    id: "privacy",
-    title: "Privacy",
-    final: false,
-    body: [
-      "This notice describes how this website currently works. A full privacy policy will replace it.",
-      "When you prepare a sourcing or viewing request, your message opens in WhatsApp or your email app and you decide whether to send it. That route does not store your details on our servers.",
-      "If you instead choose “Send from the website”, the request and the contact details you give are stored in our database (hosted by Supabase) so our team can reply. Only SEVN HEVN can read them; they are used only to respond to your request.",
-      "If you use our concierge chat (the Concierge button or /chat), your messages, the contact details you give and any photos you send are stored in the same database so our team can follow up. The chat is a virtual assistant that follows set rules; prices, availability and orders are always confirmed by our team. We ask for your consent to contact you about your request; we do not use it for marketing.",
-      "Photos sent in the chat are saved again without their hidden data (such as the location where they were taken) and only our team can open them. Your browser keeps a conversation number so you can continue after reloading; a conversation can no longer be continued after 24 hours without activity.",
-      "To prevent abuse we keep a one-way hashed form of the sender’s IP address with website-sent requests and chat conversations, never the address itself.",
-      "Your bag is saved only in your own browser (local storage) so it is still there when you return. It contains item references, not personal details.",
-      "This website does not currently use advertising or analytics cookies. If that changes, we will ask for your consent first.",
-      "Like most websites, our hosting provider may keep standard technical logs (such as IP address and browser type) for security and reliability.",
-      "WhatsApp, email providers and Instagram are operated by third parties under their own privacy policies.",
-      "To ask about your information, contact us using the details on this page.",
-    ],
-  },
-  {
-    id: "terms",
-    title: "Terms",
-    final: false,
-    body: [
-      "Full terms of sale will be published before online purchases open.",
-      "Images marked “Editorial preview” are AI-generated mood imagery. They are not items for sale and do not represent a specific piece, its condition or its availability.",
-      "Listings, prices and availability are subject to confirmation. Adding a piece to your bag does not reserve it. A private viewing request is not a confirmed appointment until our team confirms it with you.",
-      "SEVN HEVN is an independent business and is not affiliated with, authorised by or endorsed by any brand mentioned on this website.",
-    ],
-  },
-];
-
-export const policyById = Object.fromEntries(policies.map((p) => [p.id, p])) as Record<PolicyId, Policy>;
