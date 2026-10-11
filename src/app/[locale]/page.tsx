@@ -4,11 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { site } from "@/config/site";
-import { isLocale, languageAlternates, localePath } from "@/i18n/config";
+import { isLocale, languageAlternates, localePath, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { rich } from "@/i18n/rich";
 import { getFeatured } from "@/lib/catalog";
 import { localizeItem } from "@/lib/localize";
+import { baseOpenGraph } from "@/lib/seo";
 import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
 import { ItemCard } from "@/components/ItemCard";
 import { EditRail } from "@/components/EditRail";
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]">): Prom
   return {
     title: { absolute: getDictionary(locale).meta.homeTitle },
     alternates: { canonical: localePath(locale, "/"), languages: languageAlternates("/") },
-    openGraph: { url: localePath(locale, "/") },
+    openGraph: { ...baseOpenGraph(locale), url: localePath(locale, "/") },
   };
 }
 
@@ -45,6 +46,15 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const featured = (await getFeatured(6)).map((i) => localizeItem(i, locale));
   const previewsOnly = featured.every((i) => i.status === "editorial_preview");
   const houses = site.sourcingBrands;
+  // Tells search engines the site's name and the other ways people write it (Google "site names").
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: site.name,
+    alternateName: site.alternateNames,
+    url: `${site.url}/`,
+    inLanguage: locales,
+  };
 
   return (
     <>
@@ -236,6 +246,8 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           <ViewingForm carryKey="viewing:home" />
         </div>
       </section>
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd).replace(/</g, "\\u003c") }} />
     </>
   );
 }

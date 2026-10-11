@@ -7,6 +7,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { fmt } from "@/i18n/format";
 import { getCatalog, getItem, isGenuine } from "@/lib/catalog";
 import { localizeItem } from "@/lib/localize";
+import { baseOpenGraph } from "@/lib/seo";
 import { CollectionView } from "@/components/CollectionView";
 
 type Props = PageProps<"/[locale]/collection">;
@@ -39,10 +40,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       // Editorial previews are not items; keep them out of search results.
       robots: indexingEnabled && genuine ? { index: true, follow: true } : { index: false, follow: true },
       openGraph: {
+        ...baseOpenGraph(locale),
         title: `${title} | SEVN HEVN`,
         description,
         url,
-        images: image ? [{ url: image.src, width: image.width, height: image.height, alt: image.alt }] : undefined,
+        ...(image && { images: [{ url: image.src, width: image.width, height: image.height, alt: image.alt }] }),
       },
       twitter: { card: "summary_large_image", title: `${title} | SEVN HEVN`, description, images: image ? [image.src] : undefined },
     };
@@ -52,11 +54,12 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const label = isCategoryId(cat) ? t.ui.categories[cat] : null;
   const title = label ? fmt(t.meta.categoryTitle, { category: label }) : t.meta.collectionTitle;
   const path = label ? `/collection?category=${cat}` : "/collection";
+  const description = fmt(t.meta.collectionDescription, { subject: label ?? t.meta.collectionSubject });
   return {
     title,
-    description: fmt(t.meta.collectionDescription, { subject: label ?? t.meta.collectionSubject }),
+    description,
     alternates: { canonical: localePath(locale, path), languages: languageAlternates(path) },
-    openGraph: { title: `${title} | SEVN HEVN`, url: localePath(locale, path), images: ["/og-image.jpg"] },
+    openGraph: { ...baseOpenGraph(locale), title: `${title} | SEVN HEVN`, description, url: localePath(locale, path) },
   };
 }
 
