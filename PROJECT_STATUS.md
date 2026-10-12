@@ -1,6 +1,6 @@
 # Project status: SEVN HEVN
 
-Last updated: 11 October 2026
+Last updated: 12 October 2026
 
 ## Website languages (Oct 2026)
 
@@ -72,10 +72,10 @@ Tests (6 Oct 2026, commit on `main`):
 - **Enquiries:** sourcing and viewing forms validate input and then hand off to WhatsApp or email, with the message prepared and correctly encoded. The site never shows a fake "sent" confirmation. Item enquiries include the name, reference and URL. A persistent WhatsApp button hides while a panel is open.
 - **Bag:** stored in localStorage; one-off pieces are limited to quantity 1. Unavailable, sold or unknown items are flagged and left out of the subtotal. The checkout API re-checks everything on the server and ignores browser prices. With no payment provider connected, it returns an honest "not available yet" message and a WhatsApp handoff.
 - **Honesty rules in data:** an item marked "available" without a price, stock or delivery details is shown as enquiry-only. The site never shows AED 0. Demo records are rejected by checkout and never included in structured data.
-- **SEO:** titles and descriptions, Open Graph image, canonical URLs, Organization JSON-LD, and Product JSON-LD for genuine items only. The sitemap is in place. Robots and `noindex` apply until `SITE_INDEXING=true`.
+- **SEO:** titles and descriptions, Open Graph image, canonical URLs, Organization JSON-LD, and Product JSON-LD for genuine items only. The sitemap is in place. Indexing is on in production since 10 Oct 2026 (`SITE_INDEXING=true`); see the Search engines section in `docs/DEPLOYMENT.md`.
 - **Security headers:** CSP, X-Frame-Options, nosniff, Referrer-Policy and HSTS.
 - **Supabase catalogue, website-sent enquiry storage, `/api/revalidate`, CI and backups:** added by a parallel session (commits eaebc6e, 0a38adc, 8b82df9). See `docs/SUPABASE.md`, `docs/DEPLOYMENT.md` and `docs/BACKUPS.md`. The Supabase project and Vercel deployment are waiting for the owner to choose a region and plan and to log in.
-- **GitHub:** private repository https://github.com/nadiafallah/sevn-hevn.
+- **GitHub:** public repository https://github.com/nadiafallah/sevn-hevn (public since 28 Sep 2026).
 
 ## Checks run (27 Sep 2026, re-run on commit 8b82df9)
 
@@ -136,4 +136,4 @@ Earlier items:
 
 - After the Supabase and Vercel work lands: re-run `npm run check` and the browser checks against the preview deployment.
 - Add real items and review the item panel with genuine data.
-- When approved, set `SITE_INDEXING=true` on production, connect the domain with the host's DNS values, and choose one canonical hostname (apex or www) with a redirect from the other.
+- Done: `SITE_INDEXING=true` on production (10 Oct 2026); `www.sevnhevn.ae` is the canonical hostname, with `sevnhevn.ae` and `sevn-hevn.vercel.app` redirecting to it.

@@ -4,7 +4,7 @@
 
 | Piece | Where |
 | --- | --- |
-| Code | Private GitHub repo `nadiafallah/sevn-hevn`, default branch `main` |
+| Code | Public GitHub repo `nadiafallah/sevn-hevn` (public since 28 Sep 2026), default branch `main` |
 | Checks | GitHub Actions `CI` on every push and pull request: migration tests, typecheck, lint, build |
 | Hosting | Vercel project `sevn-hevn` (team "nadia", Hobby plan, pre-launch), linked to the repo through the Vercel GitHub app. Production branch `main`; functions in `bom1` (Mumbai) |
 | Data | Supabase project `sevn-hevn` (ref `amjgwnuroshdqrruasmn`, Mumbai `ap-south-1`, org "nadia web vs", Free plan) |
@@ -27,9 +27,9 @@ Work on a branch, push, check the preview URL Vercel posts on the pull request, 
 
 **Only a push or merge to `main` on GitHub publishes.** Saving files on a computer, or committing without pushing, changes nothing on the live site. Each push to `main` starts a Production build automatically (about a minute); if the build fails, the previous version stays live.
 
-**Who can open what:** Vercel Authentication (Standard Protection) is on, so preview URLs and per-deployment URLs (`sevn-hevn-<hash>-nadia-ea59.vercel.app`) open only for members of the Vercel team. The production domain **`https://www.sevnhevn.ae`** (and the fallback `https://sevn-hevn.vercel.app`) is **public**, but kept out of search engines: `SITE_INDEXING=false` makes robots.txt disallow everything and adds noindex.
+**Who can open what:** Vercel Authentication (Standard Protection) is on, so preview URLs and per-deployment URLs (`sevn-hevn-<hash>-nadia-ea59.vercel.app`) open only for members of the Vercel team. The production domain **`https://www.sevnhevn.ae`** (and the fallback `https://sevn-hevn.vercel.app`) is **public** and open to search engines since 10 Oct 2026 (`SITE_INDEXING=true` on Production). `sevn-hevn.vercel.app` redirects to `https://www.sevnhevn.ae` (308, path kept).
 
-## Status (5 Oct 2026)
+## Status (5 Oct 2026, domains updated 12 Oct 2026)
 
 | Item | State |
 | --- | --- |
@@ -39,7 +39,7 @@ Work on a branch, push, check the preview URL Vercel posts on the pull request, 
 | Catalogue refresh webhook (Vault → `https://www.sevnhevn.ae/api/revalidate`) | connected and verified |
 | `SUPABASE_SECRET_KEY` in Vercel Production | **not set yet**. Until it is, the website's "Send from the website" option reports it is unavailable. You add it yourself (see below). |
 | Main domain **`www.sevnhevn.ae`** | connected (5 Oct 2026). `sevnhevn.ae` redirects to it (308), HTTPS by Vercel (Let's Encrypt). DNS and email are at Tasjeel.ae / Host Arabia cPanel: apex `A 216.198.79.1` + `A 64.29.17.1`, `www CNAME f7cd6713914e89dd.vercel-dns-017.com`. Email stays on cPanel: `MX 0 mail.sevnhevn.ae`, `mail A 192.250.230.80`. Official address: `info@sevnhevn.ae`. |
-| `sevnhevnmaison.com` (GoDaddy) | added to Vercel and set to redirect to `www.sevnhevn.ae`, but its DNS still points at GoDaddy parking. It only works once the GoDaddy records below are changed. |
+| `sevnhevnmaison.com` (GoDaddy) | added to Vercel and set to redirect to `www.sevnhevn.ae`, but its DNS still points at GoDaddy parking (checked 12 Oct 2026: `A 3.33.130.190`, `15.197.148.33`, the page loads `/lander`). It only works once the GoDaddy records below are changed. |
 | Backup workflow | prepared, waiting for its GitHub secrets ([BACKUPS.md](BACKUPS.md)) |
 | Vercel Pro | not purchased. Upgrade before public launch (commercial use). |
 
@@ -60,6 +60,18 @@ Also switch off any GoDaddy "Forwarding" for the domain. Leave MX, TXT (SPF, DKI
 2. Vercel → project `sevn-hevn` → **Settings → Environment Variables → Add**: name `SUPABASE_SECRET_KEY`, environment **Production only**, tick **Sensitive**, paste, save.
 3. Vercel → **Deployments** → latest production deployment → **Redeploy**.
 
+## Search engines (checked 12 Oct 2026)
+
+| Item | State |
+| --- | --- |
+| Main address | `https://www.sevnhevn.ae`. `http://`, `sevnhevn.ae` and `sevn-hevn.vercel.app` all reach it with permanent (308) redirects that keep the path and query. |
+| robots.txt / sitemap | crawling allowed except `/api/`. The sitemap lists the 24 public pages (home, collection, four categories × four languages) with `hreflang`. |
+| Google Search Console | Domain property `sc-domain:sevnhevn.ae`, verified by DNS TXT at Tasjeel. Sitemap submitted 12 Oct. The home page was crawled and indexed on 12 Oct; the other pages were still waiting for their first crawl. |
+| Bing Webmaster Tools | site `https://sevnhevn.ae/` (imported from Search Console). Sitemap read successfully (24 URLs); the 24 URLs were also submitted directly and through IndexNow. |
+| IndexNow key | `public/944a47b2738d5c85bfe733bd80cc4bb4.txt` |
+
+Submitting a sitemap or URL only asks a search engine to crawl. It does not mean the page is indexed. Check indexing with URL Inspection in Search Console.
+
 ## Environment variables (Vercel → Project → Settings → Environment Variables)
 
 | Name | Production | Preview | Development | Notes |
@@ -69,7 +81,7 @@ Also switch off any GoDaddy "Forwarding" for the domain. Leave MX, TXT (SPF, DKI
 | `SUPABASE_SECRET_KEY` | ✓ | – | – | `sb_secret_…`. Mark as **Sensitive**. Production only. |
 | `CATALOG_REVALIDATE_SECRET` | ✓ | – | – | Random, e.g. `openssl rand -hex 32`. Mark as **Sensitive**. Same value as the Supabase Vault entry. |
 | `NEXT_PUBLIC_SITE_URL` | ✓ | – | – | `https://www.sevnhevn.ae` |
-| `SITE_INDEXING` | `false` until the launch is approved | – | – | |
+| `SITE_INDEXING` | `true` since 10 Oct 2026 | – | – | Previews and development are always kept out of search engines. |
 | `DEMO_INVENTORY` | – | optional `true` | optional | always ignored on production |
 | `CONCIERGE_SERVER_KEY` | ✓ | – | – | Concierge chat’s limited database key. **Sensitive**. Its hash is in `private.server_keys`. |
 | `CRON_SECRET` | ✓ | – | – | Daily notification retry (Vercel Cron). **Sensitive**. |
