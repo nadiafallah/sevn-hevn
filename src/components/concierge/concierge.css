@@ -23,12 +23,13 @@
   text-transform: uppercase;
   transition:
     background-color 0.3s var(--ease),
-    transform 0.3s var(--ease);
+    box-shadow 0.3s var(--ease);
 }
 
+/* Light, not movement: the button stays exactly where it was tapped. */
 .cc-launcher:hover {
   background: var(--ivory);
-  transform: translateY(-2px);
+  box-shadow: 0 12px 34px rgba(23, 21, 19, 0.24);
 }
 
 .cc-launcher[hidden],

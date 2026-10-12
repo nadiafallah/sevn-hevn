@@ -804,30 +804,32 @@ body:has(.coll-bar) .cat-row {
 }
 
 /* ==========================================================================
-   Hero
+   Hero — the featured piece settles onto a lit stage
    ========================================================================== */
 .hero {
   position: relative;
   background: var(--ivory-deep);
+  overflow: clip;
+  --stage-wall: #4d3629;
+  --stage-wall-top: #5f4433;
+  --stage-glow: rgba(226, 190, 142, 0.72);
+  --stage-stone: #e4d5ba;
+  --stage-stone-face: #d3c09d;
+  --plinth-h: max(21%, 132px);
+  --stage-foot: 26px;
+  --stage-inset: 7%;
+  --drop-y: -40%;
+  --drop-r: -7deg;
+  --drop-t: 1.8s;
 }
 
-.hero__media {
-  position: relative;
-  overflow: hidden;
-}
-
-.hero__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  animation: hero-settle 2.6s var(--ease-out) both;
-}
-
-@keyframes hero-settle {
-  from {
-    opacity: 0;
-    transform: scale(1.07);
-  }
+.hero__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  align-items: center;
+  gap: clamp(32px, 5vw, 96px);
+  min-height: clamp(600px, calc(100svh - 34px - var(--header-h) - 47px), 860px);
+  padding-block: clamp(28px, 3.5vw, 52px);
 }
 
 .hero__eyebrow {
@@ -838,7 +840,7 @@ body:has(.coll-bar) .cat-row {
 .hero__title {
   font-family: var(--serif);
   font-weight: 400;
-  font-size: clamp(3.1rem, 6.1vw, 6.5rem);
+  font-size: clamp(3.1rem, 5.6vw, 6.1rem);
   line-height: 0.94;
   letter-spacing: -0.02em;
 }
@@ -897,60 +899,267 @@ body:has(.coll-bar) .cat-row {
   }
 }
 
-@media (min-width: 900px) {
-  .hero__media {
-    height: clamp(600px, calc(100svh - 34px - var(--header-h) - 47px), 58vw);
+/* The stage: an arched window onto a warm wall, a travertine ledge, the piece and its shadow.
+   Layers move a few pixels against each other with the pointer (--px/--py, set by HeroStage). */
+.stage {
+  position: relative;
+  margin: 0;
+  height: clamp(520px, calc(100svh - 34px - var(--header-h) - 47px - 2 * clamp(28px, 3.5vw, 52px)), 780px);
+  isolation: isolate;
+}
+
+.stage__window {
+  position: absolute;
+  inset: 0 var(--stage-inset) var(--stage-foot);
+  border-radius: 999px 999px 0 0;
+  overflow: hidden;
+  background:
+    linear-gradient(112deg, transparent 0 34%, rgba(255, 233, 200, 0.09) 34% 43%, transparent 43% 51%, rgba(255, 233, 200, 0.06) 51% 57%, transparent 57%),
+    linear-gradient(180deg, var(--stage-wall-top), var(--stage-wall) 70%);
+  animation: stage-open 1.3s var(--ease-out) both;
+}
+
+.stage__light {
+  position: absolute;
+  inset: 8% -6% calc(var(--plinth-h) - 4%);
+  background: radial-gradient(ellipse 62% 56% at 50% 62%, var(--stage-glow), transparent 74%);
+  translate: calc(var(--px, 0) * -22px) calc(var(--py, 0) * -14px);
+}
+
+/* A fine grain on the stone, so it doesn't read as flat colour. (Kept off the wall: a texture
+   across the whole arch would become the page's largest paint and wait for its opening.) */
+.stage__plinth::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.16;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.stage__plinth {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: var(--plinth-h);
+  background:
+    linear-gradient(180deg, rgba(255, 250, 240, 0.7) 0 2px, transparent 2px),
+    linear-gradient(180deg, var(--stage-stone) 0 16%, var(--stage-stone-face) 16% 100%);
+  box-shadow: inset 0 18px 24px -18px rgba(60, 40, 25, 0.35);
+}
+
+.stage__shadow,
+.stage__piece {
+  position: absolute;
+  inset-inline: 0;
+  margin-inline: auto;
+  z-index: 1;
+  translate: calc(var(--px, 0) * 18px) 0;
+}
+
+.stage__shadow {
+  bottom: calc(var(--stage-foot) + var(--plinth-h) - 22px);
+  width: min(54%, 380px);
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(28, 16, 9, 0.62), rgba(28, 16, 9, 0.26) 58%, transparent);
+  animation: stage-shadow var(--drop-t) 0.2s both;
+}
+
+.stage__piece {
+  bottom: calc(var(--stage-foot) + var(--plinth-h) - 15px);
+  width: min(58%, 410px);
+  transform-origin: 50% 100%;
+  animation: stage-drop var(--drop-t) 0.2s both;
+}
+
+.stage__float {
+  translate: 0 calc(var(--py, 0) * 6px);
+}
+
+.stage__img {
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* A placard on the ledge: what the piece is, and the way to it. */
+.stage__caption {
+  position: absolute;
+  inset-inline: var(--stage-inset);
+  bottom: var(--stage-foot);
+  z-index: 2;
+  height: calc(var(--plinth-h) - 14px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+  color: var(--espresso);
+  animation: rise 0.9s calc(var(--drop-t) * 0.78) var(--ease-out) both;
+}
+
+.stage__label {
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #6b5444;
+}
+
+.stage__name {
+  font-family: var(--serif);
+  font-size: clamp(1.35rem, 1.9vw, 1.75rem);
+  line-height: 1.1;
+}
+
+.stage__note {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 0.98rem;
+  color: #5d4a3d;
+}
+
+.stage__link {
+  margin-top: 2px;
+  padding-block: 4px;
+}
+
+.stage__ai {
+  inset-inline: 0;
+  bottom: 0;
+  padding: 0;
+  background: none;
+  color: var(--muted);
+  text-align: center;
+  line-height: var(--stage-foot);
+}
+
+@keyframes stage-open {
+  from {
+    clip-path: inset(100% 0 0 0);
   }
-  .hero__media::after {
-    /* A soft ivory wash keeps the headline legible over the lit wall. */
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, rgba(245, 240, 232, 0.62) 0%, rgba(245, 240, 232, 0.28) 32%, rgba(245, 240, 232, 0) 52%);
-    pointer-events: none;
+  to {
+    clip-path: inset(0);
   }
-  .hero__img {
-    object-position: 74% 55%;
+}
+
+/* Glides down from the top of the frame, unwinding a small turn, then settles with a soft rebound. */
+@keyframes stage-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(var(--drop-y)) rotate(var(--drop-r));
+    animation-timing-function: cubic-bezier(0.33, 0, 0.3, 1);
   }
-  .hero__content {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    pointer-events: none;
+  16% {
+    opacity: 1;
   }
-  .hero__content > * {
-    pointer-events: auto;
+  66% {
+    transform: translateY(1.1%) rotate(0.9deg);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
   }
-  .hero .media-label {
-    right: auto;
-    left: var(--gutter);
-    bottom: 20px;
+  83% {
+    transform: translateY(-0.35%) rotate(-0.25deg);
+    animation-timing-function: cubic-bezier(0.25, 0, 0.3, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The shadow gathers under the piece as it lands. */
+@keyframes stage-shadow {
+  0% {
+    opacity: 0;
+    transform: scale(0.42, 0.5);
+    animation-timing-function: cubic-bezier(0.33, 0, 0.3, 1);
+  }
+  58% {
+    opacity: 0.5;
+    transform: scale(0.84, 0.8);
+  }
+  66% {
+    opacity: 1;
+    transform: scale(1.05, 1.04);
+    animation-timing-function: cubic-bezier(0.25, 0, 0.3, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
   }
 }
 
 @media (max-width: 899px) {
   .hero {
-    display: flex;
-    flex-direction: column-reverse;
     background: var(--ivory);
+    --drop-y: -24%;
+    --drop-r: -4deg;
+    --drop-t: 1.35s;
   }
-  .hero__content {
-    padding-block: 44px 40px;
+  .hero__grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+    min-height: 0;
+    padding-block: 14px 44px;
+  }
+  /* The piece comes first on small screens, so it is seen without scrolling. */
+  .hero {
+    --plinth-h: 68px;
+    --stage-foot: 22px;
+    --stage-inset: 3%;
+  }
+  .stage {
+    order: -1;
+    height: clamp(340px, 46svh, 460px);
+  }
+  .stage__piece {
+    width: min(56%, 300px);
+    bottom: calc(var(--stage-foot) + var(--plinth-h) - 11px);
+  }
+  .stage__shadow {
+    width: min(52%, 280px);
+    height: 30px;
+    bottom: calc(var(--stage-foot) + var(--plinth-h) - 16px);
+  }
+  /* On the narrow ledge: the label, then the name beside the link. */
+  .stage__caption {
+    flex-flow: row wrap;
+    align-content: center;
+    gap: 0 14px;
+  }
+  .stage__label {
+    flex-basis: 100%;
+  }
+  .stage__note {
+    display: none;
+  }
+  .stage__name {
+    font-size: 1.3rem;
+  }
+  .hero__eyebrow {
+    margin-bottom: 18px;
   }
   .hero__title {
-    font-size: clamp(3rem, 13.5vw, 4.6rem);
+    font-size: clamp(2.6rem, 11.5vw, 3.9rem);
   }
-  .hero__media {
-    aspect-ratio: 4 / 3.3;
+  .hero__lead {
+    margin-top: 20px;
   }
-  .hero__img {
-    object-position: 64% 50%;
+  .hero__actions {
+    margin-top: 28px;
   }
   .hero__actions .btn {
     flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 899px) and (max-height: 700px) {
+  .stage {
+    height: 310px;
   }
 }
 
@@ -1095,8 +1304,8 @@ body:has(.coll-bar) .cat-row {
 
 /* Detail crops so each door reads differently from the full images used elsewhere. */
 .door--bags {
-  --zoom: 1.3;
-  --focus: 42% 48%;
+  --zoom: 1.32;
+  --focus: 46% 56%;
 }
 
 .door--watches {
@@ -1396,6 +1605,11 @@ body:has(.coll-bar) .cat-row {
 .card__img--alt {
   position: absolute;
   inset: 0;
+  opacity: 0;
+}
+
+/* A photo still downloading when the page wakes up fades in once decoded (see fadeInOnLoad). */
+.card__img[data-fade="wait"] {
   opacity: 0;
 }
 
@@ -2113,12 +2327,11 @@ body:has(.coll-bar) .cat-row {
   box-shadow: 0 8px 28px rgba(23, 21, 19, 0.24);
   transition:
     background-color 0.3s var(--ease),
-    transform 0.3s var(--ease);
+    box-shadow 0.3s var(--ease);
 }
 
 .wa-float:hover {
   background: var(--black);
-  transform: translateY(-2px);
 }
 
 html:has(dialog[open]) .wa-float {
@@ -2554,6 +2767,34 @@ html:has(dialog[open]) .wa-float {
   height: 100%;
   object-fit: cover;
   animation: fade 0.6s ease both;
+}
+
+/* Desktop: a photo wider than the frame is shown whole, over a soft blur of itself, so the piece
+   is never cut at the sides. On phones the frame is wide enough for cover. */
+.pd__backdrop {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .pd__main--wide .pd__img {
+    position: relative;
+    height: auto;
+    max-height: 100%;
+    object-fit: contain;
+    /* The photo's top and bottom edges melt into the blur instead of ending on a hard line. */
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(180deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .pd__main--wide .pd__backdrop {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(36px) saturate(0.9) brightness(0.94);
+    transform: scale(1.15);
+  }
 }
 
 .pd__thumbs {
@@ -3167,16 +3408,208 @@ html:has(dialog[open]) .wa-float {
 }
 
 @media (min-width: 900px) {
-  /* The headline stays on the lit wall, clear of the bags, in every language. */
+  /* The headline keeps to its column in every language. */
   .hero__title:lang(ru) {
     font-size: clamp(2.6rem, 4.3vw, 4.6rem);
   }
   .hero__title:is(:lang(fr), :lang(ar)) {
     font-size: clamp(2.8rem, 5.2vw, 5.6rem);
   }
-  /* Arabic: the copy stays over the lit wall on the left of the photograph, as in English, and
-     reads from the right edge of its column. */
-  [dir="rtl"] .hero__content {
-    padding-inline-start: max(var(--gutter), calc(min(100vw, var(--max)) - min(28rem, 32vw) - var(--gutter)));
+}
+
+/* ==========================================================================
+   Interaction states — feedback that never moves what you click
+   Hover, press and focus change colour, shadow and light only, so the hit area
+   and the label stay exactly where they are. Hover effects are limited to
+   devices that really hover, so a tap never leaves a "stuck" state behind.
+   ========================================================================== */
+.btn {
+  transition:
+    background-color 0.35s var(--ease),
+    color 0.35s var(--ease),
+    border-color 0.35s var(--ease),
+    box-shadow 0.45s var(--ease);
+}
+
+@media (hover: hover) {
+  .btn--dark:hover {
+    box-shadow: 0 14px 30px -16px rgba(23, 21, 19, 0.6);
   }
+  .btn--line:hover,
+  .btn--light:hover {
+    box-shadow: 0 12px 26px -18px rgba(23, 21, 19, 0.5);
+  }
+}
+
+/* Pressed: the face darkens a touch and sinks into its own border. */
+.btn:not([disabled]):active {
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.22);
+  transition-duration: 0.08s;
+}
+
+.btn--line:not([disabled]):active,
+.btn--light:not([disabled]):active {
+  box-shadow: inset 0 2px 6px rgba(42, 28, 22, 0.16);
+}
+
+/* A ring that follows the pill, clear of the moving border. */
+.btn:focus-visible {
+  outline: 2px solid var(--espresso);
+  outline-offset: 4px;
+}
+
+.band--dark .btn:focus-visible,
+.door--request .btn:focus-visible {
+  outline-color: var(--ivory);
+}
+
+.text-link:active,
+.link-btn:active {
+  opacity: 0.7;
+}
+
+/* Floating buttons answer with light, not by jumping. */
+.wa-float:hover {
+  box-shadow: 0 12px 34px rgba(23, 21, 19, 0.3);
+}
+
+.wa-float:active,
+.cc-launcher:active {
+  box-shadow: 0 4px 14px rgba(23, 21, 19, 0.28);
+}
+
+/* Cards: zoom on real hover only; keyboard focus shows the second photograph too. */
+@media (hover: none) {
+  .card__link:hover .card__img {
+    transform: none;
+  }
+}
+
+.card__link:focus-visible .card__media--swap .card__img--alt {
+  opacity: 1;
+}
+
+.card__link:focus-visible {
+  outline-offset: 6px;
+}
+
+.card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(23, 21, 19, 0);
+  transition: background-color 0.25s var(--ease);
+  pointer-events: none;
+}
+
+.card__link:active .card__media::after {
+  background: rgba(23, 21, 19, 0.08);
+}
+
+.card__more svg {
+  transition: transform 0.4s var(--ease);
+}
+
+.card__link:hover .card__more svg {
+  transform: translateX(calc(4px * var(--dir)));
+}
+
+/* The header gains a soft edge once the page moves under it (no script, no layout change). */
+@supports (animation-timeline: scroll()) {
+  .site-header {
+    animation: header-lift linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 140px;
+  }
+}
+
+@keyframes header-lift {
+  to {
+    background: rgba(245, 240, 232, 0.97);
+    box-shadow: 0 12px 30px -24px rgba(42, 28, 22, 0.55);
+  }
+}
+
+/* ── Panels: they leave the way they came ───────────────────────────────── */
+.dlg[data-closing] {
+  pointer-events: none;
+}
+
+.dlg[data-closing]::backdrop {
+  animation: fade-out 0.26s ease both;
+}
+
+.dlg--drawer[data-closing] .dlg__panel {
+  animation: to-end 0.26s var(--ease) both;
+}
+
+.dlg--drawer-left[data-closing] .dlg__panel {
+  animation: to-start 0.26s var(--ease) both;
+}
+
+.dlg--center[data-closing] .dlg__panel,
+.dlg--wide[data-closing] .dlg__panel {
+  animation: sink 0.26s var(--ease) both;
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes to-end {
+  to {
+    transform: translateX(calc(36px * var(--dir)));
+    opacity: 0;
+  }
+}
+
+@keyframes to-start {
+  to {
+    transform: translateX(calc(-36px * var(--dir)));
+    opacity: 0;
+  }
+}
+
+@keyframes sink {
+  to {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+}
+
+/* Menu entries follow the drawer in, one after another; the bag's contents settle in behind it. */
+.dlg[open]:not([data-closing]) :is(.menu-panel__primary > li, .menu-panel .lang--menu) {
+  animation: rise 0.55s var(--ease-out) both;
+}
+
+.dlg[open] .menu-panel__primary > li:nth-child(2) {
+  animation-delay: 0.04s;
+}
+.dlg[open] .menu-panel__primary > li:nth-child(3) {
+  animation-delay: 0.08s;
+}
+.dlg[open] .menu-panel__primary > li:nth-child(4) {
+  animation-delay: 0.12s;
+}
+.dlg[open] .menu-panel__primary > li:nth-child(5) {
+  animation-delay: 0.16s;
+}
+.dlg[open] .menu-panel__primary > li:nth-child(6) {
+  animation-delay: 0.2s;
+}
+.dlg[open] .menu-panel__primary > li:nth-child(n + 7),
+.dlg[open] .menu-panel .lang--menu {
+  animation-delay: 0.24s;
+}
+
+.dlg[open]:not([data-closing]) :is(.cart__list > li, .cart__summary, .cart-empty) {
+  animation: rise 0.5s 0.12s var(--ease-out) both;
+}
+
+/* Off-screen sections hold their button glint still (set by the reveal observer). */
+[data-offscreen] .btn::before,
+[data-offscreen] .btn::after {
+  animation-play-state: paused;
 }

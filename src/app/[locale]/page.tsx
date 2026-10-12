@@ -7,10 +7,12 @@ import { site } from "@/config/site";
 import { isLocale, languageAlternates, localePath, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { rich } from "@/i18n/rich";
-import { getFeatured } from "@/lib/catalog";
+import { findItem, getCatalog, getFeatured } from "@/lib/catalog";
 import { localizeItem } from "@/lib/localize";
 import { baseOpenGraph } from "@/lib/seo";
 import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
+import { heroPiece } from "@/data/hero";
+import { HeroStage } from "@/components/HeroStage";
 import { ItemCard } from "@/components/ItemCard";
 import { EditRail } from "@/components/EditRail";
 import { PanelButton } from "@/components/PanelButton";
@@ -19,11 +21,12 @@ import { ViewingForm } from "@/components/ViewingForm";
 import { ContactList } from "@/components/SitePanels";
 import { ArrowIcon, WhatsAppIcon } from "@/components/icons";
 
-// Category doors use detail crops of the supplied editorial images (set per door in CSS).
+// Category doors use detail crops of the supplied editorial images (set per door in CSS). Their `sizes`
+// allow for that zoom (up to 1.46× on hover), so the enlarged crop is still drawn from enough pixels.
 const categoryDoors = [
-  { id: "bags", image: { src: "/images/editorial/bag-cognac.jpg", width: 1122, height: 1028 } },
-  { id: "watches", image: { src: "/images/editorial/watch-gold-rectangular.jpg", width: 1122, height: 1402 } },
-  { id: "shoes", image: { src: "/images/editorial/loafer-cobalt-suede.jpg", width: 1122, height: 1402 } },
+  { id: "bags", image: { src: "/images/editorial/bag-emerald-v2.jpg", width: 1122, height: 1402 } },
+  { id: "watches", image: { src: "/images/editorial/watch-gold-rectangular-v2.jpg", width: 1122, height: 1402 } },
+  { id: "shoes", image: { src: "/images/editorial/loafer-cobalt-suede-v2.jpg", width: 1122, height: 1402 } },
 ] as const;
 
 export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
@@ -44,6 +47,8 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const ui = d.ui;
   const href = (path: string) => localePath(locale, path);
   const featured = (await getFeatured(6)).map((i) => localizeItem(i, locale));
+  const heroFound = findItem(await getCatalog(), heroPiece.ref);
+  const hero = heroFound && localizeItem(heroFound, locale);
   const previewsOnly = featured.every((i) => i.status === "editorial_preview");
   const houses = site.sourcingBrands;
   // Tells search engines the site's name and the other ways people write it (Google "site names").
@@ -58,33 +63,62 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
 
   return (
     <>
-      {/* 1 · Hero */}
+      {/* 1 · Hero: the featured piece settles onto its stage while the headline rises. */}
       <section className="hero" aria-labelledby="hero-title">
-        <div className="hero__media">
-          <Image src="/images/editorial/hero-emerald-noir.jpg" alt={t.heroAlt} width={1672} height={941} priority sizes="100vw" className="hero__img" />
-          <span className="media-label">{t.aiImage}</span>
-        </div>
-        <div className="container hero__content">
-          <p className="eyebrow hero__eyebrow">{t.heroEyebrow}</p>
-          <h1 id="hero-title" className="hero__title">
-            {t.heroLines.map((line, i) => (
-              <Fragment key={i}>
-                {i > 0 && " "}
-                <span className="hero__line">
-                  <span>{rich(line)}</span>
-                </span>
-              </Fragment>
-            ))}
-          </h1>
-          <p className="hero__lead">{t.heroLead}</p>
-          <div className="hero__actions">
-            <Link href={href("/collection")} className="btn btn--dark">
-              {t.explore}
-            </Link>
-            <PanelButton panel={{ type: "sourcing" }} className="text-link hero__alt">
-              {t.requestPiece} <ArrowIcon size={14} />
-            </PanelButton>
+        <div className="container hero__grid">
+          <div className="hero__content">
+            <p className="eyebrow hero__eyebrow">{t.heroEyebrow}</p>
+            <h1 id="hero-title" className="hero__title">
+              {t.heroLines.map((line, i) => (
+                <Fragment key={i}>
+                  {i > 0 && " "}
+                  <span className="hero__line">
+                    <span>{rich(line)}</span>
+                  </span>
+                </Fragment>
+              ))}
+            </h1>
+            <p className="hero__lead">{t.heroLead}</p>
+            <div className="hero__actions">
+              <Link href={href("/collection")} className="btn btn--dark">
+                {t.explore}
+              </Link>
+              <PanelButton panel={{ type: "sourcing" }} className="text-link hero__alt">
+                {t.requestPiece} <ArrowIcon size={14} />
+              </PanelButton>
+            </div>
           </div>
+          <HeroStage className="stage">
+            <div className="stage__window" aria-hidden="true">
+              <span className="stage__light" />
+              <span className="stage__plinth" />
+            </div>
+            <span className="stage__shadow" aria-hidden="true" />
+            <div className="stage__piece">
+              <div className="stage__float">
+                <Image
+                  src={heroPiece.cutout.src}
+                  alt={t.heroAlt}
+                  width={heroPiece.cutout.width}
+                  height={heroPiece.cutout.height}
+                  priority
+                  sizes="(min-width: 900px) 34vw, 72vw"
+                  className="stage__img"
+                />
+              </div>
+            </div>
+            {hero && (
+              <figcaption className="stage__caption">
+                <span className="stage__label">{t.featuredPiece}</span>
+                <span className="stage__name">{hero.name}</span>
+                {hero.tagline && <span className="stage__note">{hero.tagline}</span>}
+                <Link href={href(`/collection?item=${encodeURIComponent(hero.ref)}`)} className="text-link stage__link">
+                  {t.viewPiece} <ArrowIcon size={13} />
+                </Link>
+              </figcaption>
+            )}
+            {heroPiece.editorial && <span className="media-label stage__ai">{t.aiImage}</span>}
+          </HeroStage>
         </div>
       </section>
 
@@ -127,7 +161,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             <li key={c.id} data-reveal style={{ transitionDelay: `${i * 90}ms` }}>
               <Link href={href(`/collection?category=${c.id}`)} className={`door door--${c.id}`}>
                 <div className="door__media">
-                  <Image src={c.image.src} alt={t.doors[c.id].alt} width={c.image.width} height={c.image.height} sizes="(min-width: 1000px) 25vw, 50vw" className="door__img" />
+                  <Image src={c.image.src} alt={t.doors[c.id].alt} width={c.image.width} height={c.image.height} sizes="(min-width: 1000px) 42vw, 92vw" className="door__img" />
                   <span className="media-label">{t.aiImageShort}</span>
                 </div>
                 <div className="door__text">

@@ -4,6 +4,7 @@ import Image from "next/image";
 import type { Item } from "@/data/types";
 import { useI18n } from "@/i18n/I18nProvider";
 import { priceLabel } from "@/lib/format";
+import { coverSizes, fadeInOnLoad } from "@/lib/images";
 import { ArrowIcon } from "./icons";
 
 export function ItemBadge({ item }: { item: Item }) {
@@ -14,6 +15,9 @@ export function ItemBadge({ item }: { item: Item }) {
   if (item.status === "reserved") return <span className="tag tag--dark">{t.badges.reserved}</span>;
   return null;
 }
+
+/** The card's photo frame (`.card__media`, 4 / 5). */
+const CARD_RATIO = 4 / 5;
 
 /**
  * Product card. Rendered as a real link to /collection?item=REF so it works without
@@ -55,8 +59,29 @@ export function ItemCard({
         }
       >
         <div className={`card__media${second ? " card__media--swap" : ""}`}>
-          {first && <Image src={first.src} alt={first.alt} width={first.width} height={first.height} sizes={sizes} priority={priority} className="card__img" />}
-          {second && <Image src={second.src} alt="" width={second.width} height={second.height} sizes={sizes} className="card__img card__img--alt" />}
+          {first && (
+            <Image
+              src={first.src}
+              alt={first.alt}
+              width={first.width}
+              height={first.height}
+              sizes={coverSizes(sizes, first, CARD_RATIO)}
+              priority={priority}
+              ref={priority ? undefined : fadeInOnLoad}
+              className="card__img"
+            />
+          )}
+          {second && (
+            <Image
+              src={second.src}
+              alt=""
+              width={second.width}
+              height={second.height}
+              sizes={coverSizes(sizes, second, CARD_RATIO)}
+              ref={fadeInOnLoad}
+              className="card__img card__img--alt"
+            />
+          )}
           <div className="card__badge">
             <ItemBadge item={item} />
           </div>
