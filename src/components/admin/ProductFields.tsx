@@ -1,11 +1,15 @@
-import { categories } from "@/data/taxonomy";
+import { coreBrands, findBrand, jewelleryOnlyBrands } from "@/data/brands";
+import { categories, subcategoryId, isCategoryId } from "@/data/taxonomy";
 import { conditionLabels } from "@/lib/admin/labels";
 import { productStatusOptions, type PanelProduct } from "@/lib/admin/products";
 
-const subcategories = Array.from(new Set(categories.flatMap((c) => c.sub)));
-
-/** The details of a piece. Everything except name and category is optional. */
+/**
+ * The details of a piece. Everything except name, category and house is optional; fill in only what
+ * is documented. Houses are limited to the shop's list (also enforced by the database).
+ */
 export function ProductFields({ p }: { p?: PanelProduct }) {
+  const brand = findBrand(p?.brand)?.name ?? p?.brand ?? "";
+  const type = p && isCategoryId(p.category) ? (subcategoryId(p.category, p.subcategory) ?? "") : "";
   return (
     <>
       <fieldset className="adm-fieldset">
@@ -18,8 +22,33 @@ export function ProductFields({ p }: { p?: PanelProduct }) {
             <input name="name" required maxLength={160} defaultValue={p?.name ?? ""} placeholder="e.g. Kelly 28" />
           </label>
           <label>
-            Brand
-            <input name="brand" maxLength={80} defaultValue={p?.brand ?? ""} placeholder="e.g. Hermès" />
+            <span>
+              House <span aria-hidden="true">*</span>
+            </span>
+            <select name="brand" required defaultValue={brand}>
+              <option value="" disabled>
+                Choose…
+              </option>
+              <optgroup label="Bags, shoes, watches and jewellery">
+                {coreBrands.map((b) => (
+                  <option key={b.id} value={b.name}>
+                    {b.name}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Jewellery only">
+                {jewelleryOnlyBrands.map((b) => (
+                  <option key={b.id} value={b.name}>
+                    {b.name}
+                  </option>
+                ))}
+              </optgroup>
+              {brand && !findBrand(brand) && (
+                <option value={brand} disabled>
+                  {brand} (not a shop house — choose another to save)
+                </option>
+              )}
+            </select>
           </label>
         </div>
         <div className="adm-row">
@@ -27,7 +56,7 @@ export function ProductFields({ p }: { p?: PanelProduct }) {
             <span>
               Category <span aria-hidden="true">*</span>
             </span>
-            <select name="category" required defaultValue={p?.category ?? ""}>
+            <select name="category" required defaultValue={p && isCategoryId(p.category) ? p.category : ""}>
               <option value="" disabled>
                 Choose…
               </option>
@@ -40,16 +69,22 @@ export function ProductFields({ p }: { p?: PanelProduct }) {
           </label>
           <label>
             Type (optional)
-            <input name="subcategory" maxLength={80} list="adm-subcategories" defaultValue={p?.subcategory ?? ""} placeholder="e.g. Handbags" />
-            <datalist id="adm-subcategories">
-              {subcategories.map((s) => (
-                <option key={s} value={s} />
+            <select name="subcategory" defaultValue={type}>
+              <option value="">Not set</option>
+              {categories.map((c) => (
+                <optgroup key={c.id} label={c.label}>
+                  {c.sub.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.label}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
-            </datalist>
+            </select>
           </label>
           <label>
             Model or reference number
-            <input name="model_reference" maxLength={80} defaultValue={p?.model_reference ?? ""} placeholder="e.g. 126500LN" />
+            <input name="model_reference" maxLength={80} defaultValue={p?.model_reference ?? ""} placeholder="e.g. a watch reference" />
           </label>
         </div>
         <label>
@@ -77,8 +112,13 @@ export function ProductFields({ p }: { p?: PanelProduct }) {
             <input name="year" maxLength={20} defaultValue={p?.year ?? ""} placeholder="e.g. 2021" />
           </label>
           <label>
-            Size
-            <input name="size" maxLength={80} defaultValue={p?.size ?? ""} placeholder="e.g. 28 cm, EU 38, 40 mm" />
+            For
+            <select name="audience" defaultValue={p?.audience ?? ""}>
+              <option value="">Not set</option>
+              <option value="women">Women</option>
+              <option value="men">Men</option>
+              <option value="unisex">Unisex</option>
+            </select>
           </label>
         </div>
         <label>
@@ -88,25 +128,71 @@ export function ProductFields({ p }: { p?: PanelProduct }) {
         <div className="adm-row">
           <label>
             Material
-            <input name="material" maxLength={120} defaultValue={p?.material ?? ""} placeholder="e.g. Togo leather" />
+            <input name="material" maxLength={120} defaultValue={p?.material ?? ""} placeholder="e.g. Togo leather, 18k yellow gold" />
           </label>
           <label>
             Colour
-            <input name="colour" maxLength={80} defaultValue={p?.colour ?? ""} placeholder="e.g. Black" />
+            <input name="colour" maxLength={80} defaultValue={p?.colour ?? ""} placeholder="e.g. Noir" />
           </label>
           <label>
-            Dimensions
-            <input name="dimensions" maxLength={120} defaultValue={p?.dimensions ?? ""} />
+            Hardware (bags, shoes)
+            <input name="hardware" maxLength={80} defaultValue={p?.hardware ?? ""} placeholder="e.g. Gold-tone" />
           </label>
         </div>
+        <div className="adm-row">
+          <label>
+            Size
+            <input name="size" maxLength={80} defaultValue={p?.size ?? ""} placeholder="e.g. 25 (bag), 40.5 (shoe), 52 (ring)" />
+          </label>
+          <label>
+            Size system (shoes)
+            <select name="size_system" defaultValue={p?.size_system ?? ""}>
+              <option value="">Not set</option>
+              {["EU", "IT", "FR", "UK", "US"].map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Dimensions (bags)
+            <input name="dimensions" maxLength={120} defaultValue={p?.dimensions ?? ""} placeholder="e.g. 25 × 19 × 9 cm" />
+          </label>
+        </div>
+        <div className="adm-row">
+          <label>
+            Case diameter, mm (watches)
+            <input name="case_diameter_mm" inputMode="decimal" maxLength={6} defaultValue={p?.case_diameter_mm ?? ""} placeholder="e.g. 36" />
+          </label>
+          <label>
+            Movement (watches)
+            <select name="movement" defaultValue={p?.movement ?? ""}>
+              <option value="">Not set</option>
+              <option value="automatic">Automatic</option>
+              <option value="manual">Manual winding</option>
+              <option value="quartz">Quartz</option>
+            </select>
+          </label>
+          <label>
+            Fineness / carat (jewellery)
+            <input name="purity" maxLength={80} defaultValue={p?.purity ?? ""} placeholder="Only as documented, e.g. 18k, 925" />
+          </label>
+        </div>
+        <label>
+          Stones (jewellery — confirmed details only)
+          <input name="stones" maxLength={300} defaultValue={p?.stones ?? ""} placeholder="e.g. Diamonds, 0.50 ct total (certificate no. …)" />
+        </label>
         <label>
           Comes with (separate with commas)
           <input name="included" maxLength={800} defaultValue={p?.included?.join(", ") ?? ""} placeholder="e.g. Box, Dust bag, Receipt" />
         </label>
         <label>
-          Authentication (documented facts only)
-          <textarea name="authentication" rows={2} maxLength={1000} defaultValue={p?.authentication ?? ""} placeholder="e.g. Entrupy certificate no. …" />
+          Documentation (facts only)
+          <textarea name="authentication" rows={2} maxLength={1000} defaultValue={p?.authentication ?? ""} placeholder="e.g. Original receipt available to view" />
         </label>
+        <p className="adm-small adm-muted">
+          Write only what is documented. Never describe plated or costume jewellery as gold or as fine jewellery, and don’t claim official authorisation or a guarantee you
+          can’t show.
+        </p>
       </fieldset>
 
       <fieldset className="adm-fieldset">
@@ -121,7 +207,7 @@ export function ProductFields({ p }: { p?: PanelProduct }) {
               title="A whole number of dirhams, e.g. 62000 or 62,000"
               maxLength={16}
               defaultValue={p?.price_aed ?? ""}
-              placeholder="Leave empty: “Enquire for details”"
+              placeholder="Leave empty: “Price on request”"
             />
           </label>
           <label>
@@ -148,7 +234,7 @@ export function ProductFields({ p }: { p?: PanelProduct }) {
         </ul>
         <label>
           Delivery details
-          <textarea name="delivery" rows={2} maxLength={1000} defaultValue={p?.delivery ?? ""} placeholder="e.g. Dubai: same day. Other emirates: 1–2 days. International: on request." />
+          <textarea name="delivery" rows={2} maxLength={1000} defaultValue={p?.delivery ?? ""} placeholder="Only what you actually offer for this piece." />
         </label>
         <label>
           Returns
@@ -156,7 +242,7 @@ export function ProductFields({ p }: { p?: PanelProduct }) {
         </label>
         <input type="hidden" name="featured_shown" value="1" />
         <label className="adm-check">
-          <input type="checkbox" name="featured" defaultChecked={p?.featured ?? false} /> Feature on the home page (shown there once at least three pieces are featured)
+          <input type="checkbox" name="featured" defaultChecked={p?.featured ?? false} /> Show first in “New in” on the home page
         </label>
       </fieldset>
     </>

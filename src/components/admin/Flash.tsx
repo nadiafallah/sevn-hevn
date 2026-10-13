@@ -14,6 +14,8 @@ const okMessages: Record<string, string> = {
   product_deleted: "The piece and its photos were deleted.",
   photo_main: "Main photo changed.",
   photo_removed: "Photo removed.",
+  variant_saved: "Version saved. The website updates within a minute.",
+  variant_removed: "Version removed.",
   order_created: "Order created.",
   saved_draft: "Saved as a draft. Approve it to let the chat quote it.",
   approved: "Approved. The chat may now quote this entry.",

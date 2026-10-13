@@ -14,6 +14,8 @@ grep -q "ready on" "$STACK_DIR.log" || { cat "$STACK_DIR.log"; exit 1; }
 
 set -a; source "$STACK_DIR/env"; set +a
 npx next build > "$STACK_DIR.build.log" 2>&1 || { tail -40 "$STACK_DIR.build.log"; exit 1; }
+# Cached database answers survive a rebuild; a fresh stack must not see an earlier run's catalogue.
+rm -rf .next/cache/fetch-cache
 npx next start -p 3300 > "$STACK_DIR.next.log" 2>&1 & pids+=($!)
 # A second instance without the concierge server key: the chat must say it is unavailable.
 ( unset CONCIERGE_SERVER_KEY; exec npx next start -p 3301 ) > "$STACK_DIR.next3301.log" 2>&1 & pids+=($!)

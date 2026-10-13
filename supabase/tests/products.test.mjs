@@ -1,4 +1,5 @@
-// Access rules and behaviour of products in the private panel (20261007120000_panel_products.sql).
+// Access rules and behaviour of products in the private panel (20261007120000_panel_products.sql,
+// with the shop rules of 20261013120000_shop_four_categories.sql).
 // Run with: npm run db:test   (in-process Postgres; never touches a remote database)
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -26,7 +27,9 @@ async function setup() {
   return db;
 }
 
-const save = (db, user, ref, fields) => asUser(db, user, "select public.admin_save_product($1, $2) as ref", [ref, fields]).then((r) => r.rows[0].ref);
+// New pieces default to Hermès: every piece must be from one of the shop's houses (see shop.test.mjs).
+const save = (db, user, ref, fields) =>
+  asUser(db, user, "select public.admin_save_product($1, $2) as ref", [ref, ref === null && !("brand" in fields) ? { brand: "Hermès", ...fields } : fields]).then((r) => r.rows[0].ref);
 const addPhoto = (db, user, ref, path = photo(ref)) =>
   asUser(db, user, "select public.admin_add_product_image($1, $2, 1600, 2000, 'Front view') as id", [ref, path]).then((r) => r.rows[0].id);
 
@@ -46,13 +49,13 @@ test("the owner adds a piece: next SH reference, saved as an unpublished draft, 
 
 test("only the four active categories and the real-piece states can be chosen", async () => {
   const db = await setup();
-  await rejects(save(db, OWNER, null, { name: "Ring", category: "jewellery" }), /invalid_request/);
+  await rejects(save(db, OWNER, null, { name: "Belt", category: "accessories" }), /invalid_request/);
   await rejects(save(db, OWNER, null, { name: "Bag", category: "bags", status: "editorial_preview" }), /invalid_request/);
   await rejects(save(db, OWNER, null, { name: "Bag", category: "bags", secret_note: "x" }), /invalid_request/);
   await rejects(save(db, OWNER, null, { name: " ", category: "bags" }), /invalid_request/);
   await rejects(save(db, OWNER, null, { name: "Bag", category: "bags", price_aed: "0" }), /invalid_request/);
   await rejects(save(db, OWNER, null, { name: "Bag", category: "bags", price_aed: "lots" }), /invalid_request/);
-  for (const c of ["bags", "watches", "shoes", "accessories"]) await save(db, OWNER, null, { name: c, category: c });
+  for (const c of ["bags", "shoes", "watches", "jewellery"]) await save(db, OWNER, null, { name: c, category: c });
 });
 
 test("staff and other accounts cannot change products; the public cannot call the functions", async () => {
@@ -114,7 +117,7 @@ test("photos: kept in the piece's folder, at most 12, main photo first, last pho
   for (let i = 0; i < 10; i++) await addPhoto(db, OWNER, ref);
   await rejects(addPhoto(db, OWNER, ref), /photo_limit/);
   // A published piece keeps at least one photo.
-  const solo = await save(db, OWNER, null, { name: "Belt", category: "accessories" });
+  const solo = await save(db, OWNER, null, { name: "Farandole necklace", category: "jewellery" });
   const only = await addPhoto(db, OWNER, solo);
   await save(db, OWNER, solo, { published: true });
   await rejects(asUser(db, OWNER, "select public.admin_delete_product_image($1)", [only]), /needs_photo/);
@@ -135,7 +138,7 @@ test("photo files: only the owner may upload or delete them; nobody can list the
 
 test("deleting a piece removes its photo rows and returns the file paths, logged", async () => {
   const db = await setup();
-  const ref = await save(db, OWNER, null, { name: "Scarf", category: "accessories" });
+  const ref = await save(db, OWNER, null, { name: "Ring", category: "jewellery" });
   const p1 = photo(ref);
   await addPhoto(db, OWNER, ref, p1);
   const paths = (await asUser(db, OWNER, "select public.admin_delete_product($1) as p", [ref])).rows[0].p;

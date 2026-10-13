@@ -36,7 +36,7 @@ export const localeInfo: Record<Locale, LocaleInfo> = {
 
 export const dirOf = (locale: Locale) => localeInfo[locale].dir;
 
-/** "/collection?item=X" in Arabic → "/ar/collection?item=X". English stays unprefixed. */
+/** "/product/X" in Arabic → "/ar/product/X". English stays unprefixed. */
 export function localePath(locale: Locale, path = "/") {
   const p = path.startsWith("/") ? path : `/${path}`;
   if (locale === defaultLocale) return p;

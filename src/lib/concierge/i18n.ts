@@ -75,7 +75,7 @@ const en = {
     bags: "Bags",
     watches: "Watches",
     shoes: "Shoes",
-    accessories: "Accessories",
+    jewellery: "Jewellery",
     other: "Something else",
   } as Record<string, string>,
   topics: {
@@ -273,7 +273,7 @@ const ar: Strings = {
     bags: "حقائب",
     watches: "ساعات",
     shoes: "أحذية",
-    accessories: "إكسسوارات",
+    jewellery: "مجوهرات",
     other: "شيء آخر",
   },
   topics: {
@@ -465,7 +465,7 @@ const ru: Strings = {
     bags: "Сумки",
     watches: "Часы",
     shoes: "Обувь",
-    accessories: "Аксессуары",
+    jewellery: "Украшения",
     other: "Другое",
   },
   topics: {
@@ -659,7 +659,7 @@ const fr: Strings = {
     bags: "Sacs",
     watches: "Montres",
     shoes: "Chaussures",
-    accessories: "Accessoires",
+    jewellery: "Bijoux",
     other: "Autre chose",
   },
   topics: {

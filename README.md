@@ -30,9 +30,11 @@ npm start                    # serves the build on http://localhost:3000
 |---|---|
 | Phone, WhatsApp, email, Instagram, Facebook, company name, reseller statement | `src/config/site.ts` |
 | Genuine products | Supabase (see [docs/SUPABASE.md](docs/SUPABASE.md)); offline fallback `src/data/products.ts` |
-| Editorial previews (AI mood images, not for sale) | `src/data/editorial.ts` |
+| The four categories and their types | `src/data/taxonomy.ts` |
+| The permitted houses (enforced again in the database) | `src/data/brands.ts` |
+| Listing, filters, sorting and search | `src/lib/shop.ts` |
+| Shop pages, menu, product page, bag and checkout | [docs/SHOP.md](docs/SHOP.md) |
 | Demo records for testing the bag | `src/data/demo.ts` (only with `DEMO_INVENTORY=true`, never in production) |
-| Categories (full taxonomy from the brand PDF) | `src/data/taxonomy.ts` |
 | Shipping / returns / privacy / terms text | `src/content/policies.ts` |
 | WhatsApp message wording | `src/lib/whatsapp.ts` |
 | Styles and brand colours | `src/app/globals.css` (tokens at the top) |
@@ -47,18 +49,17 @@ Edit `src/config/site.ts`. Every link on the site reads from it. To show Faceboo
 
 ## Adding products
 
-Each item has a **status**:
+Add pieces in the private panel (`/admin/products`): photos, price, stock, versions (colours / sizes) and publishing, without touching code. The shop lists only **Bags, Shoes, Watches and Jewellery**, and only **Hermès, Louis Vuitton, Gucci and Chanel** — plus **Cartier, Van Cleef & Arpels and Bvlgari** for Jewellery. The panel offers nothing else and the database refuses anything else (`out_of_scope`, `brand_not_allowed`), so an import or a dashboard edit can't publish it either. Rules, fields per category and the go-live steps: [docs/SHOP.md](docs/SHOP.md).
 
-- `enquiry_only`: a real piece. The item panel shows "Enquire for details" or its price, plus WhatsApp and viewing buttons. There is no online checkout.
-- `available`: a real piece that can be added to the bag. It needs a price in AED, stock and delivery text. If any of these is missing, the site automatically shows the item as `enquiry_only`.
-- `reserved` / `sold`: the item stays visible, cannot be bought, and offers "Request a similar piece".
-- `editorial_preview`: inspiration only. It is never purchasable and never appears in product structured data.
+Each piece has a **status**:
 
-Only fill in fields you know are true. The site hides empty fields and never shows AED 0. Never put supplier or owner details in product data, because it is public.
+- `enquiry_only`: a real piece. The page shows its price if one is set (otherwise "Price on request"), with WhatsApp and "Request availability". There is no online checkout.
+- `available`: a real piece that can be added to the bag. It needs a price in AED, stock and delivery text. If any of these is missing, the site automatically shows the piece as `enquiry_only`.
+- `reserved` / `sold`: the piece stays visible, cannot be bought, and offers "Request a similar piece".
 
-For the Supabase workflow (dashboard entry and photo upload), see [docs/SUPABASE.md](docs/SUPABASE.md). Without Supabase configured, the site reads `src/data/products.ts`, which contains a commented template.
+Only fill in fields you know are true. The site hides empty fields and never shows AED 0. Never put supplier or owner details in product data, because it is public. Without Supabase configured, the site reads `src/data/products.ts` (a commented template).
 
-Each item gets a shareable link: `/collection?item=REFERENCE`.
+Each piece has its own page: `/product/REFERENCE` (a chosen version adds `?sku=CODE`).
 
 ## Preview vs live
 
@@ -67,6 +68,7 @@ Each item gets a shareable link: `/collection?item=REFERENCE`.
 | `SITE_INDEXING=false` (default) | `robots.txt` blocks everything and pages carry `noindex`. Use for previews. |
 | `SITE_INDEXING=true` | Indexing on (production deployment only). Turn on only when the public launch is approved. |
 | `DEMO_INVENTORY=true` | Shows labelled demo records for testing. Ignored on production. |
+| `DRAFT_PREVIEW=true` | Private design preview with draft pieces built by `scripts/drafts/build.mjs` (git-ignored). Drafts can't be bought and are never indexed. Ignored on production. |
 | `NEXT_PUBLIC_ANALYTICS_ENABLED` | Analytics events (`src/lib/analytics.ts`) are forwarded only when this is on **and** the visitor has consented. A consent banner must be added before enabling any tracking tool. |
 
 ## Enquiries
@@ -83,18 +85,18 @@ Setup, roles, daily use, notification connections, order checks, optional AI, mi
 
 ## Payments
 
-No payment provider is connected. `/api/checkout` re-checks every item against the server catalogue and ignores prices sent by the browser. It then returns a truthful "online payment is not available yet" response, and the bag offers WhatsApp instead. To connect a provider, implement `PaymentProvider` in `src/lib/payments/index.ts`. The requirements are:
+No payment provider is connected. The checkout (`/checkout`) re-checks the bag on the server (`/api/checkout` ignores prices sent by the browser), takes the customer's details and delivery choice, and stores a **purchase request** for the team (`/api/purchase-request` → the panel's Requests). It says plainly that nothing is charged. Where requests can't be stored it hands over to WhatsApp with the bag in the message. To connect a provider, implement `PaymentProvider` in `src/lib/payments/index.ts`. The requirements are:
 
 - Use a hosted or tokenised checkout, with secrets stored server-side only.
+- Start from a stored purchase request, re-check price and stock, and reserve one-off pieces.
 - Mark an order paid only from a verified webhook (`src/app/api/payments/webhook`), never from a redirect.
-- Make webhook handling idempotent.
-- Reserve stock for one-off pieces.
+- Make webhook handling idempotent, and handle failed and cancelled payments.
 - Start in test mode.
 
 ## Deployment, backups
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and [docs/BACKUPS.md](docs/BACKUPS.md).
 
-## Notes on the two-page design
+## Addresses
 
-Items have no individual pages. `/collection?item=REF` is server-rendered with the item's title, description, image, canonical link and (for genuine items only) Product structured data, so shared links preview correctly. Search engines may still give query-string URLs less weight than dedicated product pages. If organic product search becomes important, add per-item pages later.
+Category pages (`/bags`, `/bags/hermes`), product pages (`/product/REF`) and the Collection (`/collection?q=…`) have their own canonical addresses, titles and structured data. Older addresses (`/collection?category=…`, `/collection?item=…`) redirect permanently (308) to the new ones, keeping the language; old Accessories links go to Jewellery.

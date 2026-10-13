@@ -41,10 +41,23 @@ const platformStandIns = `
   alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
 `;
 
-export async function freshDb() {
+/** Migration files in order; `before` stops at (and excludes) the first file whose name starts with it. */
+function migrationFiles(before) {
+  const all = readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
+  const stop = before ? all.findIndex((f) => f.startsWith(before)) : -1;
+  return stop === -1 ? all : all.slice(0, stop);
+}
+
+/** Applies one migration file by name prefix (for tests of what a migration does to existing rows). */
+export async function applyMigration(db, prefix) {
+  const file = readdirSync(dir).find((f) => f.startsWith(prefix) && f.endsWith(".sql"));
+  await db.exec(readFileSync(join(dir, file), "utf8"));
+}
+
+export async function freshDb({ before } = {}) {
   const db = new PGlite();
   await db.exec(platformStandIns);
-  for (const file of readdirSync(dir).filter((f) => f.endsWith(".sql")).sort()) {
+  for (const file of migrationFiles(before)) {
     // pg_net is a platform extension; the stand-in above provides net.http_post instead.
     const sql = readFileSync(join(dir, file), "utf8").replace(/create extension if not exists pg_net[^;]*;/i, "");
     try {

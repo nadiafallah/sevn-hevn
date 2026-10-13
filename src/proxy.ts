@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { ACCESS_COOKIE, REFRESH_COOKIE, REFRESH_MAX_AGE, cookieOptions, refreshSession, tokenExpiresAt } from "@/lib/admin/gotrue";
-import { LOCALE_COOKIE, defaultLocale, isLocale, splitLocale } from "@/i18n/config";
+import { LOCALE_COOKIE, defaultLocale, isLocale, localePath, splitLocale } from "@/i18n/config";
+import { brandAllowedIn, findBrand } from "@/data/brands";
+import { isCategoryId } from "@/data/taxonomy";
 
 /**
  * Two jobs:
@@ -18,9 +20,38 @@ export async function proxy(request: NextRequest) {
   return language(request);
 }
 
+/**
+ * Addresses from before the shop pages (Oct 2026) move permanently to their new place:
+ *   /collection?item=REF            → /product/REF
+ *   /collection?category=bags       → /bags   (with ?designer=Hermès → /bags/hermes)
+ *   /collection?category=accessories → /jewellery (Jewellery replaced Accessories)
+ * The language prefix and the search text are kept.
+ */
+function legacyShopAddress(path: string, params: URLSearchParams): string | null {
+  if (path !== "/collection") return null;
+  const item = params.get("item");
+  if (item && /^[A-Za-z0-9-]{2,40}$/.test(item)) return `/product/${encodeURIComponent(item)}`;
+  const category = params.get("category");
+  if (!category) return null;
+  const target = category === "accessories" ? "jewellery" : isCategoryId(category) ? category : null;
+  const keep = new URLSearchParams();
+  for (const k of ["q", "sort"]) {
+    const v = params.get(k);
+    if (v) keep.set(k, v);
+  }
+  const qs = keep.toString() ? `?${keep}` : "";
+  if (!target) return `/collection${qs}`;
+  const brand = findBrand(params.get("designer") ?? params.get("brand"));
+  const brandPart = brand && brandAllowedIn(target, brand.name) ? `/${brand.id}` : "";
+  return `/${target}${brandPart}${qs}`;
+}
+
 function language(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const { locale, path, prefixed } = splitLocale(pathname);
+
+  const moved = legacyShopAddress(path, request.nextUrl.searchParams);
+  if (moved) return NextResponse.redirect(new URL(prefixed ? localePath(locale, moved) : moved, request.url), 308);
 
   if (prefixed && locale === defaultLocale) {
     return NextResponse.redirect(new URL(`${path}${search}`, request.url), 308);

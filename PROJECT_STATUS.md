@@ -1,6 +1,26 @@
 # Project status: SEVN HEVN
 
-Last updated: 12 October 2026
+Last updated: 13 October 2026
+
+## Shop: four categories, permitted houses, product pages, checkout (13 Oct 2026)
+
+Branch `feat/shop-four-categories`. Not on the live site until it is merged and the database update is run. Details: [docs/SHOP.md](docs/SHOP.md).
+
+| Part | State |
+| --- | --- |
+| Four categories (Bags, Shoes, Watches, Jewellery; Jewellery replaces Accessories) and their few types | done: site, menu, search, sourcing form, chat, panel and database |
+| Permitted houses only (Hermès, Louis Vuitton, Gucci, Chanel; plus Cartier, Van Cleef & Arpels, Bvlgari for Jewellery) | done: enforced in the catalogue, the panel, the forms, the chat's choices and the database (pieces outside are hidden, never deleted) |
+| Header with a menu per category (houses, types, real pieces), click / keyboard / hover; phone drawer with fold-out sections | done |
+| Home: hero, four category cards, new arrivals (real pieces only), houses, special request + WhatsApp | done |
+| Category / house pages with filters from real data, sorting, shareable addresses, Back | done |
+| Product pages with gallery, zoom, versions (colour / size / hardware), details per category, related pieces, structured data | done |
+| Bag with versions; checkout (bag re-checked on the server → details → delivery → payment notice) storing a purchase request in the panel | done; **online payment not connected** (no provider or merchant account) |
+| Redirects from the old addresses (308) | done |
+| Database migration `20261013120000_shop_four_categories.sql` | **not applied in production yet** (with the two pending earlier ones; the SQL file is with the owner) |
+| Real pieces | none published. Four documented pieces from the shop's own Instagram exist as private-preview drafts only, waiting for the owner's confirmation of price, stock and details |
+| Fix: home / chat / checkout answered 404 after a catalogue refresh (since the language release) | fixed in this branch |
+
+Tests (13 Oct 2026): `npm run typecheck`, `npm run lint`; `npm run test:unit` 35 of 35; `npm run db:test` 43 of 43; `tests/e2e/run.sh` 27 of 27. A browser review made 264 page loads (Chromium, Firefox and WebKit; desktop and phone; four languages; eleven pages) with no horizontal scroll, no errors and no broken images. The axe scan found no serious or critical issues, including with the menu open. Not run: HawkScan (no CLI or API key), real phones and real Safari.
 
 ## Website languages (Oct 2026)
 

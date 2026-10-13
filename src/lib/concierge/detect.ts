@@ -5,8 +5,8 @@
  * The optional AI provider can improve on it, but the chat never depends on AI.
  */
 
-/** The four active categories, plus "other" so a request outside them is still taken down for the team. */
-export type CategoryKey = "bags" | "watches" | "shoes" | "accessories" | "other";
+/** The shop's four categories, plus "other" so a request outside them is still taken down for the team. */
+export type CategoryKey = "bags" | "shoes" | "watches" | "jewellery" | "other";
 export type Intent = "sourcing" | "question" | "order" | "callback";
 export type Topic = "price" | "authenticity" | "shipping" | "returns" | "other";
 
@@ -89,18 +89,18 @@ const MODELS: [RegExp, string, string, CategoryKey][] = [
   [/\bnautilus\b|نوتيلوس/i, "Nautilus", "Patek Philippe", "watches"],
   [/\baquanaut\b/i, "Aquanaut", "Patek Philippe", "watches"],
   [/\broyal\s*oak\b|رويال\s*أوك/i, "Royal Oak", "Audemars Piguet", "watches"],
-  [/\balhambra\b|الهمبرا/i, "Alhambra", "Van Cleef & Arpels", "other"],
-  [/\blove\s*bracelet\b/i, "Love bracelet", "Cartier", "other"],
-  [/\bjuste\s*un\s*clou\b/i, "Juste un Clou", "Cartier", "other"],
-  [/\bserpenti\b/i, "Serpenti", "Bvlgari", "other"],
+  [/\balhambra\b|الهمبرا/i, "Alhambra", "Van Cleef & Arpels", "jewellery"],
+  [/\blove\s*bracelet\b/i, "Love bracelet", "Cartier", "jewellery"],
+  [/\bjuste\s*un\s*clou\b/i, "Juste un Clou", "Cartier", "jewellery"],
+  [/\bserpenti\b/i, "Serpenti", "Bvlgari", "jewellery"],
 ];
 
 const CATEGORY_WORDS: [RegExp, CategoryKey][] = [
   [/\b(hand)?bags?\b|\bclutch(es)?\b|\btote\b|\bpurse\b|\bwallet\b|حقيب|شنط|محفظ|сумк|сумоч|клатч|кошел|\bsacs?\b|\bpochettes?\b|\bportefeuilles?\b|\bmaroquinerie\b/i, "bags"],
   [/\bwatch(es)?\b|\btimepiece\b|ساع|часы|часов|часики|\bmontres?\b/i, "watches"],
   [/\bshoes?\b|\bheels?\b|\bsneakers?\b|\bsandals?\b|\bloafers?\b|\bboots?\b|\bpumps?\b|\bmules?\b|حذاء|أحذية|احذية|جزم|صندل|كعب|обув|туфл|кроссов|кед|сандал|босонож|лофер|ботин|сапог|мюли|\bchaussures?\b|\bescarpins?\b|\bbaskets\b|\bsandales?\b|\bmocassins?\b|\bbottes?\b|\bbottines?\b/i, "shoes"],
-  [/\brings?\b|\bnecklace\b|\bbracelet\b|\bearrings?\b|\bpendant\b|\bjewel(le)?ry\b|خاتم|قلادة|عقد|سوار|أسورة|اسوارة|أقراط|حلق|مجوهرات|кольц|колье|ожерель|браслет|серьг|подвес|кулон|ювелир|\bbagues?\b|\bcolliers?\b|\bboucles? d.oreilles?\b|\bpendentifs?\b|\bbijoux?\b|\bjoaillerie\b/i, "other"],
-  [/\bbelt\b|\bscarf\b|\bsunglasses\b|\bcharm\b|حزام|وشاح|نظار|ремен|ремн|пояс|шарф|платок|платк|очки|брелок|\bceintures?\b|[ée]charpes?\b|\bfoulards?\b|\blunettes\b/i, "accessories"],
+  [/\brings?\b|\bnecklace\b|\bbracelet\b|\bearrings?\b|\bpendant\b|\bjewel(le)?ry\b|خاتم|قلادة|عقد|سوار|أسورة|اسوارة|أقراط|حلق|مجوهرات|кольц|колье|ожерель|браслет|серьг|подвес|кулон|ювелир|\bbagues?\b|\bcolliers?\b|\bboucles? d.oreilles?\b|\bpendentifs?\b|\bbijoux?\b|\bjoaillerie\b/i, "jewellery"],
+  [/\bbelt\b|\bscarf\b|\bsunglasses\b|\bcharm\b|حزام|وشاح|نظار|ремен|ремн|пояс|шарф|платок|платк|очки|брелок|\bceintures?\b|[ée]charpes?\b|\bfoulards?\b|\blunettes\b/i, "other"],
 ];
 
 const BRAND_CATEGORY: Record<string, CategoryKey> = {
@@ -108,7 +108,7 @@ const BRAND_CATEGORY: Record<string, CategoryKey> = {
   "Vacheron Constantin": "watches", Omega: "watches", "Jaeger-LeCoultre": "watches", IWC: "watches", Hublot: "watches",
   Panerai: "watches", Breguet: "watches", "A. Lange & Söhne": "watches", "F.P. Journe": "watches", Tudor: "watches",
   "Christian Louboutin": "shoes", "Manolo Blahnik": "shoes", "Jimmy Choo": "shoes", Aquazzura: "shoes", "Gianvito Rossi": "shoes",
-  "Van Cleef & Arpels": "other", Graff: "other", "Harry Winston": "other", Goyard: "bags", Moynat: "bags", Delvaux: "bags",
+  "Van Cleef & Arpels": "jewellery", Cartier: "jewellery", Bvlgari: "jewellery", Graff: "other", "Harry Winston": "other", Goyard: "bags", Moynat: "bags", Delvaux: "bags",
 };
 
 const COLOURS: [RegExp, string][] = [
@@ -194,9 +194,9 @@ export function detectIntent(text: string): { intent?: Intent; topic?: Topic } {
   return {};
 }
 
-/** Product reference typed directly or inside a website link (…/collection?item=SH-0001). */
+/** Product reference typed directly or inside a website link (…/product/SH-0001, or the older …/collection?item=SH-0001). */
 export function findItemRef(text: string) {
-  const fromUrl = text.match(/[?&]item=([A-Za-z0-9-]{2,40})/);
+  const fromUrl = text.match(/\/product\/([A-Za-z0-9-]{2,40})/) ?? text.match(/[?&]item=([A-Za-z0-9-]{2,40})/);
   if (fromUrl) return fromUrl[1];
   const direct = text.match(/\b([A-Za-z]{1,6}-[A-Za-z0-9]{1,12}(?:-[A-Za-z0-9]{1,12})?)\b/);
   return direct && !/^ORD-|^REQ-/i.test(direct[1]) ? direct[1] : undefined;

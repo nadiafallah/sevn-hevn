@@ -16,9 +16,9 @@ test("migrations apply cleanly, twice in separate databases", async () => {
 test("public can read only published products and their images", async () => {
   const db = await freshDb();
   await db.exec(`
-    insert into public.products (ref, published, status, name, category) values
-      ('SH-0001', true, 'enquiry_only', 'Published piece', 'bags'),
-      ('SH-0002', false, 'enquiry_only', 'Draft piece', 'bags');
+    insert into public.products (ref, published, status, name, category, brand) values
+      ('SH-0001', true, 'enquiry_only', 'Published piece', 'bags', 'Hermès'),
+      ('SH-0002', false, 'enquiry_only', 'Draft piece', 'bags', 'Hermès');
     insert into public.product_images (product_ref, storage_path, alt) values
       ('SH-0001', 'SH-0001/front.jpg', 'Front'),
       ('SH-0002', 'SH-0002/front.jpg', 'Front');
@@ -33,7 +33,7 @@ test("public can read only published products and their images", async () => {
 
 test("public cannot insert, update or delete catalogue rows", async () => {
   const db = await freshDb();
-  await db.exec(`insert into public.products (ref, published, name, category) values ('SH-0001', true, 'Piece', 'bags')`);
+  await db.exec(`insert into public.products (ref, published, name, category, brand) values ('SH-0001', true, 'Piece', 'bags', 'Chanel')`);
   for (const role of ["anon", "authenticated"]) {
     await rejects(as(db, role, `insert into public.products (ref, name, category) values ('X-1', 'x', 'bags')`), /permission denied/);
     await rejects(as(db, role, `update public.products set price_aed = 1 where ref = 'SH-0001'`), /permission denied/);
@@ -92,7 +92,7 @@ test("enquiries are rate limited per sender", async () => {
 
 test("catalogue changes notify the website only when Vault is configured", async () => {
   const db = await freshDb();
-  await db.exec(`insert into public.products (ref, name, category) values ('SH-1', 'x', 'bags')`);
+  await db.exec(`insert into public.products (ref, name, category, brand) values ('SH-1', 'x', 'bags', 'Gucci')`);
   assert.equal((await db.query("select count(*)::int as n from net.calls")).rows[0].n, 0);
   await db.exec(`insert into vault.store values ('catalog_revalidate_url', 'https://example.test/api/revalidate'), ('catalog_revalidate_secret', 's3cret')`);
   await as(db, "service_role", `update public.products set published = true where ref = 'SH-1'`);

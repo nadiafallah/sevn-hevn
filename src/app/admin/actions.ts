@@ -393,6 +393,7 @@ const productRef = (f: FormData) => {
 const PRODUCT_TEXT = [
   "name", "category", "subcategory", "brand", "model_reference", "description", "stock", "condition", "condition_notes",
   "year", "material", "colour", "size", "dimensions", "authentication", "delivery", "returns", "status",
+  "hardware", "size_system", "case_diameter_mm", "movement", "purity", "stones", "audience",
 ] as const;
 
 /** The product fields present in the form. Empty values clear optional fields (checked again in the database). */
@@ -477,6 +478,44 @@ export async function removeProductPhoto(form: FormData) {
   await storageRemove(ctx.api, PRODUCT_IMAGES_BUCKET, [path], ctx.token).catch(() => console.error("[admin] product photo file could not be removed"));
   refreshCatalogue();
   back(`/admin/products/${ref}`, { ok: "photo_removed" });
+}
+
+// Versions (colour / size / hardware) of a piece.
+const VARIANT_TEXT = ["sku", "colour", "size", "hardware", "material", "stock", "image_id"] as const;
+
+function variantFields(form: FormData) {
+  const f: Record<string, unknown> = {};
+  for (const k of VARIANT_TEXT) if (form.has(k)) f[k] = str(form, k, 120);
+  if (form.has("price_aed")) f.price_aed = str(form, "price_aed", 30).replace(/aed|[\s,]/gi, "");
+  return f;
+}
+
+export async function saveVariant(form: FormData) {
+  const ctx = await requireOwner();
+  const ref = productRef(form);
+  const idRaw = str(form, "variant", 20);
+  if (idRaw && !/^[0-9]{1,18}$/.test(idRaw)) back(`/admin/products/${ref}`, { error: "invalid_request" });
+  try {
+    await rpc(ctx.api, "admin_save_variant", { p_ref: ref, p_id: idRaw ? Number(idRaw) : null, p_fields: variantFields(form) }, ctx.token);
+  } catch (e) {
+    back(`/admin/products/${ref}`, { error: codeOf(e) });
+  }
+  refreshCatalogue();
+  back(`/admin/products/${ref}`, { ok: "variant_saved" });
+}
+
+export async function deleteVariant(form: FormData) {
+  const ctx = await requireOwner();
+  const ref = productRef(form);
+  const idRaw = str(form, "variant", 20);
+  if (!/^[0-9]{1,18}$/.test(idRaw)) back(`/admin/products/${ref}`, { error: "invalid_request" });
+  try {
+    await rpc(ctx.api, "admin_delete_variant", { p_id: Number(idRaw) }, ctx.token);
+  } catch (e) {
+    back(`/admin/products/${ref}`, { error: codeOf(e) });
+  }
+  refreshCatalogue();
+  back(`/admin/products/${ref}`, { ok: "variant_removed" });
 }
 
 export async function deleteProduct(form: FormData) {

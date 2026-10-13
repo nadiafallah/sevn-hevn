@@ -27,3 +27,7 @@ npm-debug.log*
 # supabase cli local state
 /supabase/.temp/
 /supabase/.branches/
+
+# Private design preview (scripts/drafts/build.mjs) — never committed
+/public/drafts/
+/src/data/drafts.generated.json

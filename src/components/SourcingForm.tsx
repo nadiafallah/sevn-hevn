@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { categories, isCategoryId } from "@/data/taxonomy";
-import { site } from "@/config/site";
+import { brandAllowedIn, brandsFor, coreBrands, findBrand } from "@/data/brands";
 import { useI18n } from "@/i18n/I18nProvider";
 import { CARRY_EVENT, takeCarriedForm, type Carry } from "@/i18n/carry";
 import { sourcingMessage } from "@/lib/whatsapp";
@@ -29,7 +29,7 @@ export function SourcingForm({ prefill, tone = "light", carryKey }: { prefill?: 
   const [method, setMethod] = useState<ContactMethod>("WhatsApp");
   const [values, setValues] = useState<Values>(() => ({
     category: isCategoryId(prefill?.category) ? prefill.category : "",
-    brand: prefill?.brand ?? "",
+    brand: findBrand(prefill?.brand)?.name ?? "",
     model: prefill?.model ?? "",
     details: prefill?.details ?? "",
     budget: "",
@@ -59,7 +59,13 @@ export function SourcingForm({ prefill, tone = "light", carryKey }: { prefill?: 
     return () => window.removeEventListener(CARRY_EVENT, give);
   }, [carryKey]);
 
-  const set = (k: keyof Values) => (e: { target: { value: string } }) => setValues((v) => ({ ...v, [k]: e.target.value }));
+  const set = (k: keyof Values) => (e: { target: { value: string } }) =>
+    setValues((v) => {
+      const next = { ...v, [k]: e.target.value };
+      // Cartier, Van Cleef & Arpels and Bvlgari are offered for jewellery only.
+      if (k === "category" && next.brand && isCategoryId(next.category) && !brandAllowedIn(next.category, next.brand)) next.brand = "";
+      return next;
+    });
   const label = {
     category: (id: string) => (isCategoryId(id) ? t.categories[id] : id),
     budget: (id: string) => f.budgets[id as (typeof budgetIds)[number]] ?? id,
@@ -174,23 +180,21 @@ export function SourcingForm({ prefill, tone = "light", carryKey }: { prefill?: 
 
         <div className="field">
           <label htmlFor={id("brand")}>{f.designer}</label>
-          <input
+          {/* Only the houses the shop lists for the chosen category (data/brands.ts). */}
+          <select
             id={id("brand")}
-            list={id("brands")}
             value={values.brand}
             onChange={set("brand")}
-            autoComplete="off"
-            maxLength={80}
-            dir="auto"
-            placeholder={f.designerPlaceholder}
             aria-invalid={!!errors.describe}
             aria-describedby={errors.describe ? id("describe-err") : undefined}
-          />
-          <datalist id={id("brands")}>
-            {site.sourcingBrands.map((b) => (
-              <option key={b} value={b} />
+          >
+            <option value="">{f.anyHouse}</option>
+            {(isCategoryId(values.category) ? brandsFor(values.category) : coreBrands).map((b) => (
+              <option key={b.id} value={b.name} lang="en">
+                {b.name}
+              </option>
             ))}
-          </datalist>
+          </select>
         </div>
 
         <div className="field field--wide">

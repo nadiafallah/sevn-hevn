@@ -27,13 +27,39 @@ export interface PanelProduct {
   returns: string | null;
   featured: boolean;
   updated_at: string;
+  // Added by the shop migration (20261013120000); undefined until it has run.
+  hardware?: string | null;
+  size_system?: string | null;
+  case_diameter_mm?: number | string | null;
+  movement?: string | null;
+  purity?: string | null;
+  stones?: string | null;
+  audience?: string | null;
   product_images: { id: number; storage_path: string; width: number; height: number; alt: string; position: number }[];
+  product_variants?: PanelVariant[];
 }
 
-export const PRODUCT_SELECT =
+export interface PanelVariant {
+  id: number;
+  sku: string;
+  colour: string | null;
+  size: string | null;
+  hardware: string | null;
+  material: string | null;
+  price_aed: number | null;
+  stock: number | null;
+  image_id: number | null;
+  position: number;
+}
+
+const BASE =
   "ref,published,status,name,category,subcategory,brand,model_reference,description,price_aed,stock,condition,condition_notes," +
   "year,material,colour,size,dimensions,included,authentication,delivery,returns,featured,updated_at," +
   "product_images(id,storage_path,width,height,alt,position)";
+
+export const PRODUCT_SELECT = `${BASE},hardware,size_system,case_diameter_mm,movement,purity,stones,audience,product_variants(id,sku,colour,size,hardware,material,price_aed,stock,image_id,position)`;
+/** Before the shop migration has run, the new columns and versions don't exist yet. */
+export const PRODUCT_SELECT_LEGACY = BASE;
 
 export const PRODUCT_PHOTO_LIMIT = 12;
 

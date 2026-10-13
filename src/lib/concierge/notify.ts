@@ -30,7 +30,7 @@ interface Claimed {
   };
 }
 
-const TYPE: Record<string, string> = { sourcing: "Find a piece", question: "Question", order_followup: "Order follow-up", callback: "Call back" };
+const TYPE: Record<string, string> = { sourcing: "Find a piece", question: "Question", order_followup: "Order follow-up", callback: "Call back", purchase: "Purchase request (website checkout, not paid)" };
 
 function panelLink(id: string) {
   return `${site.url}/admin/requests/${id}`;
@@ -39,7 +39,7 @@ function panelLink(id: string) {
 function summaryLines(r: Claimed["request"]) {
   const when = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Dubai" }).format(new Date(r.created_at));
   return [
-    `${r.is_test ? "[TEST] " : ""}New concierge request ${r.reference}`,
+    `${r.is_test ? "[TEST] " : ""}New ${r.type === "purchase" ? "purchase" : "concierge"} request ${r.reference}`,
     `Type: ${TYPE[r.type] ?? r.type}`,
     `Language: ${isLocale(r.locale) ? localeEnglishNames[r.locale] : r.locale}`,
     ...(r.needs_review ? [`Needs your confirmation: ${r.needs_review}`] : []),

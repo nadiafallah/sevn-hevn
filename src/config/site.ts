@@ -26,7 +26,7 @@ export const site = {
   tagline: "Welcome to your happy place.",
   supportingLine: "Exceptional pieces. Personally sourced in Dubai.",
   description:
-    "SEVN HEVN is a Dubai maison for exceptional luxury pieces — bags, watches including vintage, shoes and accessories — with private sourcing and private viewings by request.",
+    "SEVN HEVN is a Dubai maison for exceptional luxury pieces — bags, shoes, watches and fine jewellery from Hermès, Louis Vuitton, Gucci and Chanel — with private sourcing and private viewings by request.",
   url: resolveSiteUrl(),
   canonicalHost: "www.sevnhevn.ae",
   location: {
@@ -61,8 +61,6 @@ export const site = {
   licence: null as null | { authority: string; number: string },
   resellerStatement:
     "SEVN HEVN is an independent business. We are not affiliated with, authorised by or endorsed by any of the brands mentioned on this website. Brand names are used only to describe items and sourcing requests.",
-  /** Houses clients can name in a sourcing request (not a claim of stock or partnership). */
-  sourcingBrands: ["Audemars Piguet", "Rolex", "Hermès", "Bvlgari", "Gucci", "Louis Vuitton"],
 } as const;
 
 /** Indexing is off unless explicitly enabled for the public launch. */
@@ -73,3 +71,11 @@ export const indexingEnabled =
 /** Demo records exist only to test cart behaviour locally. Never on production. */
 export const demoInventoryEnabled =
   process.env.DEMO_INVENTORY === "true" && process.env.VERCEL_ENV !== "production";
+
+/**
+ * Private design preview with draft pieces awaiting the owner's approval (scripts/drafts/). Local
+ * or preview deployments only — drafts are never loaded on production, never purchasable and never
+ * indexed.
+ */
+export const draftPreviewEnabled =
+  process.env.DRAFT_PREVIEW === "true" && process.env.VERCEL_ENV !== "production";

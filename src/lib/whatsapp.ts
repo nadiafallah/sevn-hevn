@@ -1,6 +1,7 @@
 import { site } from "@/config/site";
 import { localePath, type Locale } from "@/i18n/config";
 import type { UiDictionary } from "@/i18n/dictionaries";
+import type { Variant } from "@/data/types";
 
 /**
  * Wording of the messages a visitor sends to SEVN HEVN from their own WhatsApp or e-mail
@@ -22,21 +23,32 @@ export function emailUrl(subject: string, body?: string) {
   return `${site.contact.emailHref}?${params.toString().replace(/\+/g, "%20")}`;
 }
 
-/** Shareable link to an item, in the given language (English: /collection?item=REF). */
-export function itemUrl(ref: string, locale: Locale = "en") {
-  return `${site.url}${localePath(locale, `/collection?item=${encodeURIComponent(ref)}`)}`;
+/** Shareable link to a piece (and the chosen version), in the given language: /product/REF?sku=… */
+export function itemUrl(ref: string, locale: Locale = "en", sku?: string) {
+  return `${site.url}${localePath(locale, `/product/${encodeURIComponent(ref)}${sku ? `?sku=${encodeURIComponent(sku)}` : ""}`)}`;
 }
 
 export function generalMessage(m: MessageText) {
   return m.general;
 }
 
-export function itemMessage(item: { name: string; ref: string; brand?: string; status: string }, m: MessageText, locale: Locale) {
+/** "Noir · 40.5" — the chosen version's options, as shown on the page. */
+export const variantText = (v?: Pick<Variant, "colour" | "size" | "hardware" | "material">) => (v ? [v.colour, v.size, v.hardware, v.material].filter(Boolean).join(" · ") : "");
+
+/**
+ * A question about one piece: name, code (and version code), the chosen options, the price shown on
+ * the page and the link. Opening WhatsApp sends nothing until the visitor presses Send.
+ */
+export function itemMessage(
+  item: { name: string; ref: string; brand?: string; status: string },
+  m: MessageText,
+  locale: Locale,
+  opts: { variant?: Pick<Variant, "sku" | "colour" | "size" | "hardware" | "material">; details?: string; price?: string } = {},
+) {
   const title = item.brand ? `${item.brand} — ${item.name}` : item.name;
-  if (item.status === "editorial_preview") {
-    return [m.previewIntro, `${title} (${m.refShort} ${item.ref})`, itemUrl(item.ref, locale)].join("\n");
-  }
-  return [m.itemIntro, `${title}`, `${m.labels.reference}: ${item.ref}`, itemUrl(item.ref, locale)].join("\n");
+  const options = variantText(opts.variant) || opts.details || "";
+  const code = opts.variant && opts.variant.sku !== item.ref ? `${item.ref} / ${opts.variant.sku}` : item.ref;
+  return [m.itemIntro, title, `${m.labels.reference}: ${code}`, ...(options ? [options] : []), ...(opts.price ? [opts.price] : []), itemUrl(item.ref, locale, opts.variant?.sku)].join("\n");
 }
 
 type Field = [label: string, value: string | undefined | null];
@@ -104,13 +116,34 @@ export function viewingMessage(r: ViewingRequest, m: MessageText, locale: Locale
   ].join("\n");
 }
 
-export function cartMessage(items: { name: string; ref: string; qty: number }[], totalLabel: string | undefined, m: MessageText, locale: Locale) {
+export interface PurchaseLine {
+  ref: string;
+  sku?: string;
+  name: string;
+  options?: string;
+  qty: number;
+  price?: string;
+}
+
+/**
+ * The bag sent on WhatsApp: each piece with its code, options, quantity, price and link, the website
+ * request reference if one was stored, and the delivery choice.
+ */
+export function purchaseMessage(
+  lines: PurchaseLine[],
+  w: { intro: string; code: string; total?: string; reference?: string; delivery?: string; confirm: string },
+  locale: Locale,
+) {
   return [
-    m.cartIntro,
+    w.intro,
     "",
-    ...items.map((i) => `• ${i.name} (${m.refShort} ${i.ref})${i.qty > 1 ? ` × ${i.qty}` : ""} — ${itemUrl(i.ref, locale)}`),
-    ...(totalLabel ? ["", m.cartTotal.replace("{total}", totalLabel)] : []),
+    ...lines.map((l) =>
+      [`• ${l.name}${l.qty > 1 ? ` × ${l.qty}` : ""}`, `  ${w.code} ${l.sku && l.sku !== l.ref ? `${l.ref} / ${l.sku}` : l.ref}${l.options ? ` · ${l.options}` : ""}${l.price ? ` · ${l.price}` : ""}`, `  ${itemUrl(l.ref, locale, l.sku)}`].join("\n"),
+    ),
+    ...(w.total ? ["", w.total] : []),
+    ...(w.delivery ? [w.delivery] : []),
+    ...(w.reference ? [w.reference] : []),
     "",
-    m.cartConfirm,
+    w.confirm,
   ].join("\n");
 }
