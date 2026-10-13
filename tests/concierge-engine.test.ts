@@ -91,14 +91,28 @@ test("sourcing in English: asks one thing at a time, skips what was said, submit
   assert.match(run.last.assistant[0], /WhatsApp at \+971 50 123 4567/);
 });
 
-test("only the four active categories are offered; requests outside them are still taken down", async () => {
-  assert.equal(extract("Cartier Love bracelet in yellow gold").category, "other");
-  assert.equal(extract("a black leather belt").category, "accessories");
+test("only the shop's four categories are offered (Jewellery replaces Accessories); others are still taken down", async () => {
+  assert.equal(extract("Cartier Love bracelet in yellow gold").category, "jewellery");
+  assert.equal(extract("une bague Alhambra").category, "jewellery");
+  assert.equal(extract("кольцо Cartier").category, "jewellery");
+  assert.equal(extract("خاتم من كارتييه").category, "jewellery");
+  assert.equal(extract("a black leather belt").category, "other");
   const { deps } = makeDeps();
   const run = await play(deps, [choice("sourcing"), "Something special for my mother"]);
   const ask = run.turns.find((t) => t.state.step === "src_category");
   assert.ok(ask, "the category question is asked");
-  assert.deepEqual(ask.prompt.choices.map((c) => c.id), ["bags", "watches", "shoes", "accessories", "other"]);
+  assert.deepEqual(ask.prompt.choices.map((c) => c.id), ["bags", "shoes", "watches", "jewellery", "other"]);
+});
+
+test("the brand question offers only the shop's houses for the category", async () => {
+  const { deps } = makeDeps();
+  const watches = await play(deps, [choice("sourcing"), "I am looking for a watch"]);
+  const askW = watches.turns.find((t) => t.state.step === "src_brand");
+  assert.ok(askW, "the brand question is asked");
+  assert.deepEqual(askW.prompt.choices.map((c) => c.id), ["Hermès", "Louis Vuitton", "Gucci", "Chanel", "skip"]);
+  const rings = await play(makeDeps().deps, [choice("sourcing"), "I am looking for a ring"]);
+  const askJ = rings.turns.find((t) => t.state.step === "src_brand");
+  assert.deepEqual(askJ?.prompt.choices.map((c) => c.id), ["Hermès", "Louis Vuitton", "Gucci", "Chanel", "Cartier", "Van Cleef & Arpels", "Bvlgari", "skip"]);
 });
 
 test("Arabic: right wording, numbers kept left-to-right, international destination", async () => {

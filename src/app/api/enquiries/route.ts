@@ -6,6 +6,7 @@ import { isLocale, localeInfo, type Locale } from "@/i18n/config";
 import { formatDay } from "@/i18n/format";
 import { en } from "@/i18n/dictionaries/en";
 import { isCategoryId } from "@/data/taxonomy";
+import { brandAllowedIn, findBrand } from "@/data/brands";
 
 /** The team's record is written in English: choice ids from the form become English labels. */
 const english = en.ui;
@@ -86,6 +87,12 @@ export async function POST(request: Request) {
   let message: string;
   if (kind === "sourcing") {
     const fields = pickStrings(body.request, sourcingFields);
+    // Only the shop's houses (data/brands.ts), in the shop's spelling; the form offers no others.
+    if (fields.brand) {
+      const house = findBrand(fields.brand);
+      if (!house || (isCategoryId(fields.category) && !brandAllowedIn(fields.category, house.name))) return fail(400, "Choose one of our houses.", "invalid_brand");
+      fields.brand = house.name;
+    }
     const r: SourcingRequest = {
       ...fields,
       category: isCategoryId(fields.category) ? english.categories[fields.category] : fields.category,

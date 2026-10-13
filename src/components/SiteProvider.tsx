@@ -1,23 +1,11 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { ItemImage, ItemStatus } from "@/data/types";
 import { isPolicyId, type PolicyId } from "@/content/policies";
-import { maxQuantity } from "@/lib/format";
+import { findVariant, maxQuantity } from "@/lib/format";
+import type { ShopItem } from "@/lib/paths";
 import { track } from "@/lib/analytics";
 import { takeCarried } from "@/i18n/carry";
-
-export interface CartCatalogItem {
-  ref: string;
-  name: string;
-  brand?: string;
-  status: ItemStatus;
-  priceAED?: number;
-  stock?: number;
-  maxPerOrder?: number;
-  image?: ItemImage;
-  demo?: boolean;
-}
 
 export interface SourcingPrefill {
   category?: string;
@@ -41,60 +29,62 @@ export type Panel =
   | { type: "menu" }
   | { type: "policy"; id: PolicyId };
 
+/** One line in the bag: a piece, and the version (colour / size) chosen, if it has versions. */
 export interface CartLine {
   ref: string;
+  sku?: string;
   qty: number;
 }
+
+export const lineKey = (l: Pick<CartLine, "ref" | "sku">) => (l.sku ? `${l.ref}|${l.sku}` : l.ref);
 
 interface SiteContextValue {
   panel: Panel | null;
   openPanel: (panel: Panel) => void;
   closePanel: () => void;
-  catalog: Record<string, CartCatalogItem>;
+  /** The shop's pieces (client-safe fields), for the menu, search and the bag. */
+  items: ShopItem[];
+  itemByRef: Record<string, ShopItem>;
   /** True only where the server can store website enquiries (the production deployment). */
   websiteEnquiries: boolean;
   cart: {
     ready: boolean;
     lines: CartLine[];
     count: number;
-    add: (ref: string) => void;
-    remove: (ref: string) => void;
-    setQty: (ref: string, qty: number) => void;
-    has: (ref: string) => boolean;
+    add: (ref: string, sku?: string) => void;
+    remove: (key: string) => void;
+    setQty: (key: string, qty: number) => void;
+    has: (ref: string, sku?: string) => boolean;
+    clear: () => void;
   };
 }
 
 const SiteContext = createContext<SiteContextValue | null>(null);
 
-const STORAGE_KEY = "sevn-hevn-bag-v1";
+const STORAGE_KEY = "sevn-hevn-bag-v2";
+/** Bags saved before versions existed hold refs only; they are read once and carried over. */
+const LEGACY_KEY = "sevn-hevn-bag-v1";
 
 function readStoredCart(): CartLine[] {
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "[]");
+    const raw = window.localStorage.getItem(STORAGE_KEY) ?? window.localStorage.getItem(LEGACY_KEY) ?? "[]";
+    const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed
       .filter((l) => typeof l?.ref === "string" && Number.isInteger(l?.qty) && l.qty > 0)
       .slice(0, 20)
-      .map((l) => ({ ref: l.ref.slice(0, 40), qty: Math.min(l.qty, 10) }));
+      .map((l) => ({ ref: l.ref.slice(0, 40), ...(typeof l.sku === "string" && l.sku ? { sku: l.sku.slice(0, 48) } : {}), qty: Math.min(l.qty, 10) }));
   } catch {
     return [];
   }
 }
 
-export function SiteProvider({
-  catalog,
-  websiteEnquiries,
-  children,
-}: {
-  catalog: CartCatalogItem[];
-  websiteEnquiries: boolean;
-  children: ReactNode;
-}) {
+export function SiteProvider({ items, websiteEnquiries, children }: { items: ShopItem[]; websiteEnquiries: boolean; children: ReactNode }) {
   const [panel, setPanel] = useState<Panel | null>(null);
   const [lines, setLines] = useState<CartLine[]>([]);
   const [ready, setReady] = useState(false);
 
-  const catalogMap = useMemo(() => Object.fromEntries(catalog.map((c) => [c.ref, c])), [catalog]);
+  const itemByRef = useMemo(() => Object.fromEntries(items.map((c) => [c.ref, c])), [items]);
 
   useEffect(() => {
     // Restore the bag after hydration; localStorage is unavailable on the server.
@@ -112,6 +102,7 @@ export function SiteProvider({
     if (!ready) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
+      window.localStorage.removeItem(LEGACY_KEY);
     } catch {
       /* storage may be blocked; the bag still works for this visit */
     }
@@ -141,46 +132,50 @@ export function SiteProvider({
   const closePanel = useCallback(() => {
     setPanel((current) => {
       if (current?.type === "policy" && window.location.hash === `#${current.id}`) {
-        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
       }
       return null;
     });
   }, []);
 
+  const limitFor = useCallback(
+    (ref: string, sku?: string) => {
+      const item = itemByRef[ref];
+      return item ? maxQuantity(item, findVariant(item, sku)) : 1;
+    },
+    [itemByRef],
+  );
+
   const add = useCallback(
-    (ref: string) => {
-      const item = catalogMap[ref];
-      if (!item) return;
+    (ref: string, sku?: string) => {
+      if (!itemByRef[ref]) return;
+      const key = lineKey({ ref, sku });
       setLines((prev) => {
-        const existing = prev.find((l) => l.ref === ref);
-        if (existing) {
-          const qty = Math.min(existing.qty + 1, maxQuantity(item));
-          return prev.map((l) => (l.ref === ref ? { ...l, qty } : l));
-        }
-        return [...prev, { ref, qty: 1 }];
+        const existing = prev.find((l) => lineKey(l) === key);
+        if (existing) return prev.map((l) => (lineKey(l) === key ? { ...l, qty: Math.min(l.qty + 1, limitFor(ref, sku)) } : l));
+        return [...prev, { ref, ...(sku ? { sku } : {}), qty: 1 }];
       });
       track("add_to_bag", { ref });
     },
-    [catalogMap],
+    [itemByRef, limitFor],
   );
 
-  const remove = useCallback((ref: string) => setLines((prev) => prev.filter((l) => l.ref !== ref)), []);
+  const remove = useCallback((key: string) => setLines((prev) => prev.filter((l) => lineKey(l) !== key)), []);
 
   const setQty = useCallback(
-    (ref: string, qty: number) => {
-      const item = catalogMap[ref];
-      const max = item ? maxQuantity(item) : 1;
-      setLines((prev) => prev.map((l) => (l.ref === ref ? { ...l, qty: Math.max(1, Math.min(qty, max)) } : l)));
-    },
-    [catalogMap],
+    (key: string, qty: number) => setLines((prev) => prev.map((l) => (lineKey(l) === key ? { ...l, qty: Math.max(1, Math.min(qty, limitFor(l.ref, l.sku))) } : l))),
+    [limitFor],
   );
+
+  const clear = useCallback(() => setLines([]), []);
 
   const value = useMemo<SiteContextValue>(
     () => ({
       panel,
       openPanel,
       closePanel,
-      catalog: catalogMap,
+      items,
+      itemByRef,
       websiteEnquiries,
       cart: {
         ready,
@@ -189,10 +184,11 @@ export function SiteProvider({
         add,
         remove,
         setQty,
-        has: (ref) => lines.some((l) => l.ref === ref),
+        has: (ref, sku) => lines.some((l) => lineKey(l) === lineKey({ ref, sku })),
+        clear,
       },
     }),
-    [panel, openPanel, closePanel, catalogMap, websiteEnquiries, ready, lines, add, remove, setQty],
+    [panel, openPanel, closePanel, items, itemByRef, websiteEnquiries, ready, lines, add, remove, setQty, clear],
   );
 
   return <SiteContext.Provider value={value}>{children}</SiteContext.Provider>;

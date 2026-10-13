@@ -351,6 +351,8 @@ const env = {
   CONCIERGE_SERVER_KEY: SERVER_KEY,
   CONCIERGE_ALLOW_NON_PRODUCTION: "true",
   NEXT_PUBLIC_SITE_URL: "http://localhost:3300",
+  // Lets the shop tests refresh the cached catalogue after seeding pieces.
+  CATALOG_REVALIDATE_SECRET: "local-revalidate-secret",
   SMTP_HOST: "127.0.0.1",
   SMTP_PORT: String(SMTP_PORT),
   SMTP_TLS: "off",

@@ -7,7 +7,8 @@ import { getCatalog } from "@/lib/catalog";
 import { localizeItem } from "@/lib/localize";
 import { supabaseWriteConfig } from "@/lib/supabase";
 import { conciergeReady } from "@/lib/concierge/config";
-import { SiteProvider, type CartCatalogItem } from "./SiteProvider";
+import { toShopItem } from "@/lib/paths";
+import { SiteProvider } from "./SiteProvider";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { SitePanels } from "./SitePanels";
@@ -18,20 +19,8 @@ import "./concierge/concierge.css";
 /** The public website frame: header, footer, panels, WhatsApp button and the concierge chat. */
 export async function SiteChrome({ locale, children }: { locale: Locale; children: ReactNode }) {
   const t = getDictionary(locale);
-  const cartCatalog: CartCatalogItem[] = (await getCatalog())
-    .filter((i) => i.status !== "editorial_preview")
-    .map((i) => localizeItem(i, locale))
-    .map((i) => ({
-      ref: i.ref,
-      name: i.name,
-      brand: i.brand,
-      status: i.status,
-      priceAED: i.priceAED,
-      stock: i.stock,
-      maxPerOrder: i.maxPerOrder,
-      image: i.images[0],
-      demo: i.demo,
-    }));
+  // Every listed piece, without its long text: the menu, search, cards and the bag use these.
+  const items = (await getCatalog()).map((i) => toShopItem(localizeItem(i, locale)));
 
   const chatReady = await conciergeReady();
 
@@ -48,12 +37,12 @@ export async function SiteChrome({ locale, children }: { locale: Locale; childre
     telephone: site.contact.phoneE164,
     address: { "@type": "PostalAddress", addressLocality: site.location.locality, addressCountry: site.location.country },
     sameAs: [site.social.instagram.url, ...(site.social.facebook.url ? [site.social.facebook.url] : [])],
-    contactPoint: [{ "@type": "ContactPoint", telephone: site.contact.phoneE164, email: site.contact.email, contactType: "customer service", availableLanguage: ["English", "Arabic"] }],
+    contactPoint: [{ "@type": "ContactPoint", telephone: site.contact.phoneE164, email: site.contact.email, contactType: "customer service", availableLanguage: ["English", "Arabic", "Russian", "French"] }],
   };
 
   return (
     <I18nProvider locale={locale} ui={t.ui}>
-      <SiteProvider catalog={cartCatalog} websiteEnquiries={supabaseWriteConfig() !== null}>
+      <SiteProvider items={items} websiteEnquiries={supabaseWriteConfig() !== null}>
         <a href="#main" className="skip-link">
           {t.ui.skip}
         </a>

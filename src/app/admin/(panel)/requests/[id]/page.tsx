@@ -19,7 +19,7 @@ interface RequestRow {
   type: string;
   status: string;
   summary: string;
-  details: Record<string, string | number | boolean>;
+  details: Record<string, unknown>;
   needs_review: string | null;
   locale: string;
   destination_country: string | null;
@@ -47,7 +47,16 @@ interface RequestRow {
   request_photos: { id: string; object_path: string; status: string; width: number | null; height: number | null; created_at: string }[];
 }
 
+type PurchaseLine = { ref: string; sku?: string; brand?: string; name: string; options?: string; qty: number; unitAED: number; lineAED: number };
+
+function purchaseDetails(d: Record<string, unknown>) {
+  const lines = Array.isArray(d.lines) ? (d.lines as PurchaseLine[]).filter((l) => l && typeof l.ref === "string" && Number.isFinite(l.unitAED)) : [];
+  const delivery = (d.delivery && typeof d.delivery === "object" ? d.delivery : {}) as { mode?: string; country?: string; city?: string; address?: string };
+  return { lines, subtotal: Number(d.subtotal_aed) || lines.reduce((s, l) => s + l.lineAED, 0), delivery };
+}
+
 const DETAIL_LABELS: Record<string, string> = {
+  notes: "Customer’s notes",
   category: "Category", brand: "Brand", model: "Model / reference", colour: "Colour", size: "Size", year: "Year",
   extra_details: "Other details", budget: "Budget", timing: "Timing", topic: "Question topic", question: "Question",
   item_ref: "Website piece", item_name: "Piece name", order_ref: "Order reference", photos: "Photos sent", ai_assisted: "AI helped read the message",
@@ -96,7 +105,9 @@ export default async function RequestPage({ params, searchParams }: { params: Pr
   const greeting = greetings[r.locale] ?? `Hello${who}, this is the SEVN HEVN team about your request ${r.reference}.`;
   const customerWa = `https://wa.me/${r.contact_phone.replace(/\D/g, "")}?text=${encodeURIComponent(greeting)}`;
   const statuses = isOwner ? Object.keys(requestStatusLabels) : staffSettableStatuses;
-  const details = Object.entries(r.details ?? {});
+  // Purchase requests carry the verified bag; it is shown as a table, everything else as label / value.
+  const purchase = r.type === "purchase" ? purchaseDetails(r.details) : null;
+  const details = Object.entries(r.details ?? {}).filter(([k, v]) => v !== null && v !== "" && !(purchase && ["lines", "subtotal_aed", "currency", "payment", "delivery"].includes(k)));
   const connected = configuredChannels();
 
   return (
@@ -108,7 +119,7 @@ export default async function RequestPage({ params, searchParams }: { params: Pr
           {r.reference} {r.is_test && <span className="adm-badge adm-badge--test">Test</span>}
         </h1>
         <p className="adm-muted">
-          {requestTypeLabels[r.type]} · received {when(r.created_at)} · {languageLabel(r.locale)} · via {r.source === "page" ? "/chat page" : "website widget"}
+          {requestTypeLabels[r.type] ?? r.type} · received {when(r.created_at)} · {languageLabel(r.locale)} · via {r.source === "page" ? "/chat page" : r.source === "checkout" ? "website checkout" : "website widget"}
         </p>
         <p>
           <span className={`adm-status adm-status--${r.status}`}>{requestStatusLabels[r.status]}</span>
@@ -137,9 +148,39 @@ export default async function RequestPage({ params, searchParams }: { params: Pr
           <section className="adm-card">
             <h2>Request</h2>
             <p className="adm-quote" dir="auto">{r.summary}</p>
+            {purchase && (
+              <>
+                <table className="adm-table">
+                  <thead>
+                    <tr><th>Piece</th><th>Code</th><th>Qty</th><th>Unit (AED)</th><th>Line (AED)</th></tr>
+                  </thead>
+                  <tbody>
+                    {purchase.lines.map((l, i) => (
+                      <tr key={i}>
+                        <td>
+                          <a href={`/product/${encodeURIComponent(l.ref)}`} target="_blank" rel="noopener noreferrer">{[l.brand, l.name].filter(Boolean).join(" ")}</a>
+                          {l.options && <span className="adm-muted"> · {l.options}</span>}
+                        </td>
+                        <td className="adm-ltr">{l.sku && l.sku !== l.ref ? `${l.ref} / ${l.sku}` : l.ref}</td>
+                        <td>{l.qty}</td>
+                        <td>{l.unitAED.toLocaleString("en-US")}</td>
+                        <td>{l.lineAED.toLocaleString("en-US")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="adm-small">
+                  Subtotal <strong>{money(purchase.subtotal, "AED")}</strong> as listed when the customer sent it. Delivery and VAT not included.{" "}
+                  <strong>Not paid</strong> — online payment isn’t connected. Confirm availability and the total with the customer, then create an order.
+                </p>
+                <dl className="adm-dl">
+                  <div className="adm-dl__row"><dt>Receive by</dt><dd dir="auto">{purchase.delivery.mode === "collect" ? "Collect in Dubai (to arrange)" : [purchase.delivery.address, purchase.delivery.city, purchase.delivery.country].filter(Boolean).join(", ")}</dd></div>
+                </dl>
+              </>
+            )}
             <dl className="adm-dl">
               {details.map(([k, v]) => (
-                <div key={k} className="adm-dl__row"><dt>{DETAIL_LABELS[k] ?? k}</dt><dd dir="auto">{String(v)}</dd></div>
+                <div key={k} className="adm-dl__row"><dt>{DETAIL_LABELS[k] ?? k}</dt><dd dir="auto">{typeof v === "object" ? JSON.stringify(v) : String(v)}</dd></div>
               ))}
               <div className="adm-dl__row"><dt>Destination</dt><dd>{r.destination_label ? `${r.destination_label}${r.destination_country ? ` (${r.destination_country})` : ""}` : "—"}</dd></div>
             </dl>

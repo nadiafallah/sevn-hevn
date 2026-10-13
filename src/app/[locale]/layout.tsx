@@ -7,13 +7,16 @@ import { baseOpenGraph } from "@/lib/seo";
 import { SiteChrome } from "@/components/SiteChrome";
 import { fontVariables } from "../fonts";
 import "../globals.css";
+import "../shop.css";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
-// Only the four site languages exist; anything else is a 404.
-export const dynamicParams = false;
+// Only the four site languages exist; anything else is a 404 (notFound() below and in each page).
+// Not `dynamicParams = false`: with it, Next.js answers 404 (NoFallbackError) for every pre-rendered
+// page in this segment once the catalogue cache is refreshed (/api/revalidate, a panel save), until
+// the next deployment.
 
 export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Promise<Metadata> {
   const { locale } = await params;

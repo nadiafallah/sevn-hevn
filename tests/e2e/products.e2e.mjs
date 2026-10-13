@@ -57,11 +57,13 @@ describe("products in the panel", () => {
     await page.waitForURL(`${BASE}/admin/products`);
     await page.getByRole("link", { name: "Add a piece" }).click();
     await page.waitForURL(`${BASE}/admin/products/new`);
-    // Only the four active categories can be chosen.
+    // Only the four categories and the shop's houses can be chosen.
     const cats = (await page.locator("select[name=category] option").allTextContents()).map((t) => t.trim());
-    assert.deepEqual(cats, ["Choose…", "Bags", "Watches", "Shoes", "Accessories"]);
+    assert.deepEqual(cats, ["Choose…", "Bags", "Shoes", "Watches", "Jewellery"]);
+    const houses = (await page.locator("select[name=brand] option:not([disabled])").allTextContents()).map((t) => t.trim());
+    assert.deepEqual(houses, ["Hermès", "Louis Vuitton", "Gucci", "Chanel", "Cartier", "Van Cleef & Arpels", "Bvlgari"]);
     await page.locator("input[name=name]").fill("Constance 24");
-    await page.locator("input[name=brand]").fill("Hermès");
+    await page.locator("select[name=brand]").selectOption("Hermès");
     await page.locator("select[name=category]").selectOption("bags");
     await page.locator("input[name=price_aed]").fill("AED 62,000");
     await page.locator("input[name=included]").fill("Box, Dust bag");
@@ -89,11 +91,11 @@ describe("products in the panel", () => {
     assert.deepEqual(row, { published: true, price_aed: 62000, included: ["Box", "Dust bag"] });
 
     // The website shows it straight away (the action refreshes the cached catalogue).
-    await page.goto(`${BASE}/collection?item=${ref}`);
-    const dialog = page.locator("dialog[open]");
-    await dialog.waitFor();
-    assert.match(await dialog.innerText(), /Constance 24/);
-    assert.match(await dialog.innerText(), /62,000/);
+    await page.goto(`${BASE}/product/${ref}`);
+    const info = page.locator(".pdp-info");
+    await info.waitFor();
+    assert.match(await info.innerText(), /Constance 24/);
+    assert.match(await info.innerText(), /62,000/);
     await context.close();
   });
 
@@ -155,8 +157,8 @@ describe("products in the panel", () => {
     assert.equal((await sql("select count(*)::int as n from public.products where ref = $1", [state.ref]))[0].n, 0);
     const gone = await fetch(`${GW}/__test/file?key=${encodeURIComponent(`product-images/${path}`)}`);
     assert.equal(gone.status, 404, "photo file deleted from storage");
-    await page.goto(`${BASE}/collection?item=${state.ref}`);
-    await page.getByText(/We couldn’t find the piece/).waitFor();
+    const res = await page.goto(`${BASE}/product/${state.ref}`);
+    assert.equal(res.status(), 404);
     await context.close();
     assert.deepEqual(consoleErrors, [], "no browser console errors");
   });

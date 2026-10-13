@@ -3,15 +3,23 @@ import { site } from "@/config/site";
 import { categories } from "@/data/taxonomy";
 import { languageAlternates, localePath, locales } from "@/i18n/config";
 import { getCatalog, isGenuine } from "@/lib/catalog";
+import { categoryPath, productPath } from "@/lib/paths";
 
-/** Every page in all four languages, each entry listing its language versions (hreflang). */
+/**
+ * Every page in all four languages, each entry listing its language versions (hreflang). Category
+ * and house pages are listed only once they hold a genuine piece (an empty listing is noindex), and
+ * every genuine piece has its own page. Drafts and demo records are never included.
+ */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const genuine = (await getCatalog()).filter(isGenuine);
+  const withPieces = (category: string, brand?: string) => genuine.some((i) => i.category === category && (!brand || i.brandId === brand));
+  const houses = Array.from(new Set(genuine.map((i) => `${i.category}|${i.brandId}`))).map((k) => k.split("|"));
   const pages: { path: string; changeFrequency: "daily" | "weekly"; priority: number }[] = [
     { path: "/", changeFrequency: "weekly", priority: 1 },
     { path: "/collection", changeFrequency: "daily", priority: 0.8 },
-    ...categories.map((c) => ({ path: `/collection?category=${c.id}`, changeFrequency: "daily" as const, priority: 0.7 })),
-    ...genuine.map((i) => ({ path: `/collection?item=${encodeURIComponent(i.ref)}`, changeFrequency: "weekly" as const, priority: 0.6 })),
+    ...categories.filter((c) => withPieces(c.id)).map((c) => ({ path: categoryPath(c.id), changeFrequency: "daily" as const, priority: 0.8 })),
+    ...houses.map(([category, brand]) => ({ path: `/${category}/${brand}`, changeFrequency: "daily" as const, priority: 0.7 })),
+    ...genuine.map((i) => ({ path: productPath(i.ref), changeFrequency: "weekly" as const, priority: 0.6 })),
   ];
   const absolute = (path: string) => `${site.url}${path}`;
   return pages.flatMap((p) => {

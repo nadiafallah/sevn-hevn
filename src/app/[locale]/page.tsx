@@ -4,27 +4,33 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { site } from "@/config/site";
+import { coreBrands, jewelleryOnlyBrands, type Brand } from "@/data/brands";
+import { categories, type CategoryId } from "@/data/taxonomy";
+import type { ItemImage } from "@/data/types";
 import { isLocale, languageAlternates, localePath, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { plural } from "@/i18n/format";
 import { rich } from "@/i18n/rich";
-import { getFeatured } from "@/lib/catalog";
+import { getCatalog, getNewArrivals } from "@/lib/catalog";
 import { localizeItem } from "@/lib/localize";
+import { categoryPath, toShopItem } from "@/lib/paths";
 import { baseOpenGraph } from "@/lib/seo";
+import { sortItems } from "@/lib/shop";
 import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
 import { ItemCard } from "@/components/ItemCard";
-import { EditRail } from "@/components/EditRail";
 import { PanelButton } from "@/components/PanelButton";
-import { SourcingForm } from "@/components/SourcingForm";
-import { ViewingForm } from "@/components/ViewingForm";
-import { ContactList } from "@/components/SitePanels";
 import { ArrowIcon, WhatsAppIcon } from "@/components/icons";
 
-// Category doors use detail crops of the supplied editorial images (set per door in CSS).
-const categoryDoors = [
-  { id: "bags", image: { src: "/images/editorial/bag-cognac.jpg", width: 1122, height: 1028 } },
-  { id: "watches", image: { src: "/images/editorial/watch-gold-rectangular.jpg", width: 1122, height: 1402 } },
-  { id: "shoes", image: { src: "/images/editorial/loafer-cobalt-suede.jpg", width: 1122, height: 1402 } },
-] as const;
+/**
+ * Category images: the newest listed piece's own photo. Until a category has one, the approved
+ * AI-generated editorial image (always labelled as such) stands in; Jewellery has none, so its card
+ * is typographic. Never shown as a piece for sale.
+ */
+const editorialFallback: Partial<Record<CategoryId, ItemImage & { position: string }>> = {
+  bags: { src: "/images/editorial/bag-cognac.jpg", width: 1122, height: 1028, alt: "", position: "50% 60%" },
+  shoes: { src: "/images/editorial/loafer-cobalt-suede.jpg", width: 1122, height: 1402, alt: "", position: "50% 55%" },
+  watches: { src: "/images/editorial/watch-gold-rectangular.jpg", width: 1122, height: 1402, alt: "", position: "50% 45%" },
+};
 
 export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
   const { locale } = await params;
@@ -43,9 +49,20 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const t = d.home;
   const ui = d.ui;
   const href = (path: string) => localePath(locale, path);
-  const featured = (await getFeatured(6)).map((i) => localizeItem(i, locale));
-  const previewsOnly = featured.every((i) => i.status === "editorial_preview");
-  const houses = site.sourcingBrands;
+  const catalog = (await getCatalog()).map((i) => localizeItem(i, locale));
+  const arrivals = (await getNewArrivals(4)).map((i) => toShopItem(localizeItem(i, locale)));
+
+  const cards = categories.map((c) => {
+    const pieces = sortItems(
+      catalog.filter((i) => i.category === c.id),
+      "newest",
+    );
+    const real = pieces.find((i) => i.images.length && i.status !== "sold")?.images[0];
+    return { id: c.id, count: pieces.length, image: real ? { ...real, position: "50% 50%" } : editorialFallback[c.id], ai: !real && !!editorialFallback[c.id] };
+  });
+  const listedBrands = new Set(catalog.map((i) => i.brandId));
+  const brandLink = (b: Brand) => (listedBrands.has(b.id) ? href(`/collection?brand=${b.id}`) : null);
+
   // Tells search engines the site's name and the other ways people write it (Google "site names").
   const websiteJsonLd = {
     "@context": "https://schema.org",
@@ -88,166 +105,149 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         </div>
       </section>
 
-      {/* 2 · Maison introduction */}
-      <section className="intro container" aria-labelledby="intro-title">
-        <div className="intro__head" data-reveal>
-          <p className="eyebrow">{t.introEyebrow}</p>
-          <h2 id="intro-title" className="h2 h2--xl">
-            {rich(t.introTitle)}
-          </h2>
-        </div>
-        <div className="intro__body" data-reveal>
-          <p className="intro__text">{t.introText}</p>
-          <ol className="pillars">
-            {t.pillars.map((p) => (
-              <li key={p.title}>
-                <h3>{p.title}</h3>
-                <p>{p.text}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* 3 · Category discovery */}
-      <section className="container section section--doors" aria-labelledby="cat-title">
+      {/* 2 · The four categories */}
+      <section className="container section" aria-labelledby="cat-title">
         <div className="section__head" data-reveal>
           <div>
-            <p className="eyebrow">{t.discover}</p>
+            <p className="eyebrow">{t.categoriesEyebrow}</p>
             <h2 id="cat-title" className="h2">
-              {rich(t.categoryTitle)}
+              {rich(t.categoriesTitle)}
             </h2>
           </div>
-          <Link href={href("/collection")} className="text-link">
-            {t.allPieces} <ArrowIcon size={14} />
-          </Link>
         </div>
-        <ul className="doors">
-          {categoryDoors.map((c, i) => (
-            <li key={c.id} data-reveal style={{ transitionDelay: `${i * 90}ms` }}>
-              <Link href={href(`/collection?category=${c.id}`)} className={`door door--${c.id}`}>
-                <div className="door__media">
-                  <Image src={c.image.src} alt={t.doors[c.id].alt} width={c.image.width} height={c.image.height} sizes="(min-width: 1000px) 25vw, 50vw" className="door__img" />
-                  <span className="media-label">{t.aiImageShort}</span>
-                </div>
-                <div className="door__text">
-                  <span className="door__num" aria-hidden="true">
-                    0{i + 1}
-                  </span>
-                  <h3>{ui.categories[c.id]}</h3>
-                  <p>{t.doors[c.id].note}</p>
-                  <span className="door__cta">
-                    {t.exploreShort} <ArrowIcon size={14} />
-                  </span>
-                </div>
+        <ul className="cat-cards">
+          {cards.map((c, i) => (
+            <li key={c.id} data-reveal style={{ transitionDelay: `${i * 80}ms` }}>
+              <Link href={href(categoryPath(c.id))} className={`cat-card${c.image ? "" : " cat-card--plain"}`}>
+                <span className="cat-card__media">
+                  {c.image && (
+                    <Image
+                      src={c.image.src}
+                      alt={c.ai ? t.categoryAlt[c.id] : c.image.alt}
+                      width={c.image.width}
+                      height={c.image.height}
+                      sizes="(min-width: 1000px) 24vw, 46vw"
+                      className="cat-card__img"
+                      style={{ objectPosition: c.image.position }}
+                    />
+                  )}
+                  {c.ai && <span className="media-label">{t.aiImageShort}</span>}
+                </span>
+                <span className="cat-card__text">
+                  <span className="cat-card__name">{ui.categories[c.id]}</span>
+                  <span className="cat-card__meta">{c.count ? plural(locale, c.count, t.categoryCount) : t.categoryRequest}</span>
+                </span>
               </Link>
             </li>
           ))}
-          <li data-reveal style={{ transitionDelay: `${categoryDoors.length * 90}ms` }}>
-            <div className="door door--request">
-              <span className="door__num" aria-hidden="true">
-                04
-              </span>
-              <h3>{rich(t.beyondTitle)}</h3>
-              <p>{t.beyondText}</p>
-              <PanelButton panel={{ type: "sourcing", prefill: { category: "accessories" } }} className="btn btn--light">
-                {t.requestPiece}
-              </PanelButton>
-            </div>
-          </li>
         </ul>
       </section>
 
-      {/* 4 · Curated selection */}
-      <section className="section section--edit" aria-labelledby="edit-title">
-        <div className="container section__head" data-reveal>
+      {/* 3 · New arrivals (real pieces only) */}
+      <section className="container section section--tight" aria-labelledby="new-title">
+        <div className="section__head" data-reveal>
           <div>
-            <p className="eyebrow">{t.editEyebrow}</p>
-            <h2 id="edit-title" className="h2">
-              {rich(t.editTitle)}
+            <p className="eyebrow">{t.newEyebrow}</p>
+            <h2 id="new-title" className="h2">
+              {rich(t.newTitle)}
             </h2>
           </div>
-          {previewsOnly && <span className="tag tag--line">{t.editorialPreview}</span>}
+          {arrivals.length > 0 && (
+            <Link href={href("/collection")} className="text-link">
+              {t.viewAll} <ArrowIcon size={14} />
+            </Link>
+          )}
         </div>
-        <div className="container" data-reveal>
-          <EditRail label={previewsOnly ? t.railPreviews : t.railSelected}>
-            {featured.map((item) => (
-              <ItemCard key={item.ref} item={item} sizes="(min-width: 1000px) 25vw, 70vw" />
+        {arrivals.length > 0 ? (
+          <div className="grid grid--shop" data-reveal>
+            {arrivals.map((item) => (
+              <ItemCard key={item.ref} item={item} />
             ))}
-          </EditRail>
-        </div>
-        <div className="container section__foot" data-reveal>
-          {previewsOnly && <p className="muted small">{t.previewsNote}</p>}
-          <Link href={href("/collection")} className="text-link">
-            {t.viewCollection} <ArrowIcon size={14} />
-          </Link>
-        </div>
+          </div>
+        ) : (
+          <p className="new-empty" data-reveal>
+            {t.newEmpty.split("{handle}")[0]}
+            <a href={site.social.instagram.url} target="_blank" rel="noopener noreferrer" dir="ltr">
+              {site.social.instagram.handle}
+            </a>
+            {t.newEmpty.split("{handle}")[1]}
+          </p>
+        )}
       </section>
 
-      {/* 5 · Private sourcing */}
-      <section id="sourcing" className="band band--dark" aria-labelledby="sourcing-title">
+      {/* 4 · The houses */}
+      <section className="section houses-band" aria-labelledby="houses-title">
         <div className="container">
-          <div className="band__intro" data-reveal>
-            <p className="eyebrow eyebrow--champagne">{t.sourcingEyebrow}</p>
-            <h2 id="sourcing-title" className="h2 h2--xl">
-              {rich(t.sourcingTitle)}
-            </h2>
-          </div>
-          <div className="houses" data-reveal>
-            <p className="houses__label">{t.housesLabel}</p>
-            <ul className="houses__list">
-              {houses.map((h) => (
-                <li key={h} lang="en" dir="ltr">
-                  {h}
-                </li>
-              ))}
-            </ul>
-            <p className="houses__fine">{t.housesFine}</p>
-          </div>
-          <div className="band__grid">
-            <div className="band__copy" data-reveal>
-              <p>{t.sourcingText}</p>
-              <ol className="steps">
-                {t.steps.map((s) => (
-                  <li key={s.title}>
-                    <h3>{s.title}</h3>
-                    <p>{s.text}</p>
-                  </li>
-                ))}
-              </ol>
-            </div>
-            <div className="band__form" data-reveal>
-              <SourcingForm tone="dark" carryKey="sourcing:home" />
+          <div className="section__head" data-reveal>
+            <div>
+              <p className="eyebrow">{t.brandsEyebrow}</p>
+              <h2 id="houses-title" className="h2">
+                {rich(t.brandsTitle)}
+              </h2>
             </div>
           </div>
+          <ul className="house-list" data-reveal>
+            {coreBrands.map((b) => (
+              <li key={b.id}>
+                <HouseLink brand={b} link={brandLink(b)} requestLabel={t.brandsRequest} />
+              </li>
+            ))}
+          </ul>
+          <p className="house-list__label" data-reveal>
+            {t.brandsJewellery}
+          </p>
+          <ul className="house-list house-list--small" data-reveal>
+            {jewelleryOnlyBrands.map((b) => (
+              <li key={b.id}>
+                <HouseLink brand={b} link={brandLink(b)} requestLabel={t.brandsRequest} jewellery />
+              </li>
+            ))}
+          </ul>
+          <p className="muted small house-list__fine">{t.brandsFine}</p>
         </div>
       </section>
 
-      {/* 6 · Private viewing */}
-      <section id="visit" className="container section visit" aria-labelledby="visit-title">
-        <div className="visit__copy" data-reveal>
-          <p className="eyebrow">{t.visitEyebrow.replace("{location}", ui.location)}</p>
-          <h2 id="visit-title" className="h2 h2--xl">
-            {rich(t.visitTitle)}
-          </h2>
-          <p>{t.visitText}</p>
-          <div className="visit__actions">
-            <a className="btn btn--dark" href={whatsappUrl(generalMessage(ui.messages))} target="_blank" rel="noopener noreferrer">
-              <WhatsAppIcon size={18} /> {t.chatWhatsApp}
-            </a>
-            <a className="btn btn--line" href={site.contact.telHref}>
-              {t.call} <bdi dir="ltr">{site.contact.phoneDisplay}</bdi>
+      {/* 5 · Special requests */}
+      <section id="sourcing" className="band band--dark request-band" aria-labelledby="request-title">
+        <div className="container request-band__inner" data-reveal>
+          <div>
+            <p className="eyebrow eyebrow--champagne">{t.requestEyebrow}</p>
+            <h2 id="request-title" className="h2">
+              {rich(t.requestTitle)}
+            </h2>
+            <p className="request-band__text">{t.requestText}</p>
+          </div>
+          <div className="request-band__actions">
+            <PanelButton panel={{ type: "sourcing" }} className="btn btn--light">
+              {t.requestCta}
+            </PanelButton>
+            <a className="btn btn--outline-light" href={whatsappUrl(generalMessage(ui.messages))} target="_blank" rel="noopener noreferrer">
+              <WhatsAppIcon size={18} /> {t.whatsapp}
             </a>
           </div>
-          <ContactList />
-        </div>
-        <div className="visit__form" data-reveal>
-          <p className="eyebrow">{t.viewingEyebrow}</p>
-          <ViewingForm carryKey="viewing:home" />
         </div>
       </section>
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd).replace(/</g, "\\u003c") }} />
     </>
+  );
+}
+
+/** A house: a link to its pieces when any are listed, otherwise a sourcing request for it. */
+function HouseLink({ brand, link, requestLabel, jewellery }: { brand: Brand; link: string | null; requestLabel: string; jewellery?: boolean }) {
+  if (link) {
+    return (
+      <Link href={link} className="house" lang="en" dir="ltr">
+        {brand.name}
+      </Link>
+    );
+  }
+  return (
+    <PanelButton panel={{ type: "sourcing", prefill: { brand: brand.name, ...(jewellery ? { category: "jewellery" } : {}) } }} className="house house--request">
+      <span lang="en" dir="ltr">
+        {brand.name}
+      </span>
+      <span className="house__hint">{requestLabel}</span>
+    </PanelButton>
   );
 }

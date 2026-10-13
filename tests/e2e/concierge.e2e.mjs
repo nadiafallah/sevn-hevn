@@ -524,29 +524,29 @@ describe("the rest of the site", () => {
     await context.close();
   });
 
-  it("only the four active categories are offered across the site", async () => {
+  it("only the four categories are offered across the site; old Accessories links lead to Jewellery", async () => {
     const { page, context } = await newPage();
     await page.goto(BASE);
-    const row = (await page.locator(".cat-row li").allTextContents()).map((t) => t.trim());
-    assert.deepEqual(row, ["All pieces", "Bags", "Watches", "Shoes", "Accessories", "Request a piece"]);
+    const nav = (await page.locator(".shop-nav__trigger").allTextContents()).map((t) => t.trim());
+    assert.deepEqual(nav, ["Bags", "Shoes", "Watches", "Jewellery"]);
     await page.goto(`${BASE}/collection?category=accessories`);
-    const tabs = (await page.locator(".coll-tabs button").allTextContents()).map((t) => t.trim());
-    assert.deepEqual(tabs, ["All", "Bags", "Watches", "Shoes", "Accessories"]);
-    assert.equal((await page.locator(".coll-tabs button[aria-pressed='true']").textContent()).trim(), "Accessories");
-    await page.getByRole("button", { name: "Request this piece" }).click();
+    assert.equal(new URL(page.url()).pathname, "/jewellery");
+    await page.locator("main").getByRole("button", { name: "Request a piece" }).click();
     await page.locator("dialog[open]").waitFor();
-    assert.equal(await page.locator("dialog[open] select").first().inputValue(), "accessories");
+    assert.equal(await page.locator("dialog[open] select").first().inputValue(), "jewellery");
     await context.close();
   });
 
-  it("home, collection, item panel and sourcing still work; the chat shows when it is unavailable", async () => {
+  it("home, collection, product page and sourcing still work; the chat shows when it is unavailable", async () => {
     const { page, context } = await newPage();
-    for (const path of ["/", "/collection", "/collection?item=SH-0001", "/chat"]) {
+    for (const path of ["/", "/collection", "/product/SH-0001", "/collection?item=SH-0001", "/chat"]) {
       const res = await page.goto(`${BASE}${path}`);
       assert.equal(res.status(), 200, path);
     }
+    assert.equal(new URL(page.url()).pathname, "/chat");
     await page.goto(`${BASE}/collection?item=SH-0001`);
-    assert.match(await page.locator("dialog[open]").innerText(), /Kelly 28 Togo/);
+    assert.equal(new URL(page.url()).pathname, "/product/SH-0001", "old item links move to the product page");
+    assert.match(await page.locator(".pdp-info").innerText(), /Kelly 28 Togo/);
     await page.goto(BASE);
     const wa = await page.locator(".wa-float").getAttribute("href");
     assert.match(wa, /^https:\/\/wa\.me\/971528877200\?text=/);

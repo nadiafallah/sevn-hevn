@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { categoryById, isCategoryId } from "@/data/taxonomy";
 import type { Condition } from "@/data/types";
-import { select } from "@/lib/concierge/db";
+import { DbError, select } from "@/lib/concierge/db";
 import { requireStaff } from "@/lib/admin/session";
 import { Flash, one, type SP } from "@/components/admin/Flash";
 import { ProductFields } from "@/components/admin/ProductFields";
 import { ProductPhotoUpload } from "@/components/admin/ProductPhotoUpload";
 import { conditionLabels, money, when } from "@/lib/admin/labels";
-import { PRODUCT_PHOTO_LIMIT, PRODUCT_SELECT, productImageUrl, productStatusLabel, type PanelProduct } from "@/lib/admin/products";
-import { deleteProduct, removeProductPhoto, saveProduct, setMainProductPhoto, setProductPublished } from "../../../actions";
+import { PRODUCT_PHOTO_LIMIT, PRODUCT_SELECT, PRODUCT_SELECT_LEGACY, productImageUrl, productStatusLabel, type PanelProduct } from "@/lib/admin/products";
+import { deleteProduct, deleteVariant, removeProductPhoto, saveProduct, saveVariant, setMainProductPhoto, setProductPublished } from "../../../actions";
 
 export const metadata = { title: "Piece" };
 
@@ -18,8 +18,16 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   const { api, token, isOwner } = await requireStaff();
   const { ref } = await params;
   const sp = await searchParams;
+  const query = (sel: string) =>
+    select<PanelProduct[]>(api, "products", { select: sel, ref: `eq.${ref}`, status: "neq.editorial_preview", "product_images.order": "position.asc,id.asc", ...(sel === PRODUCT_SELECT ? { "product_variants.order": "position.asc,id.asc" } : {}) }, token);
+  // Until the shop migration has run, versions and the new detail fields don't exist yet.
+  let shopReady = true;
   const rows = REF.test(ref)
-    ? await select<PanelProduct[]>(api, "products", { select: PRODUCT_SELECT, ref: `eq.${ref}`, status: "neq.editorial_preview", "product_images.order": "position.asc,id.asc" }, token)
+    ? await query(PRODUCT_SELECT).catch((e) => {
+        if (!(e instanceof DbError) || e.status !== 400) throw e;
+        shopReady = false;
+        return query(PRODUCT_SELECT_LEGACY);
+      })
     : [];
   const p = rows[0];
   if (!p) {
@@ -45,6 +53,13 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
     ["Material", p.material],
     ["Colour", p.colour],
     ["Dimensions", p.dimensions],
+    ["Hardware", p.hardware],
+    ["Size system", p.size_system],
+    ["Case diameter", p.case_diameter_mm ? `${p.case_diameter_mm} mm` : null],
+    ["Movement", p.movement],
+    ["Fineness / carat", p.purity],
+    ["Stones", p.stones],
+    ["For", p.audience],
     ["Comes with", p.included.join(", ")],
     ["Authentication", p.authentication],
     ["Price", p.price_aed ? money(p.price_aed, "AED") : "On enquiry"],
@@ -67,7 +82,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
           {p.featured && <span className="adm-badge">Featured</span>}
         </h1>
         {p.published && (
-          <a className="adm-btn" href={`/collection?item=${encodeURIComponent(p.ref)}`} target="_blank" rel="noopener noreferrer">
+          <a className="adm-btn" href={`/product/${encodeURIComponent(p.ref)}`} target="_blank" rel="noopener noreferrer">
             View on the website
           </a>
         )}
@@ -141,6 +156,88 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
           </ul>
         )}
         {isOwner && <ProductPhotoUpload productRef={p.ref} altBase={title} count={photos.length} limit={PRODUCT_PHOTO_LIMIT} />}
+      </section>
+
+      <section className="adm-card">
+        <h2>Versions (colours, sizes)</h2>
+        {!shopReady ? (
+          <p className="adm-muted">Versions become available once the shop database update has been run (see docs/SHOP.md).</p>
+        ) : (
+          <>
+            <p className="adm-small adm-muted">
+              Add a version for each colour, size or hardware of this model you can actually supply. Each has its own code; leave price or stock empty to use the
+              piece’s own. A piece for sale with versions is bought as one of them.
+            </p>
+            {(p.product_variants ?? []).length > 0 && (
+              <table className="adm-table">
+                <thead>
+                  <tr>
+                    <th>Code</th><th>Colour</th><th>Size</th><th>Hardware</th><th>Price (AED)</th><th>Stock</th><th>Photo</th>{isOwner && <th />}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(p.product_variants ?? []).map((v) =>
+                    isOwner ? (
+                      <tr key={v.id}>
+                        <td colSpan={8}>
+                          <form action={saveVariant} className="adm-inline adm-variant">
+                            <input type="hidden" name="ref" value={p.ref} />
+                            <input type="hidden" name="variant" value={v.id} />
+                            <input name="sku" defaultValue={v.sku} maxLength={48} aria-label="Code" className="adm-ltr" />
+                            <input name="colour" defaultValue={v.colour ?? ""} maxLength={80} aria-label="Colour" />
+                            <input name="size" defaultValue={v.size ?? ""} maxLength={40} aria-label="Size" />
+                            <input name="hardware" defaultValue={v.hardware ?? ""} maxLength={80} aria-label="Hardware" />
+                            <input name="price_aed" defaultValue={v.price_aed ?? ""} inputMode="numeric" maxLength={16} aria-label="Price (AED)" />
+                            <input name="stock" type="number" min={0} max={999} defaultValue={v.stock ?? ""} aria-label="Stock" />
+                            <select name="image_id" defaultValue={v.image_id ?? ""} aria-label="Photo">
+                              <option value="">—</option>
+                              {photos.map((ph, i) => (
+                                <option key={ph.id} value={ph.id}>Photo {i + 1}</option>
+                              ))}
+                            </select>
+                            <button type="submit" className="adm-btn">Save</button>
+                            <button type="submit" formAction={deleteVariant} className="adm-link adm-link--danger">Remove</button>
+                          </form>
+                        </td>
+                      </tr>
+                    ) : (
+                      <tr key={v.id}>
+                        <td className="adm-ltr">{v.sku}</td><td>{v.colour ?? "—"}</td><td>{v.size ?? "—"}</td><td>{v.hardware ?? "—"}</td>
+                        <td>{v.price_aed ? money(v.price_aed, "AED") : "Piece price"}</td><td>{v.stock ?? "Piece stock"}</td>
+                        <td>{v.image_id ? `Photo ${photos.findIndex((ph) => ph.id === v.image_id) + 1}` : "—"}</td>
+                      </tr>
+                    ),
+                  )}
+                </tbody>
+              </table>
+            )}
+            {isOwner && (
+              <form action={saveVariant} className="adm-form">
+                <input type="hidden" name="ref" value={p.ref} />
+                <div className="adm-row">
+                  <label>Code (optional)<input name="sku" maxLength={48} placeholder={`${p.ref}-1`} /></label>
+                  <label>Colour<input name="colour" maxLength={80} /></label>
+                  <label>Size<input name="size" maxLength={40} /></label>
+                  <label>Hardware<input name="hardware" maxLength={80} /></label>
+                </div>
+                <div className="adm-row">
+                  <label>Price (AED, optional)<input name="price_aed" inputMode="numeric" maxLength={16} /></label>
+                  <label>Stock (optional)<input name="stock" type="number" min={0} max={999} /></label>
+                  <label>
+                    Photo
+                    <select name="image_id" defaultValue="">
+                      <option value="">—</option>
+                      {photos.map((ph, i) => (
+                        <option key={ph.id} value={ph.id}>Photo {i + 1}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <button type="submit" className="adm-btn">Add version</button>
+              </form>
+            )}
+          </>
+        )}
       </section>
 
       {isOwner ? (

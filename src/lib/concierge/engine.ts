@@ -7,6 +7,7 @@
  * /chat page, and it can be tested without a database or network.
  */
 import { extract, hasEnoughDetail, detectIntent, findItemRef, normaliseOrderRef, matchChoice, YES, NO, type CategoryKey, type Extracted, type Intent, type Topic } from "./detect";
+import { brandsFor, coreBrands } from "@/data/brands";
 import { countryName, matchCountry } from "./countries";
 import { isEmail, parsePhone, type Phone } from "./phone";
 import { ltr, t, type ContactMethod, type Locale, type RequestType } from "./i18n";
@@ -156,7 +157,7 @@ export interface Turn {
   submitted?: { reference: string; id: string };
 }
 
-const CATEGORIES: CategoryKey[] = ["bags", "watches", "shoes", "accessories", "other"];
+const CATEGORIES: CategoryKey[] = ["bags", "shoes", "watches", "jewellery", "other"];
 const TOPICS: Topic[] = ["price", "authenticity", "shipping", "returns", "other"];
 const METHODS: ContactMethod[] = ["whatsapp", "call", "email"];
 const TIMINGS = ["asap", "month", "flexible"];
@@ -210,8 +211,11 @@ function ask(s: State): { text?: string; prompt: Prompt } {
       return { text: L.a.photoHint(d.photoHint ?? ""), prompt: prompt("choices", { choices: [choice("yes", L.a.photoHintYes), choice("no", L.a.photoHintNo)] }) };
     case "src_category":
       return { text: L.a.category, prompt: prompt("choices", { choices: CATEGORIES.map((c) => choice(c, L.categories[c])) }) };
-    case "src_brand":
-      return { text: L.a.brand, prompt: prompt("text", { choices: [choice("skip", L.a.notSure)], maxLength: LIMIT.name }) };
+    case "src_brand": {
+      // The shop's houses for this category as quick choices (data/brands.ts); typing stays possible.
+      const houses = d.category && d.category !== "other" ? brandsFor(d.category) : coreBrands;
+      return { text: L.a.brand, prompt: prompt("text", { choices: [...houses.map((b) => choice(b.name, b.name)), choice("skip", L.a.notSure)], maxLength: LIMIT.name }) };
+    }
     case "src_details":
       return { text: L.a.details[d.category ?? "other"] ?? L.a.details.other, prompt: prompt("text", { choices: [skip], allowPhoto: true, maxLength: LIMIT.short }) };
     case "src_budget":

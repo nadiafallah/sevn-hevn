@@ -17,7 +17,7 @@ export default async function NewProduct({ searchParams }: { searchParams: SP })
       <Flash ok={one(sp.ok)} error={one(sp.error)} />
       <h1 className="adm-h1">Add a piece</h1>
       <p className="adm-muted">
-        The piece is saved as a <strong>draft</strong> that only the team can see. On the next page you add photos and publish it. Only name and category are required.
+        The piece is saved as a <strong>draft</strong> that only the team can see. On the next page you add photos and publish it. Name, house and category are required.
       </p>
       <form action={createProduct} className="adm-form adm-card">
         <ProductFields />

@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { useI18n } from "@/i18n/I18nProvider";
 
-type Variant = "drawer" | "drawer-left" | "center" | "wide";
+type Variant = "drawer" | "drawer-left" | "center" | "wide" | "zoom";
 
 /**
  * Accessible modal built on the native <dialog> element:
