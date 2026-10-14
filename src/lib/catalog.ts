@@ -183,11 +183,6 @@ const TEXT_FIELDS = ["name", "description", "colour", "material", "hardware", "c
 function composed(item: Item): Item {
   const out: Item = { ...item };
   for (const k of TEXT_FIELDS) if (typeof out[k] === "string") (out as unknown as Record<string, string>)[k] = (out[k] as string).normalize("NFC");
-  if (out.translations) {
-    out.translations = Object.fromEntries(
-      Object.entries(out.translations).map(([l, tr]) => [l, Object.fromEntries(Object.entries(tr ?? {}).map(([k, v]) => [k, typeof v === "string" ? v.normalize("NFC") : v]))]),
-    ) as Item["translations"];
-  }
   return out;
 }
 

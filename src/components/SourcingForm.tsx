@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import { categories, isCategoryId } from "@/data/taxonomy";
 import { brandAllowedIn, brandsFor, coreBrands, findBrand } from "@/data/brands";
 import { useI18n } from "@/i18n/I18nProvider";
-import { CARRY_EVENT, takeCarriedForm, type Carry } from "@/i18n/carry";
 import { sourcingMessage } from "@/lib/whatsapp";
 import { track } from "@/lib/analytics";
 import type { SourcingPrefill } from "./SiteProvider";
@@ -16,9 +15,8 @@ const timingIds = ["asap", "months", "none"] as const;
 
 type Errors = Partial<Record<"category" | "describe" | "contactValue", string>>;
 type Values = { category: string; brand: string; model: string; details: string; budget: string; timing: string; name: string; contactValue: string };
-type Carried = { values: Values; method: ContactMethod; prepared: boolean };
 
-export function SourcingForm({ prefill, tone = "light", carryKey }: { prefill?: SourcingPrefill; tone?: "light" | "dark"; carryKey?: string }) {
+export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPrefill; tone?: "light" | "dark" }) {
   const { t, locale } = useI18n();
   const f = t.forms;
   const uid = useId();
@@ -37,27 +35,6 @@ export function SourcingForm({ prefill, tone = "light", carryKey }: { prefill?: 
     name: "",
     contactValue: "",
   }));
-
-  // Language change: hand the typed fields over to the page in the new language, and take them back.
-  const latest = useRef<Carried>({ values, method, prepared });
-  useEffect(() => {
-    latest.current = { values, method, prepared };
-  }, [values, method, prepared]);
-  useEffect(() => {
-    if (!carryKey) return;
-    const back = takeCarriedForm<Carried>(carryKey);
-    if (back?.values) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setValues((v) => ({ ...v, ...back.values }));
-      if (contactMethods.includes(back.method)) setMethod(back.method);
-      setPrepared(!!back.prepared);
-    }
-    const give = (e: Event) => {
-      (e as CustomEvent<Carry>).detail.forms[carryKey] = latest.current;
-    };
-    window.addEventListener(CARRY_EVENT, give);
-    return () => window.removeEventListener(CARRY_EVENT, give);
-  }, [carryKey]);
 
   const set = (k: keyof Values) => (e: { target: { value: string } }) =>
     setValues((v) => {

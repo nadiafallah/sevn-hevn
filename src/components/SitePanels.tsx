@@ -18,7 +18,6 @@ import { Wordmark } from "./Wordmark";
 import { CartPanel } from "./CartPanel";
 import { SourcingForm } from "./SourcingForm";
 import { ViewingForm } from "./ViewingForm";
-import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useSite, type Panel } from "./SiteProvider";
 import { categoryMenu } from "./menuData";
 import { ArrowIcon, InstagramIcon, MailIcon, PhoneIcon, PlusIcon, SearchIcon, WhatsAppIcon } from "./icons";
@@ -269,7 +268,6 @@ function MenuPanel() {
           </button>
         </li>
       </ul>
-      <LanguageSwitcher variant="menu" />
       <p className="muted small menu-panel__loc">{t.location}</p>
     </nav>
   );
@@ -293,13 +291,12 @@ export function SitePanels() {
         <SourcingForm
           key={JSON.stringify(panel?.type === "sourcing" ? panel.prefill : null)}
           prefill={panel?.type === "sourcing" ? panel.prefill : undefined}
-          carryKey="sourcing:panel"
         />
       </Dialog>
 
       <Dialog open={is("viewing")} onClose={closePanel} title={p.viewingTitle} eyebrow={t.location}>
         <p className="dlg__intro">{p.viewingIntro}</p>
-        <ViewingForm key={JSON.stringify(panel?.type === "viewing" ? panel.prefill : null)} prefill={panel?.type === "viewing" ? panel.prefill : undefined} carryKey="viewing:panel" />
+        <ViewingForm key={JSON.stringify(panel?.type === "viewing" ? panel.prefill : null)} prefill={panel?.type === "viewing" ? panel.prefill : undefined} />
       </Dialog>
 
       <Dialog open={is("contact")} onClose={closePanel} title={p.contactTitle} eyebrow={t.location}>

@@ -2,11 +2,10 @@ import type { Plural } from "../format";
 import { shopEn } from "./shop/en";
 
 /**
- * English wording: the reference dictionary. The Arabic, Russian and French dictionaries must have
- * exactly the same shape (TypeScript enforces it), so no text can be left untranslated.
+ * The website's wording. The site is English only.
  *
- * Conventions: "{name}" is a placeholder; "*text*" marks the italic accent in headings. Brand names,
- * references, prices (always "AED 12,345") and contact details are never translated.
+ * Conventions: "{name}" is a placeholder; "*text*" marks the italic accent in headings. Prices are
+ * always written "AED 12,345".
  */
 export const en = {
   meta: {
@@ -29,7 +28,7 @@ export const en = {
     previewDescription: "Editorial preview: {description}. AI-generated mood imagery, not an item for sale. Request a similar piece from SEVN HEVN in Dubai.",
     chatTitle: "Concierge chat",
     chatDescription:
-      "Ask the SEVN HEVN concierge to find a piece, answer a question or arrange a call from our team in Dubai. In English, Arabic, Russian and French.",
+      "Ask the SEVN HEVN concierge to find a piece, answer a question or arrange a call from our team in Dubai.",
     notFoundTitle: "Page not found",
   },
 
@@ -89,7 +88,6 @@ export const en = {
     location: "Dubai, UAE",
     close: "Close",
     utility: "Private sourcing & viewings",
-    language: "Language",
 
     nav: {
       main: "Main",
@@ -189,7 +187,7 @@ export const en = {
           "If you use our concierge chat (the Concierge button or /chat), your messages, the contact details you give and any photos you send are stored in the same database so our team can follow up. The chat is a virtual assistant that follows set rules; prices, availability and orders are always confirmed by our team. We ask for your consent to contact you about your request; we do not use it for marketing.",
           "Photos sent in the chat are saved again without their hidden data (such as the location where they were taken) and only our team can open them. Your browser keeps a conversation number so you can continue after reloading; a conversation can no longer be continued after 24 hours without activity.",
           "To prevent abuse we keep a one-way hashed form of the sender’s IP address with website-sent requests and chat conversations, never the address itself.",
-          "Your bag is saved only in your own browser (local storage) so it is still there when you return. It contains item references, not personal details. Your language choice is kept in a cookie in your browser so the site opens in that language next time.",
+          "Your bag is saved only in your own browser (local storage) so it is still there when you return. It contains item references, not personal details.",
           "This website does not currently use advertising or analytics cookies. If that changes, we will ask for your consent first.",
           "Like most websites, our hosting provider may keep standard technical logs (such as IP address and browser type) for security and reliability.",
           "WhatsApp, email providers and Instagram are operated by third parties under their own privacy policies.",

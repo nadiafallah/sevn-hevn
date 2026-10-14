@@ -1,7 +1,7 @@
 import { select } from "@/lib/concierge/db";
 import { requireOwner } from "@/lib/admin/session";
 import { Flash, one, type SP } from "@/components/admin/Flash";
-import { chatLanguages, day, knowledgeTopics, languageLabel, when } from "@/lib/admin/labels";
+import { recordLanguages, day, knowledgeTopics, languageLabel, when } from "@/lib/admin/labels";
 import { saveKnowledge, setKnowledgeStatus } from "../../actions";
 
 export const metadata = { title: "Store knowledge" };
@@ -27,7 +27,7 @@ function Fields({ e }: { e?: Entry }) {
     <>
       <div className="adm-row">
         <label>Topic<select name="topic" defaultValue={e?.topic ?? "shipping"}>{knowledgeTopics.map((t) => <option key={t} value={t}>{t}</option>)}</select></label>
-        <label>Language<select name="locale" defaultValue={e?.locale ?? "en"}>{chatLanguages.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}</select></label>
+        <label>Language<select name="locale" defaultValue={e?.locale ?? "en"}>{recordLanguages.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}</select></label>
         <label>Country (blank = all)<input name="country_code" defaultValue={e?.country_code ?? ""} maxLength={2} pattern="[A-Za-z]{2}" placeholder="AE" /></label>
       </div>
       <label>Title<input name="title" required defaultValue={e?.title ?? ""} maxLength={160} /></label>
@@ -52,6 +52,7 @@ export default async function Knowledge({ searchParams }: { searchParams: SP }) 
       <p className="adm-muted">
         The chat may quote only <strong>approved</strong> entries, word for word, with no additions. It never states prices, stock, delivery times, customs costs or warranties on its own;
         anything not covered here is passed to the team. After the “review by” date an entry is no longer quoted. Editing an entry sends it back to draft.
+        The chat speaks English only, so it quotes English entries only.
       </p>
       <details className="adm-card">
         <summary>Add an entry</summary>

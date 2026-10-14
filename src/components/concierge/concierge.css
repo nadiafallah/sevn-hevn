@@ -116,10 +116,6 @@ html:has(.cc-panel[data-open="true"]) .wa-float {
   font-family: var(--font);
 }
 
-.cc[lang="ar"] {
-  font-family: var(--font-arabic), "Geeza Pro", "Segoe UI", Tahoma, var(--font);
-}
-
 .cc--loading {
   min-height: 320px;
 }
@@ -154,11 +150,6 @@ html:has(.cc-panel[data-open="true"]) .wa-float {
   line-height: 1.15;
 }
 
-.cc[lang="ar"] .cc__title {
-  font-family: var(--font-arabic), "Geeza Pro", var(--font);
-  font-size: 19px;
-}
-
 .cc__subtitle {
   margin-top: 3px;
   font-size: 12px;
@@ -171,43 +162,6 @@ html:has(.cc-panel[data-open="true"]) .wa-float {
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-}
-
-.cc__lang {
-  display: flex;
-  flex: 1 0 100%;
-  border: 1px solid var(--rule-strong);
-}
-
-.cc__lang-btn {
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 34px;
-  padding: 0 6px;
-  border: 0;
-  background: transparent;
-  font-size: 12px;
-  white-space: nowrap;
-  transition:
-    background-color 0.25s var(--ease),
-    color 0.25s var(--ease);
-}
-
-.cc__lang-btn + .cc__lang-btn {
-  border-inline-start: 1px solid var(--rule);
-}
-
-.cc__lang-btn:not([aria-pressed="true"]):not(:disabled):hover {
-  background: var(--ivory-deep);
-}
-
-.cc__lang-btn[lang="ar"] {
-  font-family: var(--font-arabic), "Geeza Pro", var(--font);
-}
-
-.cc__lang-btn[aria-pressed="true"] {
-  background: var(--espresso);
-  color: var(--ivory);
 }
 
 .cc__icon {
@@ -319,11 +273,6 @@ html:has(.cc-panel[data-open="true"]) .wa-float {
   line-height: 1.25;
 }
 
-.cc[lang="ar"] .cc__unavailable-title {
-  font-family: inherit;
-  font-size: 17px;
-}
-
 .cc__unavailable-actions {
   display: flex;
   flex-wrap: wrap;
@@ -427,11 +376,6 @@ html:has(.cc-panel[data-open="true"]) .wa-float {
   flex-shrink: 0;
 }
 
-.cc[lang="ar"] .cc__send {
-  letter-spacing: 0;
-  font-size: 14px;
-}
-
 .cc__send:disabled,
 .cc button:disabled {
   opacity: 0.45;
@@ -463,12 +407,6 @@ html:has(.cc-panel[data-open="true"]) .wa-float {
   margin-bottom: 8px;
   font-family: var(--serif);
   font-size: 19px;
-}
-
-.cc[lang="ar"] .cc__review-title {
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 500;
 }
 
 .cc__review dl {

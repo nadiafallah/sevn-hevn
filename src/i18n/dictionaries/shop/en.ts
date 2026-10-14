@@ -1,9 +1,8 @@
 import type { Plural } from "../../format";
 
 /**
- * Wording of the shop: menu, listings, filters, product pages, bag and checkout. The other languages
- * (shop/ar.ts, shop/ru.ts, shop/fr.ts) must have exactly this shape. Brand names, product codes and
- * prices ("AED 12,345") are never translated.
+ * Wording of the shop: menu, listings, filters, product pages, bag and checkout (English only).
+ * Prices are always written "AED 12,345".
  */
 export const shopEn = {
   home: "Home",

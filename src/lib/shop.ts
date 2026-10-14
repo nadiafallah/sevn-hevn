@@ -114,7 +114,6 @@ export function searchHaystack(item: Piece, extra: string[] = []) {
       item.material,
       item.hardware,
       item.purity,
-      item.searchText,
       ...extra,
     ]
       .filter(Boolean)

@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { indexingEnabled, site } from "@/config/site";
-import { isLocale, localeInfo, locales } from "@/i18n/config";
+import { isLocale, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { baseOpenGraph } from "@/lib/seo";
 import { SiteChrome } from "@/components/SiteChrome";
@@ -13,7 +13,7 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
-// Only the four site languages exist; anything else is a 404 (notFound() below and in each page).
+// The site is English only; any other value is a 404 (notFound() below and in each page).
 // Not `dynamicParams = false`: with it, Next.js answers 404 (NoFallbackError) for every pre-rendered
 // page in this segment once the catalogue cache is refreshed (/api/revalidate, a panel save), until
 // the next deployment.
@@ -46,7 +46,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   if (!isLocale(locale)) notFound();
   return (
     // suppressHydrationWarning: the inline script below adds the "js" class to <html> before React hydrates.
-    <html lang={locale} dir={localeInfo[locale].dir} className={fontVariables} suppressHydrationWarning>
+    <html lang="en" dir="ltr" className={fontVariables} suppressHydrationWarning>
       <head>
         {/* Marks JS as available so reveal animations never hide content without it. */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />

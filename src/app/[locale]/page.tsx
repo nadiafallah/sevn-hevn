@@ -7,12 +7,11 @@ import { site } from "@/config/site";
 import { coreBrands, jewelleryOnlyBrands, type Brand } from "@/data/brands";
 import { categories, type CategoryId } from "@/data/taxonomy";
 import type { ItemImage } from "@/data/types";
-import { isLocale, languageAlternates, localePath, locales } from "@/i18n/config";
+import { isLocale, localePath } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { plural } from "@/i18n/format";
 import { rich } from "@/i18n/rich";
 import { getCatalog, getNewArrivals } from "@/lib/catalog";
-import { localizeItem } from "@/lib/localize";
 import { categoryPath, toShopItem } from "@/lib/paths";
 import { baseOpenGraph } from "@/lib/seo";
 import { sortItems } from "@/lib/shop";
@@ -37,7 +36,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]">): Prom
   if (!isLocale(locale)) return {};
   return {
     title: { absolute: getDictionary(locale).meta.homeTitle },
-    alternates: { canonical: localePath(locale, "/"), languages: languageAlternates("/") },
+    alternates: { canonical: localePath(locale, "/") },
     openGraph: { ...baseOpenGraph(locale), url: localePath(locale, "/") },
   };
 }
@@ -49,8 +48,8 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const t = d.home;
   const ui = d.ui;
   const href = (path: string) => localePath(locale, path);
-  const catalog = (await getCatalog()).map((i) => localizeItem(i, locale));
-  const arrivals = (await getNewArrivals(4)).map((i) => toShopItem(localizeItem(i, locale)));
+  const catalog = await getCatalog();
+  const arrivals = (await getNewArrivals(4)).map(toShopItem);
 
   const cards = categories.map((c) => {
     const pieces = sortItems(
@@ -70,7 +69,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
     name: site.name,
     alternateName: site.alternateNames,
     url: `${site.url}/`,
-    inLanguage: locales,
+    inLanguage: "en",
   };
 
   return (

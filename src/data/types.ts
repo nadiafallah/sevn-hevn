@@ -1,4 +1,3 @@
-import type { Locale } from "@/i18n/config";
 import type { BrandId } from "./brands";
 import type { CategoryId } from "./taxonomy";
 
@@ -107,33 +106,4 @@ export interface Item {
   /** Legacy fields kept for old editorial records. */
   editorialNote?: string;
   tagline?: string;
-  /**
-   * Descriptive text in other languages (Arabic, Russian, French). Brand, model reference, price,
-   * stock, year and condition grade are never translated. Missing fields fall back to English.
-   */
-  translations?: Partial<Record<Exclude<Locale, "en">, ItemText>>;
-  /** Set by localizeItem: the English and translated wording, so search works in either. */
-  searchText?: string;
-}
-
-/** The translatable, descriptive fields of an item. */
-export interface ItemText {
-  name?: string;
-  description?: string;
-  tagline?: string;
-  editorialNote?: string;
-  colour?: string;
-  material?: string;
-  hardware?: string;
-  conditionNotes?: string;
-  size?: string;
-  dimensions?: string;
-  stones?: string;
-  included?: string[];
-  authentication?: string;
-  delivery?: string;
-  returns?: string;
-  draftNote?: string;
-  /** Image descriptions, in the same order as `images`. */
-  imageAlts?: string[];
 }

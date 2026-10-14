@@ -3,7 +3,6 @@ import { verifyBag, sameOrigin } from "@/lib/checkout";
 import { clientHash, conciergeServer } from "@/lib/concierge/config";
 import { DbError, rpc } from "@/lib/concierge/db";
 import { isEmail, parsePhone } from "@/lib/concierge/phone";
-import { isLocale, type Locale } from "@/i18n/config";
 import { en } from "@/i18n/dictionaries/en";
 
 export const dynamic = "force-dynamic";
@@ -44,7 +43,6 @@ export async function POST(request: Request) {
   const bag = await verifyBag(body.items);
   if (!bag.ok) return fail(bag.status, bag.status === 409 ? "bag_changed" : "invalid_request", bag.issues ? { issues: bag.issues } : {});
 
-  const locale: Locale = isLocale(body.locale) ? body.locale : "en";
   const c = (body.customer ?? {}) as Record<string, unknown>;
   const d = (body.delivery ?? {}) as Record<string, unknown>;
   const name = str(c.name, 80);
@@ -87,7 +85,7 @@ export async function POST(request: Request) {
       p_key: db.serverKey,
       p_request: {
         idempotency_key: `checkout:${idem}`,
-        locale,
+        locale: "en",
         contact_name: name,
         contact_phone: phone.ok ? phone.phone.e164 : null,
         contact_email: email || null,

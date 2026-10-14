@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { site } from "@/config/site";
-import { localeInfo, locales, type Locale } from "@/i18n/config";
+import { localeInfo, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 
 /**
@@ -14,7 +14,6 @@ export function baseOpenGraph(locale: Locale): NonNullable<Metadata["openGraph"]
     type: "website",
     siteName: site.name,
     locale: localeInfo[locale].og,
-    alternateLocale: locales.filter((l) => l !== locale).map((l) => localeInfo[l].og),
     title: t.ogTitle,
     description: t.description,
     images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: t.ogImageAlt }],

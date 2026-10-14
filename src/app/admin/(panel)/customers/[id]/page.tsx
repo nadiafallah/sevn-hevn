@@ -4,7 +4,7 @@ import { select } from "@/lib/concierge/db";
 import { formatPhone } from "@/lib/concierge/phone";
 import { requireStaff } from "@/lib/admin/session";
 import { Flash, one, type SP } from "@/components/admin/Flash";
-import { chatLanguages, fulfilmentLabels, languageLabel, methodLabels, money, paymentLabels, requestStatusLabels, requestTypeLabels, when } from "@/lib/admin/labels";
+import { recordLanguages, fulfilmentLabels, languageLabel, methodLabels, money, paymentLabels, requestStatusLabels, requestTypeLabels, when } from "@/lib/admin/labels";
 import { updateCustomer } from "../../../actions";
 
 export const metadata = { title: "Customer" };
@@ -46,7 +46,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
                 <input type="hidden" name="id" value={c.id} />
                 <label>Name<input name="name" defaultValue={c.name ?? ""} maxLength={80} /></label>
                 <label>Email<input name="email" type="email" defaultValue={c.email ?? ""} maxLength={254} /></label>
-                <label>Language<select name="preferred_language" defaultValue={c.preferred_language}>{chatLanguages.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}</select></label>
+                <label>Language<select name="preferred_language" defaultValue={c.preferred_language}>{recordLanguages.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}</select></label>
                 <label>Prefers<select name="preferred_contact" defaultValue={c.preferred_contact ?? ""}><option value="">—</option>{Object.entries(methodLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
                 <label>Country code<input name="country_code" defaultValue={c.country_code ?? ""} maxLength={2} pattern="[A-Za-z]{2}" /></label>
                 <button type="submit" className="adm-btn adm-btn--dark">Save</button>

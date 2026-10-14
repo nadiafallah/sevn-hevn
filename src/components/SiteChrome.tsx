@@ -4,7 +4,6 @@ import type { Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import { getCatalog } from "@/lib/catalog";
-import { localizeItem } from "@/lib/localize";
 import { supabaseWriteConfig } from "@/lib/supabase";
 import { conciergeReady } from "@/lib/concierge/config";
 import { toShopItem } from "@/lib/paths";
@@ -20,7 +19,7 @@ import "./concierge/concierge.css";
 export async function SiteChrome({ locale, children }: { locale: Locale; children: ReactNode }) {
   const t = getDictionary(locale);
   // Every listed piece, without its long text: the menu, search, cards and the bag use these.
-  const items = (await getCatalog()).map((i) => toShopItem(localizeItem(i, locale)));
+  const items = (await getCatalog()).map(toShopItem);
 
   const chatReady = await conciergeReady();
 
@@ -37,7 +36,7 @@ export async function SiteChrome({ locale, children }: { locale: Locale; childre
     telephone: site.contact.phoneE164,
     address: { "@type": "PostalAddress", addressLocality: site.location.locality, addressCountry: site.location.country },
     sameAs: [site.social.instagram.url, ...(site.social.facebook.url ? [site.social.facebook.url] : [])],
-    contactPoint: [{ "@type": "ContactPoint", telephone: site.contact.phoneE164, email: site.contact.email, contactType: "customer service", availableLanguage: ["English", "Arabic", "Russian", "French"] }],
+    contactPoint: [{ "@type": "ContactPoint", telephone: site.contact.phoneE164, email: site.contact.email, contactType: "customer service", availableLanguage: ["English"] }],
   };
 
   return (

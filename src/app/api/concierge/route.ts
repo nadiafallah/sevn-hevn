@@ -1,4 +1,3 @@
-import { isLocale } from "@/lib/concierge/i18n";
 import type { Input } from "@/lib/concierge/engine";
 import { loadConversation, respond, startConversation } from "@/lib/concierge/service";
 import { conciergeReady } from "@/lib/concierge/config";
@@ -17,8 +16,6 @@ function parseInput(raw: unknown): Input | null {
       return typeof r.value === "string" && r.value.length <= 2000 ? { type: r.type, value: r.value } : null;
     case "submit":
       return typeof r.consent === "boolean" ? { type: "submit", consent: r.consent } : null;
-    case "locale":
-      return isLocale(r.value) ? { type: "locale", value: r.value } : null;
     case "restart":
     case "human":
       return { type: r.type };
@@ -52,11 +49,11 @@ export async function POST(request: Request) {
   try {
     switch (body.action) {
       case "start": {
-        const locale = isLocale(body.locale) ? body.locale : "en";
+        // The chat is English only; a language sent by an older page is ignored.
         const source = body.source === "page" ? "page" : "widget";
         const input = body.input === undefined ? undefined : parseInput(body.input);
         if (input === null) return json({ error: "invalid_request" }, 400);
-        return json(await startConversation(request, locale, source, input, clientMsgId ?? undefined), 201);
+        return json(await startConversation(request, source, input, clientMsgId ?? undefined), 201);
       }
       case "load":
         if (!id || !token) return json({ error: "invalid_request" }, 400);

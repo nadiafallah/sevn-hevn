@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useI18n } from "@/i18n/I18nProvider";
 
-/** 404 inside the site frame, in the language of the address that was requested. */
+/** 404 inside the site frame. */
 export default function NotFound() {
   const { t: ui, href } = useI18n();
   const t = ui.notFound;

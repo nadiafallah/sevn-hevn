@@ -23,7 +23,7 @@
   --header-h: 80px;
   --gutter: clamp(16px, 4vw, 56px);
   --max: 1360px;
-  /* Reading direction, for the few effects that are not logical properties (see "Languages"). */
+  /* Reading direction (the site reads left to right), for the few effects that are not logical properties. */
   --dir: 1;
   --start: left;
   --to-end: 90deg;
@@ -2040,177 +2040,19 @@ html:has(dialog[open]) .wa-float {
 }
 
 /* ==========================================================================
-   Languages — the language selector, Arabic typography and right-to-left details
+   Header links
    ========================================================================== */
-[dir="rtl"] {
-  --dir: -1;
-  --start: right;
-  --to-end: 270deg;
-}
-
-/* Selector in the utility bar: the current language, opening a short list. */
-.lang--bar {
-  position: relative;
-}
-.lang__toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 34px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-  cursor: pointer;
-  transition: color 0.25s var(--ease);
-}
-.lang__toggle:hover,
-.lang--bar[data-open] .lang__toggle {
-  color: var(--champagne);
-}
-.lang__chev {
-  transition: transform 0.25s var(--ease);
-}
-.lang--bar[data-open] .lang__chev {
-  transform: rotate(180deg);
-}
-.lang__pop {
-  position: absolute;
-  top: 100%;
-  inset-inline-end: 0;
-  z-index: 60;
-  min-width: 172px;
-  padding: 6px 0;
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  box-shadow: 0 14px 36px rgba(23, 21, 19, 0.14);
-  animation: fade 0.2s var(--ease) both;
-}
-.lang__pop[hidden] {
-  display: none;
-}
-.lang__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.lang--bar .lang__option {
-  display: block;
-  padding: 11px 18px;
-  font-size: 0.86rem;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  text-align: left; /* every option lines up with the page, whatever its own direction */
-  text-decoration: none;
-  color: var(--espresso);
-  transition: background-color 0.2s var(--ease);
-}
-.lang--bar .lang__option:hover {
-  background: var(--ivory);
-}
-.lang__pop :focus-visible {
-  outline-color: var(--espresso);
-}
-.lang__option[aria-current="true"] {
-  text-decoration: underline;
-  text-decoration-color: var(--champagne);
-  text-underline-offset: 5px;
-}
-
-/* The same choice as a plain list in the menu drawer. */
-.lang--menu {
-  margin-top: 28px;
-  padding-top: 20px;
-  border-top: 1px solid var(--rule);
-}
-.lang__heading {
-  margin-bottom: 6px;
-  font-size: 0.66rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.lang--menu .lang__list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 24px;
-}
-.lang--menu .lang__option {
-  display: inline-block;
-  padding: 10px 0;
-  font-size: 1rem;
-  text-decoration: none;
-  color: var(--espresso);
-}
-.lang--menu .lang__option[aria-current="true"] {
-  text-decoration: underline;
-  text-decoration-color: var(--champagne);
-  text-underline-offset: 5px;
-}
-
-/* Arabic: its own typefaces (Latin words inside Arabic text keep Jost and Cormorant). Arabic letters
-   join, so the tracking used for Latin capitals is removed, and there is no Arabic italic. */
-:lang(ar) {
-  --font: var(--font-arabic), var(--font-jost), "Geeza Pro", Tahoma, sans-serif;
-  --serif: var(--font-arabic-serif), var(--font-serif), "Geeza Pro", serif;
-  letter-spacing: 0 !important;
-}
-:lang(ar) :is(h1, h2, h3) em {
-  font-style: normal;
-}
-
-/* Arrows point the way the text reads. */
-[dir="rtl"] .icon-arrow {
-  scale: -1 1;
-}
-[dir="rtl"] .lang--bar .lang__option {
-  text-align: right;
-}
-
-/* Header links stay on one line. Where they no longer fit beside the wordmark, the menu button
-   takes over: the short Arabic labels fit down to the tablet layout, English needs 1280 px, and the
-   longer Russian and French labels (slightly tighter tracking) 1340 px. */
+/* Header links stay on one line. Below 1280 px they no longer fit beside the wordmark, so the menu
+   button takes over. */
 .site-nav a,
 .site-nav button {
   white-space: nowrap;
 }
-.site-nav:is(:lang(ru), :lang(fr)) {
-  gap: 26px;
-}
-.site-nav:is(:lang(ru), :lang(fr)) :is(a, button) {
-  letter-spacing: 0.12em;
-}
 @media (max-width: 1279px) {
-  .site-nav:lang(en) {
+  .site-nav {
     display: none;
   }
-  .site-header__menu:lang(en) {
+  .site-header__menu {
     display: inline-grid;
-  }
-}
-@media (max-width: 1339px) {
-  .site-nav:is(:lang(ru), :lang(fr)) {
-    display: none;
-  }
-  .site-header__menu:is(:lang(ru), :lang(fr)) {
-    display: inline-grid;
-  }
-}
-
-@media (min-width: 900px) {
-  /* The headline stays on the lit wall, clear of the bags, in every language. */
-  .hero__title:lang(ru) {
-    font-size: clamp(2.6rem, 4.3vw, 4.6rem);
-  }
-  .hero__title:is(:lang(fr), :lang(ar)) {
-    font-size: clamp(2.8rem, 5.2vw, 5.6rem);
-  }
-  /* Arabic: the copy stays over the lit wall on the left of the photograph, as in English, and
-     reads from the right edge of its column. */
-  [dir="rtl"] .hero__content {
-    padding-inline-start: max(var(--gutter), calc(min(100vw, var(--max)) - min(28rem, 32vw) - var(--gutter)));
   }
 }

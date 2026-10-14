@@ -17,7 +17,7 @@ export function interpolate(template: string, nodes: Record<string, ReactNode>):
   });
 }
 
-/** Keeps phone numbers, references, e-mail addresses and prices left-to-right inside Arabic text. */
+/** Keeps phone numbers, references, e-mail addresses and prices together, left-to-right. */
 export function Ltr({ children }: { children: ReactNode }) {
   return <bdi dir="ltr">{children}</bdi>;
 }

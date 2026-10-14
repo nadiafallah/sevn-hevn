@@ -397,9 +397,8 @@ function Zoom({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (total < 2) return;
-      const rtl = document.documentElement.dir === "rtl";
-      if (e.key === "ArrowRight") go(rtl ? -1 : 1);
-      if (e.key === "ArrowLeft") go(rtl ? 1 : -1);
+      if (e.key === "ArrowRight") go(1);
+      if (e.key === "ArrowLeft") go(-1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

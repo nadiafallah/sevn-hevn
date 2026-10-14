@@ -6,7 +6,7 @@ import { findItem, getCatalog } from "@/lib/catalog";
 import { aiConfig, clientHash, conciergeServer, emailConfig, supabaseApi } from "./config";
 import { DbError, rpc, select, storageUpload } from "./db";
 import { begin, currentPrompt, handle, initialState, type Deps, type Input, type ItemInfo, type KnowledgeAnswer, type State, type SubmitPayload, type VerifiedOrder } from "./engine";
-import { t, type Locale } from "./i18n";
+import { t } from "./i18n";
 import type { ClientMessage, ClientReply } from "./types";
 import { aiDescribePhoto, aiExtract } from "./ai";
 import { processNotifications, sendOrderCode } from "./notify";
@@ -24,7 +24,8 @@ export class ConciergeError extends Error {
 
 interface Loaded {
   id: string;
-  locale: Locale;
+  /** "en"; conversations from before the chat became English-only may carry "ar", "ru" or "fr". */
+  locale: string;
   state: State | Record<string, never>;
   version: number;
   last_client_msg_id: string | null;
@@ -46,9 +47,16 @@ function server(): Server {
   return db;
 }
 
-function parseState(raw: Loaded["state"], locale: Locale): State {
+/** The chat is English only: a conversation saved while it had other languages continues in English. */
+function parseState(raw: Loaded["state"]): State {
   const s = raw as State;
-  return s && s.v === 1 && typeof s.step === "string" && s.draft ? s : initialState(locale);
+  return s && s.v === 1 && typeof s.step === "string" && s.draft ? { ...s, locale: "en" } : initialState("en");
+}
+
+/** Started in Arabic, Russian or French, before the chat became English-only (October 2026). */
+function startedInAnotherLanguage(conv: Loaded) {
+  const saved = (conv.state as { locale?: unknown } | null)?.locale;
+  return conv.locale !== "en" || (saved !== undefined && saved !== "en");
 }
 
 // ── Approved data the assistant may use ──────────────────────────────────────────────
@@ -74,22 +82,21 @@ async function lookupItem(ref: string): Promise<ItemInfo | null> {
   return { ref: r.ref, name: r.name, brand: r.brand ?? undefined, category: r.category, status, priceAED: r.price_aed ?? undefined, updatedAt: r.updated_at };
 }
 
-async function findKnowledge(topic: string, country: string | undefined, locale: Locale): Promise<KnowledgeAnswer | null> {
+/** Approved English entries only: the chat never quotes text in another language. */
+async function findKnowledge(topic: string, country: string | undefined): Promise<KnowledgeAnswer | null> {
   const api = supabaseApi();
   if (!api || !TOPICS.has(topic)) return null;
-  const rows = await select<{ title: string; body: string; locale: Locale; country_code: string | null; review_by: string | null }[]>(api, "knowledge_entries", {
-    select: "title,body,locale,country_code,review_by",
+  const rows = await select<{ title: string; body: string; country_code: string | null; review_by: string | null }[]>(api, "knowledge_entries", {
+    select: "title,body,country_code,review_by",
     status: "eq.approved",
     topic: `eq.${topic}`,
+    locale: "eq.en",
   });
   const today = new Date().toISOString().slice(0, 10);
   const valid = rows.filter((r) => !r.review_by || r.review_by >= today);
-  const pick = (l: Locale, cc: string | null) => valid.find((r) => r.locale === l && r.country_code === cc);
-  const hit =
-    (country ? pick(locale, country) : undefined) ??
-    pick(locale, null) ??
-    (locale !== "en" ? ((country ? pick("en", country) : undefined) ?? pick("en", null)) : undefined);
-  return hit ? { title: hit.title, body: hit.body, english: locale !== "en" && hit.locale === "en" } : null;
+  const pick = (cc: string | null) => valid.find((r) => r.country_code === cc);
+  const hit = (country ? pick(country) : undefined) ?? pick(null);
+  return hit ? { title: hit.title, body: hit.body } : null;
 }
 
 function codeHash(db: Server, conversationId: string, code: string) {
@@ -108,21 +115,7 @@ function deps(db: Server, id: string, tokenHash: string): Deps {
     now: () => new Date(),
     lookupItem,
     knowledge: findKnowledge,
-    async submit(payload) {
-      const send = (p: SubmitPayload) => rpc<{ id: string; reference: string }>(db, "concierge_submit", { ...base, p_request: p });
-      try {
-        return await send(payload);
-      } catch (e) {
-        // A database without migration 20261011120000 accepts only English and Arabic. Keep the
-        // request (marked English for the team) rather than lose it; nothing was saved by the
-        // refused attempt, so the same idempotency key is safe to reuse.
-        if ((payload.locale === "ru" || payload.locale === "fr") && e instanceof DbError && /(locale|preferred_language)_check/.test(e.message)) {
-          console.error("[concierge] database refuses ru/fr; request saved as English (apply migration 20261011120000)");
-          return send({ ...payload, locale: "en" });
-        }
-        throw e;
-      }
-    },
+    submit: (payload: SubmitPayload) => rpc<{ id: string; reference: string }>(db, "concierge_submit", { ...base, p_request: payload }),
     orderVerification: emailConfig() !== null,
     async startOrderCheck(ref) {
       const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
@@ -140,7 +133,7 @@ function deps(db: Server, id: string, tokenHash: string): Deps {
       });
       return r.ok && r.order ? { ok: true, order: r.order } : { ok: false, reason: r.reason ?? "expired", attemptsLeft: r.attempts_left };
     },
-    ai: ai ? async (text, locale) => ((await aiAllowed()) ? aiExtract(ai, text, locale) : null) : undefined,
+    ai: ai ? async (text) => ((await aiAllowed()) ? aiExtract(ai, text) : null) : undefined,
   };
 }
 
@@ -156,19 +149,19 @@ function toClient(messages: { role: "customer" | "assistant"; body: string }[]):
   return messages.map((m) => ({ role: m.role, body: m.body }));
 }
 
-/** Starts a conversation. With a first input, the greeting and the answer are stored together. */
-export async function startConversation(request: Request, locale: Locale, source: "widget" | "page", input?: Input, clientMsgId?: string): Promise<ClientReply> {
+/** Starts a conversation (in English). With a first input, the greeting and the answer are stored together. */
+export async function startConversation(request: Request, source: "widget" | "page", input?: Input, clientMsgId?: string): Promise<ClientReply> {
   const db = server();
   const token = randomBytes(32).toString("base64url");
   const tokenHash = sha(token);
   const id = await rpc<string>(db, "concierge_start", {
     p_key: db.serverKey,
     p_token_hash: tokenHash,
-    p_locale: locale,
+    p_locale: "en",
     p_source: source,
     p_client_hash: clientHash(request, db.serverKey),
   });
-  const greeting = begin(locale);
+  const greeting = begin("en");
   let state = greeting.state;
   const messages: ClientMessage[] = greeting.assistant.map((body) => ({ role: "assistant", body }));
   let prompt = greeting.prompt;
@@ -200,7 +193,10 @@ export async function loadConversation(id: string, token: string): Promise<Clien
   const db = server();
   const { conv } = await load(db, id, token);
   if (Date.now() - new Date(conv.last_activity_at).getTime() > IDLE_LIMIT_MS) throw new ConciergeError("expired", 410);
-  const state = parseState(conv.state, conv.locale);
+  // Not resumed, so its earlier non-English messages never reappear: the browser starts a new
+  // conversation in English instead.
+  if (startedInAnotherLanguage(conv)) throw new ConciergeError("expired", 410);
+  const state = parseState(conv.state);
   return {
     conversation: { id },
     locale: state.locale,
@@ -220,7 +216,7 @@ export async function respond(id: string, token: string, clientMsgId: string, in
     const { conv, tokenHash } = await load(db, id, token);
     if (conv.last_client_msg_id === clientMsgId && conv.last_reply) return conv.last_reply;
     if (Date.now() - new Date(conv.last_activity_at).getTime() > IDLE_LIMIT_MS) throw new ConciergeError("expired", 410);
-    const state = parseState(conv.state, conv.locale);
+    const state = parseState(conv.state);
     const turn = await handle(state, input, deps(db, id, tokenHash));
     const customer = customerNote ?? turn.customer;
     const messages: ClientMessage[] = [
@@ -271,10 +267,9 @@ export async function attachPhoto(id: string, token: string, clientMsgId: string
 
   let hint: string | undefined;
   const ai = aiConfig();
-  const locale = parseState(conv.state, conv.locale).locale;
   if (ai) {
     const allowed = await rpc<boolean>(db, "concierge_ai_allow", { ...base, p_per_conversation: ai.perConversation, p_per_day: ai.perDay }).catch(() => false);
-    if (allowed) hint = (await aiDescribePhoto(ai, photo.bytes, locale)) ?? undefined;
+    if (allowed) hint = (await aiDescribePhoto(ai, photo.bytes)) ?? undefined;
   }
-  return respond(id, token, clientMsgId, { type: "photo", hint }, t(locale).ui.photoAttached);
+  return respond(id, token, clientMsgId, { type: "photo", hint }, t().ui.photoAttached);
 }

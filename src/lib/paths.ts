@@ -21,11 +21,11 @@ export const productPath = (ref: string) => `/product/${encodeURIComponent(ref)}
  */
 export type ShopItem = Omit<
   Item,
-  "description" | "conditionNotes" | "authentication" | "delivery" | "returns" | "included" | "translations" | "editorialNote" | "tagline" | "draftNote" | "stones" | "dimensions"
+  "description" | "conditionNotes" | "authentication" | "delivery" | "returns" | "included" | "editorialNote" | "tagline" | "draftNote" | "stones" | "dimensions"
 >;
 
 const SERVER_ONLY_FIELDS = [
-  "description", "conditionNotes", "authentication", "delivery", "returns", "included", "translations", "editorialNote", "tagline", "draftNote", "stones", "dimensions",
+  "description", "conditionNotes", "authentication", "delivery", "returns", "included", "editorialNote", "tagline", "draftNote", "stones", "dimensions",
 ] as const;
 
 export function toShopItem(item: Item): ShopItem {

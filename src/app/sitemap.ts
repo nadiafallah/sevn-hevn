@@ -1,14 +1,13 @@
 import type { MetadataRoute } from "next";
 import { site } from "@/config/site";
 import { categories } from "@/data/taxonomy";
-import { languageAlternates, localePath, locales } from "@/i18n/config";
 import { getCatalog, isGenuine } from "@/lib/catalog";
 import { categoryPath, productPath } from "@/lib/paths";
 
 /**
- * Every page in all four languages, each entry listing its language versions (hreflang). Category
- * and house pages are listed only once they hold a genuine piece (an empty listing is noindex), and
- * every genuine piece has its own page. Drafts and demo records are never included.
+ * Every page of the (English-only) site. Category and house pages are listed only once they hold a
+ * genuine piece (an empty listing is noindex), and every genuine piece has its own page. Drafts and
+ * demo records are never included. The retired /ar, /ru and /fr addresses redirect and are not listed.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const genuine = (await getCatalog()).filter(isGenuine);
@@ -21,14 +20,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...houses.map(([category, brand]) => ({ path: `/${category}/${brand}`, changeFrequency: "daily" as const, priority: 0.7 })),
     ...genuine.map((i) => ({ path: productPath(i.ref), changeFrequency: "weekly" as const, priority: 0.6 })),
   ];
-  const absolute = (path: string) => `${site.url}${path}`;
-  return pages.flatMap((p) => {
-    const languages = Object.fromEntries(Object.entries(languageAlternates(p.path)).map(([l, path]) => [l, absolute(path)]));
-    return locales.map((locale) => ({
-      url: absolute(localePath(locale, p.path)),
-      changeFrequency: p.changeFrequency,
-      priority: p.priority,
-      alternates: { languages },
-    }));
-  });
+  return pages.map((p) => ({ url: `${site.url}${p.path}`, changeFrequency: p.changeFrequency, priority: p.priority }));
 }

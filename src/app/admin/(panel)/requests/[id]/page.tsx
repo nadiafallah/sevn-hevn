@@ -95,14 +95,8 @@ export default async function RequestPage({ params, searchParams }: { params: Pr
     ),
   ]);
 
-  // The first line of the WhatsApp reply, in the customer's chat language.
-  const who = r.contact_name ? ` ${r.contact_name}` : "";
-  const greetings: Record<string, string> = {
-    ar: `مرحباً${who}، معك فريق SEVN HEVN بخصوص طلبك ${r.reference}.`,
-    ru: `Здравствуйте${r.contact_name ? `, ${r.contact_name}` : ""}! Это команда SEVN HEVN по вашему запросу ${r.reference}.`,
-    fr: `Bonjour${who}, ici l’équipe SEVN HEVN au sujet de votre demande ${r.reference}.`,
-  };
-  const greeting = greetings[r.locale] ?? `Hello${who}, this is the SEVN HEVN team about your request ${r.reference}.`;
+  // The first line of the WhatsApp reply (SEVN HEVN writes to customers in English).
+  const greeting = `Hello${r.contact_name ? ` ${r.contact_name}` : ""}, this is the SEVN HEVN team about your request ${r.reference}.`;
   const customerWa = `https://wa.me/${r.contact_phone.replace(/\D/g, "")}?text=${encodeURIComponent(greeting)}`;
   const statuses = isOwner ? Object.keys(requestStatusLabels) : staffSettableStatuses;
   // Purchase requests carry the verified bag; it is shown as a table, everything else as label / value.

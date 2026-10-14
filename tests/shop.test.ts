@@ -132,13 +132,13 @@ test("related pieces: same category, same house first, never sold or the piece i
 
 test("WhatsApp messages carry the name, code, chosen options, price and link", () => {
   const m = en.ui.messages;
-  const msg = itemMessage({ ref: "SH-0004", name: "Chypre sandals", brand: "Hermès", status: "enquiry_only" }, m, "ar", { variant: { sku: "SH-0004-42", size: "42", colour: "Noir" }, price: "AED 4,800" });
+  const msg = itemMessage({ ref: "SH-0004", name: "Chypre sandals", brand: "Hermès", status: "enquiry_only" }, m, "en", { variant: { sku: "SH-0004-42", size: "42", colour: "Noir" }, price: "AED 4,800" });
   assert.match(msg, /Hermès — Chypre sandals/);
   assert.match(msg, /Reference: SH-0004 \/ SH-0004-42/);
   assert.match(msg, /Noir · 42/);
   assert.match(msg, /AED 4,800/);
-  assert.ok(msg.includes(itemUrl("SH-0004", "ar", "SH-0004-42")));
-  assert.match(itemUrl("SH-0004", "ar", "SH-0004-42"), /\/ar\/product\/SH-0004\?sku=SH-0004-42$/);
+  assert.ok(msg.includes(itemUrl("SH-0004", "en", "SH-0004-42")));
+  assert.match(itemUrl("SH-0004", "en", "SH-0004-42"), /^https:\/\/[^/]+\/product\/SH-0004\?sku=SH-0004-42$/);
   const bag = purchaseMessage([{ ref: "SH-0001", name: "Hermès Kelly Dépêches 25", qty: 1, price: "AED 52,000" }], { intro: "Hello", code: "code", reference: "Website request: REQ-ABC123", confirm: "Please confirm." }, "en");
   assert.match(bag, /code SH-0001 · AED 52,000/);
   assert.match(bag, /REQ-ABC123/);

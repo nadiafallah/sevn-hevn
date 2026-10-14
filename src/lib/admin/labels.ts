@@ -1,7 +1,6 @@
 /** Plain-English labels for the private panel. */
 import type { Condition } from "@/data/types";
 import { en } from "@/i18n/dictionaries/en";
-import { isLocale, localeEnglishNames, locales } from "@/lib/concierge/i18n";
 
 /** Item condition grades, worded as on the English website. */
 export const conditionLabels: Record<Condition, string> = en.ui.conditions;
@@ -15,10 +14,14 @@ export const requestStatusLabels: Record<string, string> = {
   closed: "Closed",
 };
 
-/** The concierge's languages, for filters and selects. */
-export const chatLanguages = locales.map((code) => ({ code, label: localeEnglishNames[code] }));
-export const languageLabel = (code?: string | null) => (isLocale(code) ? localeEnglishNames[code] : (code ?? "—"));
-export const languageCode = (value: string | null | undefined) => (isLocale(value) ? value : null);
+/**
+ * Languages a request, customer or knowledge entry may be marked with. The website and the chat are
+ * English only since October 2026 (new requests are always "en"); older records may carry another.
+ */
+const languageNames: Record<string, string> = { en: "English", ar: "Arabic", ru: "Russian", fr: "French" };
+export const recordLanguages = Object.entries(languageNames).map(([code, label]) => ({ code, label }));
+export const languageLabel = (code?: string | null) => (code ? (languageNames[code] ?? code) : "—");
+export const languageCode = (value: string | null | undefined) => (value && value in languageNames ? value : null);
 
 export const staffSettableStatuses = ["new", "in_progress", "awaiting_approval", "awaiting_customer", "closed"];
 

@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { indexingEnabled, site } from "@/config/site";
-import { isLocale, languageAlternates, localePath } from "@/i18n/config";
+import { isLocale, localePath } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { fmt } from "@/i18n/format";
 import { getCatalog, getItem, isGenuine } from "@/lib/catalog";
 import { isPurchasable, priceRange } from "@/lib/format";
-import { localizeItem } from "@/lib/localize";
 import { categoryPath, productPath, toShopItem } from "@/lib/paths";
 import { baseOpenGraph } from "@/lib/seo";
 import { availabilityOf, related } from "@/lib/shop";
@@ -19,10 +18,9 @@ const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, ref } = await params;
   if (!isLocale(locale)) return {};
-  const found = await getItem(decodeURIComponent(ref));
-  if (!found) return { title: getDictionary(locale).ui.shop.product.notFoundTitle, robots: { index: false, follow: true } };
+  const item = await getItem(decodeURIComponent(ref));
+  if (!item) return { title: getDictionary(locale).ui.shop.product.notFoundTitle, robots: { index: false, follow: true } };
   const d = getDictionary(locale);
-  const item = localizeItem(found, locale);
   const title = `${item.brand ?? ""} ${item.name}`.trim();
   const description = fmt(d.meta.productDescription, {
     title,
@@ -37,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical: localePath(locale, path), languages: languageAlternates(path) },
+    alternates: { canonical: localePath(locale, path) },
     // Drafts and demo records are never indexed.
     robots: indexingEnabled && isGenuine(item) ? { index: true, follow: true } : { index: false, follow: true },
     openGraph: {
@@ -55,12 +53,11 @@ export default async function ProductPage({ params, searchParams }: Props) {
   const { locale, ref } = await params;
   if (!isLocale(locale)) notFound();
   const sp = await searchParams;
-  const found = await getItem(decodeURIComponent(ref));
-  if (!found) notFound();
+  const item = await getItem(decodeURIComponent(ref));
+  if (!item) notFound();
   const d = getDictionary(locale);
-  const item = localizeItem(found, locale);
   const catalog = await getCatalog();
-  const others = related(catalog, found).map((i) => toShopItem(localizeItem(i, locale)));
+  const others = related(catalog, item).map(toShopItem);
   const url = (path: string) => `${site.url}${localePath(locale, path)}`;
 
   // Structured data only for genuine, published pieces — never drafts or demo records — and an

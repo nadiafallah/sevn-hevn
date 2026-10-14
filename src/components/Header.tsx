@@ -12,7 +12,6 @@ import { track } from "@/lib/analytics";
 import { categoryPath, productPath } from "@/lib/paths";
 import { Wordmark } from "./Wordmark";
 import { useSite } from "./SiteProvider";
-import { LanguageSwitcher } from "./LanguageSwitcher";
 import { categoryMenu, type CategoryMenu } from "./menuData";
 import { ArrowIcon, BagIcon, ChevronIcon, MenuIcon, SearchIcon, WhatsAppIcon } from "./icons";
 
@@ -124,7 +123,6 @@ export function Header() {
             <a href={site.contact.telHref} className="utility-bar__phone" dir="ltr">
               {site.contact.phoneDisplay}
             </a>
-            <LanguageSwitcher variant="bar" />
           </div>
         </div>
       </div>

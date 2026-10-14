@@ -186,7 +186,6 @@ export function CheckoutView() {
           customer: { name: details.name, email: details.email, phone: details.phone, method: details.method },
           delivery: { mode: details.mode, country: details.country, city: details.city, address: details.address, notes: details.notes },
           consent: true,
-          locale,
           idempotencyKey: key.key,
           website: (document.getElementById(id("website")) as HTMLInputElement | null)?.value ?? "",
         }),

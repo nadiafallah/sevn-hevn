@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { indexingEnabled, site } from "@/config/site";
 import { brandById, type BrandId } from "@/data/brands";
 import type { CategoryId } from "@/data/taxonomy";
-import { languageAlternates, localePath, type Locale } from "@/i18n/config";
+import { localePath, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { fmt } from "@/i18n/format";
 import { getCatalog, isGenuine } from "@/lib/catalog";
@@ -33,7 +33,7 @@ export async function listingMetadata(locale: Locale, scope: { category?: Catego
   return {
     title,
     description,
-    alternates: { canonical: localePath(locale, path), languages: languageAlternates(path) },
+    alternates: { canonical: localePath(locale, path) },
     robots: indexingEnabled && !empty ? { index: true, follow: true } : { index: false, follow: true },
     openGraph: { ...baseOpenGraph(locale), title: `${title} | SEVN HEVN`, description, url: localePath(locale, path) },
   };
