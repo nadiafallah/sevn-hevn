@@ -90,6 +90,39 @@ test("enquiries are rate limited per sender", async () => {
   await as(db, "service_role", insert.replace("'h1'", "'h2'"));
 });
 
+test("public cannot read or write the newsletter list; the server can add an address once", async () => {
+  const db = await freshDb();
+  const consent = "By joining, you agree to receive emails from SEVN HEVN.";
+  const insert = `insert into public.newsletter_subscribers (email, name, consent_text) values ('a@b.co', 'Ana', '${consent}') on conflict (email) do nothing returning id`;
+  for (const role of ["anon", "authenticated"]) {
+    await rejects(as(db, role, "select * from public.newsletter_subscribers"), /permission denied/);
+    await rejects(as(db, role, insert), /permission denied/);
+  }
+  assert.equal((await as(db, "service_role", insert)).rows.length, 1);
+  // The same address again is silently ignored, never stored twice.
+  assert.equal((await as(db, "service_role", insert)).rows.length, 0);
+  assert.equal((await db.query("select count(*)::int as n from public.newsletter_subscribers")).rows[0].n, 1);
+});
+
+test("newsletter rows need a lower-case valid email and the consent wording", async () => {
+  const db = await freshDb();
+  const add = (email, consent = "By joining, you agree to receive emails.") =>
+    db.query("insert into public.newsletter_subscribers (email, consent_text) values ($1, $2)", [email, consent]);
+  await rejects(add("A@B.co"), /check/);
+  await rejects(add("not-an-email"), /check/);
+  await rejects(add("a@b.co", "ok"), /check/);
+  await add("a@b.co");
+});
+
+test("newsletter sign-ups are rate limited per sender", async () => {
+  const db = await freshDb();
+  const add = (i, hash) =>
+    as(db, "service_role", `insert into public.newsletter_subscribers (email, consent_text, client_hash) values ('n${i}@b.co', 'By joining, you agree to receive emails.', '${hash}')`);
+  for (let i = 0; i < 5; i++) await add(i, "h1");
+  await rejects(add(5, "h1"), /rate_limited/);
+  await add(6, "h2");
+});
+
 test("catalogue changes notify the website only when Vault is configured", async () => {
   const db = await freshDb();
   await db.exec(`insert into public.products (ref, name, category, brand) values ('SH-1', 'x', 'bags', 'Gucci')`);

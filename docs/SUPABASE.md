@@ -58,6 +58,15 @@ Never put supplier names, owner details, purchase prices or private notes in `pr
 - Rows contain personal data. Delete ones you no longer need, and don't export them to shared places.
 - Abuse limits: 5 enquiries per sender per hour and 200 site-wide per hour. Only a salted hash of the sender's IP is stored.
 
+## Newsletter list
+
+**Table Editor → newsletter_subscribers** (migration `20261014120000_newsletter.sql`). One row per address, stored lower-case; signing up twice adds nothing. Each row keeps the `consent_text` the visitor agreed to and `consent_at`.
+
+- To send a newsletter, export the rows where `unsubscribed_at` is empty (Table Editor → Export → CSV) into your email tool.
+- When someone asks to unsubscribe, set `unsubscribed_at` to the current time. Keep the row, so the address is never added back by mistake, and remove it from your email tool too.
+- Abuse limits: 5 sign-ups per sender per hour and 300 site-wide per hour. Only a salted hash of the sender's IP is stored.
+- Sign-ups are stored only by the production deployment. Previews answer that signing up isn't available there.
+
 ## Keys and where they live
 
 | Key | Where it is used | Environments |
