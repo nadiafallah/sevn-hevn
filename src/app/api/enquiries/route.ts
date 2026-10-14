@@ -2,7 +2,6 @@ import { createHmac } from "node:crypto";
 import { NextResponse } from "next/server";
 import { supabaseWriteConfig } from "@/lib/supabase";
 import { sourcingMessage, viewingMessage, type SourcingRequest, type ViewingRequest } from "@/lib/whatsapp";
-import { isLocale, localeInfo, type Locale } from "@/i18n/config";
 import { formatDay } from "@/i18n/format";
 import { en } from "@/i18n/dictionaries/en";
 import { isCategoryId } from "@/data/taxonomy";
@@ -81,8 +80,6 @@ export async function POST(request: Request) {
   }
 
   const relatedRef = typeof body.relatedRef === "string" && REF_PATTERN.test(body.relatedRef) ? body.relatedRef : undefined;
-  const locale: Locale = isLocale(body.locale) ? body.locale : "en";
-  const language = `Language: ${localeInfo[locale].english}`;
   let details: Record<string, string>;
   let message: string;
   if (kind === "sourcing") {
@@ -103,8 +100,8 @@ export async function POST(request: Request) {
       contactValue,
     };
     if (!r.category || !(r.brand || r.model || r.details)) return fail(400, "Tell us the category and a few details about the piece.");
-    details = { ...fields, language: locale };
-    message = `${sourcingMessage(r, english.messages, "en")}\n${language}`;
+    details = fields;
+    message = sourcingMessage(r, english.messages, "en");
   } else {
     const fields = pickStrings(body.request, viewingFields);
     const isoDate = fields.date && /^\d{4}-\d{2}-\d{2}$/.test(fields.date) ? fields.date : undefined;
@@ -115,8 +112,8 @@ export async function POST(request: Request) {
       relatedRef,
     };
     if (!r.interest) return fail(400, "Tell us which piece you’d like to see, or that you’d like a consultation.");
-    details = { ...fields, language: locale };
-    message = `${viewingMessage(r, english.messages, "en")}\n${language}`;
+    details = fields;
+    message = viewingMessage(r, english.messages, "en");
   }
 
   // Salted hash of the client IP for per-sender rate limiting; the raw IP is never stored.

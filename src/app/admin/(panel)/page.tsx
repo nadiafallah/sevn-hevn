@@ -2,7 +2,7 @@ import Link from "next/link";
 import { rpc, select } from "@/lib/concierge/db";
 import { requireStaff } from "@/lib/admin/session";
 import { Flash, one, type SP } from "@/components/admin/Flash";
-import { chatLanguages, languageCode, languageLabel, requestStatusLabels, requestTypeLabels, reviewLabels, when } from "@/lib/admin/labels";
+import { recordLanguages, languageCode, languageLabel, requestStatusLabels, requestTypeLabels, reviewLabels, when } from "@/lib/admin/labels";
 
 export const metadata = { title: "Requests" };
 
@@ -107,7 +107,7 @@ export default async function Requests({ searchParams }: { searchParams: SP }) {
           Language
           <select name="lang" defaultValue={locale ?? ""}>
             <option value="">Any</option>
-            {chatLanguages.map((l) => (
+            {recordLanguages.map((l) => (
               <option key={l.code} value={l.code}>
                 {l.label}
               </option>

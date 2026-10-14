@@ -240,7 +240,7 @@ describe("shop", () => {
 
   it("phone: the drawer holds the categories in fold-out sections; nothing overflows the screen", async () => {
     const { page, context } = await newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-    for (const path of ["/", "/bags", "/product/SH-0102", "/checkout", "/ar", "/ar/shoes", "/ru/jewellery", "/fr/product/SH-0001"]) {
+    for (const path of ["/", "/bags", "/shoes", "/jewellery", "/product/SH-0102", "/product/SH-0001", "/checkout", "/chat"]) {
       await page.goto(`${BASE}${path}`);
       assert.equal(await overflow(page), 0, `no horizontal scroll on ${path}`);
     }
@@ -260,8 +260,8 @@ describe("shop", () => {
   it("pages keep working after the catalogue is refreshed (a panel save or a database change)", async () => {
     for (const base of [BASE, UNAVAILABLE_BASE]) {
       assert.equal((await refresh(base)).status, 200);
-      for (const path of ["/", "/ar", "/ru", "/fr", "/chat", "/checkout", "/bags", "/product/SH-0001"]) assert.equal((await fetch(`${base}${path}`)).status, 200, `${base}${path}`);
-      assert.equal((await fetch(`${base}/xx`)).status, 404, "unknown languages are still refused");
+      for (const path of ["/", "/collection", "/chat", "/checkout", "/bags", "/product/SH-0001"]) assert.equal((await fetch(`${base}${path}`)).status, 200, `${base}${path}`);
+      assert.equal((await fetch(`${base}/xx`)).status, 404, "unknown addresses are refused");
     }
   });
 
@@ -269,8 +269,23 @@ describe("shop", () => {
     const res = await fetch(`${BASE}/collection?category=bags&designer=Herm%C3%A8s`, { redirect: "manual" });
     assert.equal(res.status, 308);
     assert.equal(new URL(res.headers.get("location"), BASE).pathname, "/bags/hermes");
-    const ar = await fetch(`${BASE}/ar/collection?item=SH-0001`, { redirect: "manual" });
-    assert.equal(new URL(ar.headers.get("location"), BASE).pathname, "/ar/product/SH-0001");
+    // The retired Arabic, Russian and French addresses go to the same page in English, in one step.
+    for (const [from, to] of [
+      ["/ar", "/"],
+      ["/ru", "/"],
+      ["/fr/chat", "/chat"],
+      ["/en/bags", "/bags"],
+      ["/ar/shoes/hermes?size=38", "/shoes/hermes?size=38"],
+      ["/ru/product/SH-0001", "/product/SH-0001"],
+      ["/fr/checkout", "/checkout"],
+      ["/ar/collection?item=SH-0001", "/product/SH-0001"],
+      ["/ru/collection?category=accessories&q=ring", "/jewellery?q=ring"],
+    ]) {
+      const r = await fetch(`${BASE}${from}`, { redirect: "manual" });
+      assert.equal(r.status, 308, from);
+      const target = new URL(r.headers.get("location"), BASE);
+      assert.equal(`${target.pathname}${target.search}`, to, from);
+    }
     for (const path of ["/watches/cartier", "/bags/loro-piana", "/accessories", "/product/NOPE-1"]) assert.equal((await fetch(`${BASE}${path}`)).status, 404, path);
     const sitemap = await (await fetch(`${BASE}/sitemap.xml`)).text();
     for (const path of ["/bags", "/bags/hermes", "/shoes/hermes", "/product/SH-0102", "/jewellery/cartier"]) assert.ok(sitemap.includes(`${path}<`), path);

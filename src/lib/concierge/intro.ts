@@ -1,9 +1,9 @@
-import { t, type Locale } from "./i18n";
+import { t } from "./i18n";
 import type { Prompt } from "./types";
 
 /** The opening menu. Used by the server engine and shown instantly by the chat before any request. */
-export function menuPrompt(locale: Locale): Prompt {
-  const L = t(locale);
+export function menuPrompt(): Prompt {
+  const L = t();
   return {
     kind: "choices",
     choices: [
@@ -18,7 +18,7 @@ export function menuPrompt(locale: Locale): Prompt {
   };
 }
 
-export function introMessages(locale: Locale) {
-  const L = t(locale);
+export function introMessages() {
+  const L = t();
   return [L.a.greeting, L.a.menu];
 }

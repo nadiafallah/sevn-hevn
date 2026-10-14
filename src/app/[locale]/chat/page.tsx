@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { isLocale, languageAlternates, localePath } from "@/i18n/config";
+import { isLocale, localePath } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { ChatPage } from "@/components/concierge/ChatPage";
 
@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/chat">):
   return {
     title: t.chatTitle,
     description: t.chatDescription,
-    alternates: { canonical: localePath(locale, "/chat"), languages: languageAlternates("/chat") },
+    alternates: { canonical: localePath(locale, "/chat") },
   };
 }
 

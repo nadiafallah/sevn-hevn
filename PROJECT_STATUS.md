@@ -1,6 +1,23 @@
 # Project status: SEVN HEVN
 
-Last updated: 13 October 2026
+Last updated: 14 October 2026
+
+## English only (14 Oct 2026)
+
+Branch `feat/english-only`. The website and the concierge chat are English only. The Arabic, Russian and French versions (Oct 2026) are retired.
+
+| Part | State |
+| --- | --- |
+| Pages, menus, product pages, forms, bag, checkout messages, policies and metadata | English only. `src/i18n/` keeps one dictionary, and `<html lang="en" dir="ltr">` is set on every page |
+| Language selector (utility bar, menu drawer, chat) | removed. Nothing switches language automatically |
+| Old addresses `/ar/…`, `/ru/…`, `/fr/…` (and `/en/…`) | redirect permanently (308) to the same page in English, in one step. The old `/collection?item=…` and `?category=…` forms go straight to the new shop address |
+| Saved language choice | the `sevn-hevn-lang` cookie is ignored and cleared on the next visit. A chat conversation saved in the browser in another language is not resumed: a new one starts in English |
+| Language metadata | no `hreflang` alternates. `og:locale` is `en_AE`, with no alternate locales. WebSite `inLanguage` is `en`. The sitemap lists each page once |
+| Concierge chat | replies only in English, whatever language the customer writes in. Arabic, Russian and French words (brands, categories, colours, countries, yes/no) are still understood. Only English store-knowledge entries are quoted. A conversation saved in another language continues in English |
+| Database | unchanged. New requests and conversations are stored as `en`. Older records keep their language label in the panel |
+| Fonts | Arabic fonts and the Cyrillic subsets removed (smaller downloads) |
+
+Tests (14 Oct 2026): `npm run typecheck`, `npm run lint`, `npm run build`; `npm run test:unit` 35 of 35; e2e 28 of 28 (local stack). The e2e suite covers Arabic, Russian and French input answered in English, old addresses, the remembered-language cookie and an old saved chat. A browser review made 48 page loads (Chromium desktop, laptop, tablet and phone; WebKit desktop and phone) with `lang="en"`, no horizontal scroll, no language controls, no Arabic or Cyrillic text, and no serious axe findings. Not run: HawkScan (no CLI or API key).
 
 ## Shop: four categories, permitted houses, product pages, checkout (13 Oct 2026)
 
@@ -22,9 +39,9 @@ Branch `feat/shop-four-categories`. Not on the live site until it is merged and 
 
 Tests (13 Oct 2026): `npm run typecheck`, `npm run lint`; `npm run test:unit` 35 of 35; `npm run db:test` 43 of 43; `tests/e2e/run.sh` 27 of 27. A browser review made 264 page loads (Chromium, Firefox and WebKit; desktop and phone; four languages; eleven pages) with no horizontal scroll, no errors and no broken images. The axe scan found no serious or critical issues, including with the menu open. Not run: HawkScan (no CLI or API key), real phones and real Safari.
 
-## Website languages (Oct 2026)
+## Website languages (Oct 2026, retired 14 Oct 2026, see "English only" above)
 
-The public site is in English, Arabic (right-to-left), Russian and French. English keeps the unprefixed addresses (`/`, `/collection`, `/chat`); the others live under `/ar`, `/ru` and `/fr`. `/en/…` redirects to the unprefixed address. Every page lists the other languages with `hreflang`.
+The public site was in English, Arabic (right-to-left), Russian and French. English keeps the unprefixed addresses (`/`, `/collection`, `/chat`); the others live under `/ar`, `/ru` and `/fr`. `/en/…` redirects to the unprefixed address. Every page lists the other languages with `hreflang`.
 
 | Part | State |
 | --- | --- |
@@ -45,7 +62,7 @@ Built, tested and deployed. **Dormant until the one-time database setup is run.*
 
 | Part | State |
 | --- | --- |
-| Customer chat: widget on every page and `/chat`, English, Arabic (RTL), Russian and French | in production code; hidden until the database setup is run (`/chat` honestly says “not available” with WhatsApp and phone) |
+| Customer chat: widget on every page and `/chat`, English only (since 14 Oct 2026) | in production code; hidden until the database setup is run (`/chat` honestly says “not available” with WhatsApp and phone) |
 | Private panel `/admin`: owner and staff roles, requests, customers, orders, knowledge, team, export, audit | in production code; sign-in grants access after the database setup |
 | Database migration `20261006120000_concierge_crm.sql` | **not applied yet**. The assistant’s Supabase connector refuses schema changes, so the owner must run it once in the SQL Editor (CONCIERGE.md §2.0). A tested file with the migration, server-key hash and owner entry is on the owner’s Desktop: `SEVN-HEVN-production-setup.sql`. |
 | Vercel env `CONCIERGE_SERVER_KEY`, `CRON_SECRET` (Production, Secret) | set 6 Oct 2026 |
@@ -151,7 +168,7 @@ Earlier items:
 ## Next actions
 
 - After the database setup: run a controlled live test, using an Ofcom test number, of the widget, `/chat`, the panel sign-in and a request. Then delete the test request from the panel.
-- Approve Arabic store-knowledge entries, and replace the interim policies when final.
+- Approve English store-knowledge entries, and replace the interim policies when final.
 - Roadmap (CONCIERGE.md §11): stock sync, request analytics, saved replies, follow-up reminders, and a customer order page.
 
 - After the Supabase and Vercel work lands: re-run `npm run check` and the browser checks against the preview deployment.

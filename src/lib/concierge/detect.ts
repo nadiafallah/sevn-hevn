@@ -1,5 +1,6 @@
 /**
- * Lightweight, deterministic understanding of what a customer typed (English, Arabic, Russian and French).
+ * Lightweight, deterministic understanding of what a customer typed. The chat replies in English
+ * only, but customers may write in English, Arabic, Russian or French, so those words are understood.
  * \b only works around Latin letters in JavaScript, so Arabic and Cyrillic words are matched as stems.
  * It only fills in details the customer actually wrote; anything it misses is simply asked.
  * The optional AI provider can improve on it, but the chat never depends on AI.

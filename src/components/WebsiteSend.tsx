@@ -42,7 +42,7 @@ export function WebsiteSend({
   onSent: (sent: SentEnquiry) => void;
 }) {
   const { websiteEnquiries, openPanel } = useSite();
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const w = t.websiteSend;
   const uid = useId();
   const id = (k: string) => `${uid}-${k}`;
@@ -87,7 +87,7 @@ export function WebsiteSend({
       const res = await fetch("/api/enquiries", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...send, contactMethod: method, contactValue: value, locale, website: honeypot }),
+        body: JSON.stringify({ ...send, contactMethod: method, contactValue: value, website: honeypot }),
       });
       const data = (await res.json().catch(() => ({}))) as { reference?: string; error?: string; code?: string };
       if (res.ok && data.reference) {

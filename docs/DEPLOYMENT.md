@@ -65,7 +65,7 @@ Also switch off any GoDaddy "Forwarding" for the domain. Leave MX, TXT (SPF, DKI
 | Item | State |
 | --- | --- |
 | Main address | `https://www.sevnhevn.ae`. `http://`, `sevnhevn.ae` and `sevn-hevn.vercel.app` all reach it with permanent (308) redirects that keep the path and query. |
-| robots.txt / sitemap | crawling allowed except `/api/`. The sitemap lists the 24 public pages (home, collection, four categories × four languages) with `hreflang`. |
+| robots.txt / sitemap | crawling allowed except `/api/`. The sitemap lists every public page once, in English (the site is English only since 14 Oct 2026; no `hreflang`). |
 | Google Search Console | Domain property `sc-domain:sevnhevn.ae`, verified by DNS TXT at Tasjeel. Sitemap submitted 12 Oct. The home page was crawled and indexed on 12 Oct; the other pages were still waiting for their first crawl. |
 | Bing Webmaster Tools | site `https://sevnhevn.ae/` (imported from Search Console). Sitemap read successfully (24 URLs); the 24 URLs were also submitted directly and through IndexNow. |
 | IndexNow key | `public/944a47b2738d5c85bfe733bd80cc4bb4.txt` |

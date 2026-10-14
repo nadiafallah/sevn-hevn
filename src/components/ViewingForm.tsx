@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import { viewingMessage } from "@/lib/whatsapp";
 import { track } from "@/lib/analytics";
 import { useI18n } from "@/i18n/I18nProvider";
-import { CARRY_EVENT, takeCarriedForm, type Carry } from "@/i18n/carry";
 import { formatDay } from "@/i18n/format";
 import type { ViewingPrefill } from "./SiteProvider";
 import { Handoff } from "./Handoff";
@@ -18,9 +17,8 @@ function todayISO() {
 }
 
 type Values = { interest: string; date: string; timeOfDay: string; name: string; notes: string };
-type Carried = { values: Values; prepared: boolean };
 
-export function ViewingForm({ prefill, carryKey }: { prefill?: ViewingPrefill; carryKey?: string }) {
+export function ViewingForm({ prefill }: { prefill?: ViewingPrefill }) {
   const { t, locale, intl, fmt } = useI18n();
   const f = t.forms;
   const v = f.viewing;
@@ -39,26 +37,6 @@ export function ViewingForm({ prefill, carryKey }: { prefill?: ViewingPrefill; c
     notes: "",
   });
   const set = (k: keyof Values) => (e: { target: { value: string } }) => setValues((x) => ({ ...x, [k]: e.target.value }));
-
-  // Language change: hand the typed fields over to the page in the new language, and take them back.
-  const latest = useRef<Carried>({ values, prepared });
-  useEffect(() => {
-    latest.current = { values, prepared };
-  }, [values, prepared]);
-  useEffect(() => {
-    if (!carryKey) return;
-    const back = takeCarriedForm<Carried>(carryKey);
-    if (back?.values) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setValues((x) => ({ ...x, ...back.values }));
-      setPrepared(!!back.prepared);
-    }
-    const give = (e: Event) => {
-      (e as CustomEvent<Carry>).detail.forms[carryKey] = latest.current;
-    };
-    window.addEventListener(CARRY_EVENT, give);
-    return () => window.removeEventListener(CARRY_EVENT, give);
-  }, [carryKey]);
 
   const timeLabel = (x: string) => v.times[x as (typeof timeIds)[number]] ?? x;
 

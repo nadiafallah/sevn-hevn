@@ -167,88 +167,130 @@ describe("customer chat", () => {
     const note = (await mail()).find((m) => m.subject.includes(ref));
     assert.ok(note, "team e-mail sent");
     assert.deepEqual(note.to, ["team@test.local"]);
-    assert.ok(!note.raw.includes("7700") && !note.raw.includes("Layla"), "no customer phone or name in the e-mail");
-    assert.ok(note.raw.includes(`/admin/requests/${req.id}`));
+    // Quoted-printable wraps long lines with "=" + line break; mail clients join them again.
+    const body = note.raw.replace(/=\r?\n/g, "");
+    assert.ok(!body.includes("7700") && !body.includes("Layla"), "no customer phone or name in the e-mail");
+    assert.ok(body.includes(`/admin/requests/${req.id}`));
     const [ai] = await sql("select coalesce(sum(calls), 0)::int as calls from private.ai_usage");
     assert.ok(ai.calls >= 1, "the (failing) AI provider was tried and the chat carried on without it");
     await context.close();
   });
 
-  it("mobile, Arabic, /chat page: right-to-left, international number, saved and restored after reload", async () => {
+  it("mobile, /chat page, customer writes in Arabic: every reply is in English; saved and restored after reload", async () => {
     const { page, context } = await newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
     await page.goto(`${BASE}/chat`);
     await page.locator(".cc__msg--assistant").first().waitFor();
-    await page.getByRole("button", { name: "العربية" }).click();
-    await page.waitForFunction(() => document.querySelector(".cc")?.getAttribute("dir") === "rtl");
-    assert.equal(await page.locator(".cc").getAttribute("lang"), "ar");
-    assert.match(await page.locator(".cc__log").innerText(), /المساعد الافتراضي/);
-    await pick(page, "البحث عن قطعة معيّنة");
+    assert.equal(await page.locator("html").getAttribute("lang"), "en");
+    assert.equal(await page.locator(".cc__lang, .cc__lang-btn, .lang").count(), 0, "no language switch anywhere");
+    await pick(page, "Find a specific piece");
     await answer(page, "أبحث عن ساعة رولكس دايتونا");
-    await pick(page, "تخطي");
-    await pick(page, "أفضّل عدم التحديد");
-    await pick(page, "دولة أخرى");
+    assert.match(await page.locator(".cc__log").innerText(), /Noted: Rolex · Daytona · Watches\./);
+    await pick(page, "Skip");
+    await pick(page, "Prefer not to say");
+    await pick(page, "Another country");
     await answer(page, "السعودية");
-    await pick(page, "تخطي");
-    await pick(page, "تخطي");
+    await pick(page, "Skip");
+    await pick(page, "Skip");
     await answer(page, "+44 7700 900102");
-    await pick(page, "مكالمة هاتفية");
-    await page.getByLabel("أوافق على أن تتواصل معي SEVN HEVN بخصوص هذا الطلب.").check();
-    await page.getByRole("button", { name: "إرسال الطلب" }).click();
-    await page.getByText(/ورقمه المرجعي/).waitFor();
-    const text = await lastAssistant(page);
-    const ref = text.match(/REQ-[A-Z0-9]{6}/)[0];
-    assert.ok(text.includes(`⁦${ref}⁩`), "reference shown left-to-right inside Arabic text");
+    await pick(page, "Phone call");
+    assert.match(await page.locator(".cc__review").innerText(), /Saudi Arabia/);
+    await page.getByLabel("I agree that SEVN HEVN may contact me about this request.").check();
+    await page.getByRole("button", { name: "Send request" }).click();
+    await page.getByText(/Your reference is REQ-/).waitFor();
+    const ref = (await lastAssistant(page)).match(/REQ-[A-Z0-9]{6}/)[0];
+    const replies = await page.locator(".cc__msg--assistant").allInnerTexts();
+    assert.ok(replies.length >= 10);
+    for (const r of replies) assert.doesNotMatch(r, /[\u0600-\u06ff]/, `English reply: ${r}`);
+    assert.doesNotMatch(await page.locator(".cc__head, .cc__choices, .cc__composer, .cc__human").allInnerTexts().then((t) => t.join(" ")), /[\u0600-\u06ff]/);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     assert.ok(overflow <= 0, `no horizontal scrolling (${overflow}px)`);
     assert.deepEqual(await axeViolations(page, ".cc"), []);
 
     await page.reload();
-    await page.getByText(/ورقمه المرجعي/).waitFor();
-    assert.equal(await page.locator(".cc").getAttribute("dir"), "rtl", "language kept after reload");
+    await page.getByText(/Your reference is REQ-/).waitFor();
     // The widget on any page continues the same conversation.
     await page.goto(BASE);
     await page.locator(".cc-launcher").click();
-    await page.getByText(/ورقمه المرجعي/).waitFor();
+    await page.locator(".cc-panel").getByText(/Your reference is REQ-/).waitFor();
     // The full-screen widget on a phone must receive taps (nothing from the page on top of it).
-    await page.locator(".cc-panel").getByRole("button", { name: "English" }).click({ timeout: 5000 });
-    await page.waitForFunction(() => document.querySelector(".cc-panel .cc")?.getAttribute("dir") === "ltr");
+    await page.locator(".cc-panel").getByRole("button", { name: "Close chat" }).click({ timeout: 5000 });
+    await page.waitForFunction(() => document.querySelector(".cc-panel")?.hasAttribute("hidden"));
 
-    const [req] = await sql("select locale, destination_country, contact_method, contact_phone from public.requests where reference = $1", [ref]);
-    assert.deepEqual(req, { locale: "ar", destination_country: "SA", contact_method: "call", contact_phone: "+447700900102" });
+    const [req] = await sql("select locale, destination_country, destination_label, contact_method, contact_phone from public.requests where reference = $1", [ref]);
+    assert.deepEqual(req, { locale: "en", destination_country: "SA", destination_label: "Saudi Arabia", contact_method: "call", contact_phone: "+447700900102" });
     await context.close();
   });
 
-  it("desktop, Russian site, widget: opens in Russian, switches to French mid-request without losing anything", async () => {
+  it("desktop: old language address, remembered language and a saved non-English chat all end up in English", async () => {
     const { page, context } = await newPage();
+    const host = new URL(BASE).hostname;
+    await context.addCookies([{ name: "sevn-hevn-lang", value: "ru", domain: host, path: "/" }]);
+    // A chat kept in this browser from before, in Russian: it is dropped, not resumed.
+    await context.addInitScript(() => {
+      if (!sessionStorage.getItem("seeded")) {
+        localStorage.setItem("sevn-hevn-concierge-v1", JSON.stringify({ id: "11111111-2222-4333-8444-555555555555", token: "x".repeat(43), locale: "ru" }));
+        sessionStorage.setItem("seeded", "1");
+      }
+    });
     await page.goto(`${BASE}/ru`);
+    assert.equal(new URL(page.url()).pathname, "/", "the Russian address opens the English home page");
+    assert.equal(await page.locator("html").getAttribute("lang"), "en");
+    assert.equal(await page.locator("html").getAttribute("dir"), "ltr");
+    assert.deepEqual((await context.cookies()).filter((c) => c.name === "sevn-hevn-lang"), [], "the remembered language is cleared");
+    assert.equal(await page.locator(".lang, .lang__toggle").count(), 0, "no language selector in the header");
+
     await page.locator(".cc-launcher").click();
     const panel = page.locator(".cc-panel");
     await panel.locator(".cc__msg--assistant").first().waitFor();
-    assert.equal(await panel.locator(".cc").getAttribute("lang"), "ru");
-    assert.match(await panel.locator(".cc__log").innerText(), /виртуальный ассистент SEVN HEVN/);
-    assert.deepEqual(await panel.locator(".cc__lang-btn").allInnerTexts(), ["English", "العربية", "Русский", "Français"]);
-    await pick(page, "Найти конкретное изделие");
-    await answer(page, "Ищу сумку Hermès Kelly");
-    assert.match(await lastAssistant(page), /модель, размер или цвет/);
-    await panel.getByRole("button", { name: "Français" }).click();
-    await page.waitForFunction(() => document.querySelector(".cc-panel .cc")?.getAttribute("lang") === "fr");
-    assert.match(await panel.locator(".cc__log").innerText(), /Ищу сумку Hermès Kelly/, "earlier messages stay after switching");
-    assert.match(await lastAssistant(page), /comme le modèle, la taille ou la couleur/);
-    await pick(page, "Passer");
-    await pick(page, "Je préfère ne pas le préciser");
-    await pick(page, "Émirats arabes unis");
-    await pick(page, "Passer");
-    await pick(page, "Passer");
+    assert.match(await panel.locator(".cc__log").innerText(), /virtual assistant/);
+    assert.equal(await page.evaluate(() => localStorage.getItem("sevn-hevn-concierge-v1")), null, "the saved Russian chat was dropped");
+    await pick(page, "Find a specific piece");
+    await answer(page, "Je cherche un sac Hermès Kelly");
+    assert.match(await panel.locator(".cc__log").innerText(), /Noted: Hermès · Kelly · Bags\./);
+    assert.match(await lastAssistant(page), /such as the model, size or colour/);
+    await answer(page, "Ищу чёрный цвет");
+    await pick(page, "Prefer not to say");
+    await pick(page, "United Arab Emirates");
+    await pick(page, "Skip");
+    await pick(page, "Skip");
     await answer(page, "+44 7700 900141");
     await pick(page, "WhatsApp");
-    await page.getByLabel("J’accepte que SEVN HEVN me contacte au sujet de cette demande.").check();
-    await page.getByRole("button", { name: "Envoyer la demande" }).click();
-    await page.getByText(/Votre demande a bien été reçue/).waitFor();
+    await page.getByLabel("I agree that SEVN HEVN may contact me about this request.").check();
+    await page.getByRole("button", { name: "Send request" }).click();
+    await page.getByText(/Your reference is REQ-/).waitFor();
     const ref = (await lastAssistant(page)).match(/REQ-[A-Z0-9]{6}/)[0];
+    for (const r of await panel.locator(".cc__msg--assistant").allInnerTexts()) assert.doesNotMatch(r, /[\u0400-\u04ff]|Merci|Votre demande/, `English reply: ${r}`);
     assert.deepEqual(await axeViolations(page, ".cc-panel"), []);
     const [req] = await sql("select locale, contact_method, contact_phone, details ->> 'model' as model from public.requests where reference = $1", [ref]);
-    assert.deepEqual(req, { locale: "fr", contact_method: "whatsapp", contact_phone: "+447700900141", model: "Kelly" });
+    assert.deepEqual(req, { locale: "en", contact_method: "whatsapp", contact_phone: "+447700900141", model: "Kelly" });
     await context.close();
+  });
+
+  it("API: a language sent by an old page is ignored, a language switch is refused, and a non-English saved conversation is not resumed", async () => {
+    const start = await api({ action: "start", locale: "fr", source: "widget", clientMsgId: "lang-000001", input: { type: "text", value: "Bonjour, je cherche une montre Rolex" } });
+    assert.equal(start.status, 201);
+    assert.equal(start.data.locale, "en");
+    const said = start.data.messages.filter((m) => m.role === "assistant").map((m) => m.body).join("\n");
+    assert.match(said, /virtual assistant/);
+    assert.doesNotMatch(said, /Bonjour|Merci|assistant virtuel/);
+    const conversation = { id: start.data.conversation.id, token: start.data.conversation.token };
+    const [conv] = await sql("select locale from public.conversations where id = $1", [conversation.id]);
+    assert.equal(conv.locale, "en");
+
+    const switchLang = await api({ action: "reply", conversation, clientMsgId: "lang-000002", input: { type: "locale", value: "ar" } });
+    assert.equal(switchLang.status, 400, "there is no language switch any more");
+
+    // A conversation saved in Arabic before the change is not resumed: the browser starts a new one in English.
+    await sql("update public.conversations set locale = 'ar', state = jsonb_set(state, '{locale}', '\"ar\"') where id = $1", [conversation.id]);
+    const load = await api({ action: "load", conversation });
+    assert.equal(load.status, 410);
+    // A page left open from before the change still gets its replies in English.
+    const reply = await api({ action: "reply", conversation, clientMsgId: "lang-000003", input: { type: "text", value: "نعم" } });
+    assert.equal(reply.status, 200);
+    assert.equal(reply.data.locale, "en");
+    const answered = reply.data.messages.filter((x) => x.role === "assistant");
+    assert.ok(answered.length >= 1);
+    for (const m of answered) assert.doesNotMatch(m.body, /[\u0600-\u06ff]/);
   });
 
   it("a repeated submit (double click, retry after a dropped connection) records one request", async () => {

@@ -1,23 +1,24 @@
 import { getCountries } from "libphonenumber-js/max";
-import type { Locale } from "./i18n";
 
-/** ISO country names in the chat's languages from the runtime's own data (Intl.DisplayNames). */
+/**
+ * ISO country names from the runtime's own data (Intl.DisplayNames). The chat shows them in English;
+ * a customer may still type a country in English, Arabic, Russian or French and it is recognised.
+ */
 const codes = getCountries().filter((c) => /^[A-Z]{2}$/.test(c) && c !== "AC" && c !== "TA" && c !== "XK");
 
-const names: Record<Locale, Intl.DisplayNames> = {
-  en: new Intl.DisplayNames(["en"], { type: "region" }),
-  ar: new Intl.DisplayNames(["ar"], { type: "region" }),
-  ru: new Intl.DisplayNames(["ru"], { type: "region" }),
-  fr: new Intl.DisplayNames(["fr"], { type: "region" }),
-};
+const typedLanguages = ["en", "ar", "ru", "fr"] as const;
+const names = Object.fromEntries(typedLanguages.map((l) => [l, new Intl.DisplayNames([l], { type: "region" })])) as Record<(typeof typedLanguages)[number], Intl.DisplayNames>;
 
-export function countryName(code: string, locale: Locale) {
+function nameIn(code: string, language: (typeof typedLanguages)[number]) {
   try {
-    return names[locale].of(code) ?? code;
+    return names[language].of(code) ?? code;
   } catch {
     return code;
   }
 }
+
+/** The country's English name, as shown in the chat and to the team. */
+export const countryName = (code: string) => nameIn(code, "en");
 
 const norm = (s: string) =>
   s
@@ -58,8 +59,8 @@ const stem = (s: string) => s.split(" ").map((w) => (/[\u0400-\u04ff]/.test(w) &
 const index = new Map<string, string>();
 const stems = new Map<string, string>();
 for (const code of codes) {
-  for (const l of Object.keys(names) as Locale[]) index.set(norm(countryName(code, l)), code);
-  stems.set(stem(norm(countryName(code, "ru"))), code);
+  for (const l of typedLanguages) index.set(norm(nameIn(code, l)), code);
+  stems.set(stem(norm(nameIn(code, "ru"))), code);
   index.set(code.toLowerCase(), code);
 }
 for (const [alias, code] of Object.entries(ALIASES)) {
@@ -68,7 +69,7 @@ for (const [alias, code] of Object.entries(ALIASES)) {
 }
 const lookup = (k: string) => index.get(k) ?? stems.get(stem(k));
 
-/** Matches a typed country (any of the chat's languages, common cities and abbreviations included). */
+/** Matches a typed country (English, Arabic, Russian or French; common cities and abbreviations included). */
 export function matchCountry(text: string): string | undefined {
   const key = norm(text);
   if (!key || key.length > 60) return undefined;

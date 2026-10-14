@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isLocale, type Locale } from "@/lib/concierge/i18n";
 import { introMessages, menuPrompt } from "@/lib/concierge/intro";
 import type { ClientMessage, ClientReply, Prompt } from "@/lib/concierge/types";
 import { track } from "@/lib/analytics";
@@ -9,6 +8,7 @@ import { track } from "@/lib/analytics";
 /**
  * Client state for the concierge chat. The conversation itself lives in the database; the browser
  * only keeps the conversation id and its access token so a reload (or the /chat page) can resume it.
+ * The chat is English only.
  */
 
 const STORAGE_KEY = "sevn-hevn-concierge-v1";
@@ -27,13 +27,20 @@ interface Pending {
 interface Stored {
   id: string;
   token: string;
-  locale: Locale;
+  locale: "en";
 }
 
 function readStored(): Stored | null {
   try {
     const v = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "null");
-    return v && typeof v.id === "string" && typeof v.token === "string" && isLocale(v.locale) ? v : null;
+    if (!v || typeof v.id !== "string" || typeof v.token !== "string") return null;
+    // A conversation kept from before the chat became English-only, in Arabic, Russian or French,
+    // is not resumed: a new conversation starts in English.
+    if (v.locale !== "en") {
+      writeStored(null);
+      return null;
+    }
+    return { id: v.id, token: v.token, locale: "en" };
   } catch {
     return null;
   }
@@ -50,8 +57,7 @@ function writeStored(v: Stored | null) {
 
 const newId = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/[^A-Za-z0-9_-]/g, "");
 
-export function useConcierge(source: "widget" | "page", active: boolean, preferred: Locale = "en") {
-  const [locale, setLocale] = useState<Locale>(preferred);
+export function useConcierge(source: "widget" | "page", active: boolean) {
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "busy" | "unavailable">("loading");
@@ -62,9 +68,9 @@ export function useConcierge(source: "widget" | "page", active: boolean, preferr
   const booted = useRef(false);
   const [bootAttempt, setBootAttempt] = useState(0);
 
-  const showIntro = useCallback((l: Locale) => {
-    setMessages(introMessages(l).map((body) => ({ role: "assistant", body })));
-    setPrompt(menuPrompt(l));
+  const showIntro = useCallback(() => {
+    setMessages(introMessages().map((body) => ({ role: "assistant", body })));
+    setPrompt(menuPrompt());
   }, []);
 
   // Resume a stored conversation, or check availability and show the greeting.
@@ -72,9 +78,6 @@ export function useConcierge(source: "widget" | "page", active: boolean, preferr
     if (!active || booted.current) return;
     booted.current = true;
     const stored = readStored();
-    // The site's language (Arabic or English) unless the customer switched earlier in this conversation.
-    const l = stored?.locale ?? preferred;
-    setLocale(l);
     (async () => {
       try {
         if (stored) {
@@ -86,7 +89,6 @@ export function useConcierge(source: "widget" | "page", active: boolean, preferr
           if (res.ok) {
             const data = (await res.json()) as ClientReply;
             conv.current = stored;
-            setLocale(data.locale);
             setMessages(data.messages);
             setPrompt(data.prompt);
             setSubmittedRef(data.submitted?.reference ?? null);
@@ -106,7 +108,7 @@ export function useConcierge(source: "widget" | "page", active: boolean, preferr
           setStatus("unavailable");
           return;
         }
-        showIntro(l);
+        showIntro();
         setStatus("ready");
       } catch {
         // Nothing has been sent yet: say the chat couldn't connect and offer a retry of this check.
@@ -116,7 +118,7 @@ export function useConcierge(source: "widget" | "page", active: boolean, preferr
         setError("start_failed");
       }
     })();
-  }, [active, showIntro, bootAttempt, preferred]);
+  }, [active, showIntro, bootAttempt]);
 
   const retryStart = useCallback(() => {
     booted.current = false;
@@ -126,16 +128,11 @@ export function useConcierge(source: "widget" | "page", active: boolean, preferr
   }, []);
 
   const apply = useCallback((data: ClientReply, replaceAll: boolean) => {
-    setLocale(data.locale);
     setMessages((prev) => (replaceAll ? data.messages : [...prev, ...data.messages]));
     setPrompt(data.prompt);
     if (data.submitted) {
       setSubmittedRef(data.submitted.reference);
       track("concierge_request_submitted", {});
-    }
-    if (conv.current) {
-      conv.current = { ...conv.current, locale: data.locale };
-      writeStored(conv.current);
     }
   }, []);
 
@@ -158,7 +155,7 @@ export function useConcierge(source: "widget" | "page", active: boolean, preferr
           res = await fetch("/api/concierge", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ action: "start", locale, source, clientMsgId: p.clientMsgId, ...(p.payload.input.type ? { input: p.payload.input } : {}) }),
+            body: JSON.stringify({ action: "start", source, clientMsgId: p.clientMsgId, ...(p.payload.input.type ? { input: p.payload.input } : {}) }),
           });
         } else {
           res = await fetch("/api/concierge", {
@@ -190,7 +187,7 @@ export function useConcierge(source: "widget" | "page", active: boolean, preferr
           return;
         }
         if (data.conversation?.token) {
-          conv.current = { id: data.conversation.id, token: data.conversation.token, locale: data.locale };
+          conv.current = { id: data.conversation.id, token: data.conversation.token, locale: "en" };
           writeStored(conv.current);
           track("concierge_started", { source });
         }
@@ -203,7 +200,7 @@ export function useConcierge(source: "widget" | "page", active: boolean, preferr
         setStatus("ready");
       }
     },
-    [apply, locale, source],
+    [apply, source],
   );
 
   const send = useCallback(
@@ -215,22 +212,9 @@ export function useConcierge(source: "widget" | "page", active: boolean, preferr
     if (pending) run(pending);
   }, [pending, run]);
 
-  const changeLocale = useCallback(
-    (l: Locale) => {
-      if (l === locale) return;
-      if (!conv.current) {
-        setLocale(l);
-        showIntro(l);
-        return;
-      }
-      send({ type: "locale", value: l });
-    },
-    [locale, send, showIntro],
-  );
-
   const startOver = useCallback(() => {
     if (!conv.current) {
-      showIntro(locale);
+      showIntro();
       setError(null);
       return;
     }
@@ -241,11 +225,11 @@ export function useConcierge(source: "widget" | "page", active: boolean, preferr
       setSubmittedRef(null);
       setError(null);
       setPending(null);
-      showIntro(locale);
+      showIntro();
       return;
     }
     send({ type: "restart" });
-  }, [locale, send, showIntro, submittedRef]);
+  }, [send, showIntro, submittedRef]);
 
   const uploadPhoto = useCallback(
     async (file: Blob) => {
@@ -256,7 +240,7 @@ export function useConcierge(source: "widget" | "page", active: boolean, preferr
           const res = await fetch("/api/concierge", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ action: "start", locale, source }),
+            body: JSON.stringify({ action: "start", source }),
           });
           const data = (await res.json().catch(() => ({}))) as ClientReply & { error?: string };
           if (!res.ok || !data.conversation?.token) {
@@ -264,7 +248,7 @@ export function useConcierge(source: "widget" | "page", active: boolean, preferr
             setStatus(data.error === "unavailable" ? "unavailable" : "ready");
             return;
           }
-          conv.current = { id: data.conversation.id, token: data.conversation.token, locale: data.locale };
+          conv.current = { id: data.conversation.id, token: data.conversation.token, locale: "en" };
           writeStored(conv.current);
           apply(data, true);
         } catch {
@@ -275,10 +259,10 @@ export function useConcierge(source: "widget" | "page", active: boolean, preferr
       }
       await run({ clientMsgId: newId(), payload: { action: "photo", file } });
     },
-    [apply, locale, run, source],
+    [apply, run, source],
   );
 
-  return { locale, messages, prompt, status, error, pending, submittedRef, send, retry, retryStart, changeLocale, startOver, uploadPhoto, clearError: () => setError(null) };
+  return { messages, prompt, status, error, pending, submittedRef, send, retry, retryStart, startOver, uploadPhoto, clearError: () => setError(null) };
 }
 
 /**

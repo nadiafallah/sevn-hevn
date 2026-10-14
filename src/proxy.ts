@@ -1,15 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { ACCESS_COOKIE, REFRESH_COOKIE, REFRESH_MAX_AGE, cookieOptions, refreshSession, tokenExpiresAt } from "@/lib/admin/gotrue";
-import { LOCALE_COOKIE, defaultLocale, isLocale, localePath, splitLocale } from "@/i18n/config";
+import { RETIRED_LOCALE_COOKIE, defaultLocale, retiredLocales } from "@/i18n/config";
 import { brandAllowedIn, findBrand } from "@/data/brands";
 import { isCategoryId } from "@/data/taxonomy";
 
 /**
  * Two jobs:
- * 1. Website languages. English lives at the unprefixed addresses (/, /collection, /chat), served
- *    internally from /en/…; Arabic, Russian and French live under /ar, /ru and /fr. A visitor who
- *    chose a language in the selector (cookie) is taken to that language when they open an
- *    unprefixed address. /en/… redirects to the unprefixed address, so every page has one URL.
+ * 1. Website addresses. The site is English only: pages live at the unprefixed addresses (/,
+ *    /collection, /chat), served internally from /en/…. The retired Arabic, Russian and French
+ *    addresses (/ar/…, /ru/…, /fr/…) and /en/… redirect permanently to the unprefixed English page,
+ *    so every page has one URL. A language choice remembered by the former selector is ignored and
+ *    its cookie cleared, so nothing switches a visitor away from English.
  * 2. Private panel (/admin): keeps the sign-in session fresh and sends signed-out visitors to the
  *    sign-in page. This is a convenience layer; every page and action still checks the person's
  *    role on the server, and the database enforces it again.
@@ -17,7 +18,7 @@ import { isCategoryId } from "@/data/taxonomy";
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   if (path === "/admin" || path.startsWith("/admin/")) return admin(request);
-  return language(request);
+  return pages(request);
 }
 
 /**
@@ -25,7 +26,7 @@ export async function proxy(request: NextRequest) {
  *   /collection?item=REF            → /product/REF
  *   /collection?category=bags       → /bags   (with ?designer=Hermès → /bags/hermes)
  *   /collection?category=accessories → /jewellery (Jewellery replaced Accessories)
- * The language prefix and the search text are kept.
+ * The search text is kept.
  */
 function legacyShopAddress(path: string, params: URLSearchParams): string | null {
   if (path !== "/collection") return null;
@@ -46,26 +47,25 @@ function legacyShopAddress(path: string, params: URLSearchParams): string | null
   return `/${target}${brandPart}${qs}`;
 }
 
-function language(request: NextRequest) {
-  const { pathname, search } = request.nextUrl;
-  const { locale, path, prefixed } = splitLocale(pathname);
+/** "/ar/collection" → "/collection", "/fr" → "/", "/en/chat" → "/chat". */
+const LANGUAGE_PREFIX = new RegExp(`^/(?:${[defaultLocale, ...retiredLocales].join("|")})(?=/|$)`);
 
-  const moved = legacyShopAddress(path, request.nextUrl.searchParams);
-  if (moved) return NextResponse.redirect(new URL(prefixed ? localePath(locale, moved) : moved, request.url), 308);
+function pages(request: NextRequest) {
+  const { pathname, search, searchParams } = request.nextUrl;
+  const prefix = pathname.match(LANGUAGE_PREFIX)?.[0];
+  const path = prefix ? pathname.slice(prefix.length) || "/" : pathname;
 
-  if (prefixed && locale === defaultLocale) {
-    return NextResponse.redirect(new URL(`${path}${search}`, request.url), 308);
+  const moved = legacyShopAddress(path, searchParams);
+  const response = moved
+    ? NextResponse.redirect(new URL(moved, request.url), 308)
+    : prefix
+      ? NextResponse.redirect(new URL(`${path}${search}`, request.url), 308)
+      : NextResponse.rewrite(new URL(`/${defaultLocale}${path === "/" ? "" : path}${search}`, request.url));
+
+  if (request.cookies.has(RETIRED_LOCALE_COOKIE)) {
+    response.cookies.set(RETIRED_LOCALE_COOKIE, "", { path: "/", maxAge: 0, sameSite: "lax", secure: request.nextUrl.protocol === "https:" });
   }
-  if (prefixed) return NextResponse.next();
-
-  const chosen = request.cookies.get(LOCALE_COOKIE)?.value;
-  if (isLocale(chosen) && chosen !== defaultLocale) {
-    const target = new URL(`/${chosen}${path === "/" ? "" : path}${search}`, request.url);
-    const res = NextResponse.redirect(target, 307);
-    res.headers.set("cache-control", "private, no-store");
-    return res;
-  }
-  return NextResponse.rewrite(new URL(`/${defaultLocale}${path === "/" ? "" : path}${search}`, request.url));
+  return response;
 }
 
 const OPEN_PATHS = new Set(["/admin/login", "/admin/setup", "/admin/reset"]);

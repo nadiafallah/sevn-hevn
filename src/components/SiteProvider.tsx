@@ -5,7 +5,6 @@ import { isPolicyId, type PolicyId } from "@/content/policies";
 import { findVariant, maxQuantity } from "@/lib/format";
 import type { ShopItem } from "@/lib/paths";
 import { track } from "@/lib/analytics";
-import { takeCarried } from "@/i18n/carry";
 
 export interface SourcingPrefill {
   category?: string;
@@ -107,15 +106,6 @@ export function SiteProvider({ items, websiteEnquiries, children }: { items: Sho
       /* storage may be blocked; the bag still works for this visit */
     }
   }, [lines, ready]);
-
-  // After a language change: reopen the panel that was open and return to the same place.
-  useEffect(() => {
-    const carried = takeCarried("panel") as Panel | null | undefined;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (carried && typeof carried === "object" && "type" in carried) setPanel(carried);
-    const y = takeCarried("scrollY");
-    if (typeof y === "number" && y > 0) requestAnimationFrame(() => window.scrollTo({ top: y, behavior: "instant" }));
-  }, []);
 
   // Policy panels can be linked directly, e.g. /#privacy
   useEffect(() => {

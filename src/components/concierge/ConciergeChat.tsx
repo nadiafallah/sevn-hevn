@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { site } from "@/config/site";
-import { dirOf, isLocale, localeNames, locales, t } from "@/lib/concierge/i18n";
+import { t } from "@/lib/concierge/i18n";
 import type { Choice, Prompt } from "@/lib/concierge/types";
 import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -12,16 +12,14 @@ import { preparePhoto, useConcierge, type ChatError } from "./useConcierge";
 
 /**
  * The SEVN HEVN concierge chat. One component and one conversation for both the floating widget
- * and the /chat page. Arabic is shown right-to-left; numbers, references and phone numbers stay
- * left-to-right. WhatsApp and phone stay one tap away at all times.
- * The chat speaks English, Arabic, Russian and French. It opens in the site's language; the
- * customer can switch at any time without losing the conversation.
+ * and the /chat page. WhatsApp and phone stay one tap away at all times.
+ * The chat speaks English only: every reply is in English, whatever language the customer writes in.
  */
 export function ConciergeChat({ variant, onClose, active = true }: { variant: "widget" | "page"; onClose?: () => void; active?: boolean }) {
-  const { locale: siteLocale, t: siteText } = useI18n();
-  const chat = useConcierge(variant, active, isLocale(siteLocale) ? siteLocale : "en");
-  const { locale, messages, prompt, status, error, pending } = chat;
-  const L = t(locale);
+  const { t: siteText } = useI18n();
+  const chat = useConcierge(variant, active);
+  const { messages, prompt, status, error, pending } = chat;
+  const L = t();
   const uid = useId();
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
@@ -99,7 +97,7 @@ export function ConciergeChat({ variant, onClose, active = true }: { variant: "w
   const placeholder = inputKind === "phone" ? "+971 50 123 4567" : inputKind === "email" ? "name@example.com" : inputKind === "code" ? "123456" : L.ui.placeholder;
 
   return (
-    <section className={`cc cc--${variant}`} dir={dirOf(locale)} lang={locale} aria-labelledby={`${uid}-title`}>
+    <section className={`cc cc--${variant}`} aria-labelledby={`${uid}-title`}>
       <header className="cc__head">
         <div className="cc__brand">
           <h2 id={`${uid}-title`} className="cc__title">
@@ -115,23 +113,6 @@ export function ConciergeChat({ variant, onClose, active = true }: { variant: "w
               </svg>
             </button>
           )}
-        </div>
-        {/* Its own row under the title, so all four languages fit at any width. */}
-        <div className="cc__lang" role="group" aria-label={L.ui.language}>
-          {locales.map((l) => (
-            <button
-              key={l}
-              type="button"
-              lang={l}
-              dir={dirOf(l)}
-              className="cc__lang-btn"
-              aria-pressed={locale === l}
-              disabled={busy}
-              onClick={() => chat.changeLocale(l)}
-            >
-              {localeNames[l]}
-            </button>
-          ))}
         </div>
       </header>
 

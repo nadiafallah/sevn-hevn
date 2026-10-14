@@ -79,7 +79,7 @@ As an alternative, the customer can choose **"Send from the website"** and give 
 
 ## Concierge chat and private panel
 
-A virtual-assistant chat (English, Arabic, Russian and French) takes customer requests, with photos, and stores them for the team. It opens from the **Concierge** button on every page and at `/chat`. The team works in a private panel at `/admin`, with owner and staff roles, notes, follow-ups, approved prices, orders and notifications. The chat never states a price, stock level, delivery promise or policy unless it comes from approved data.
+A virtual-assistant chat takes customer requests, with photos, and stores them for the team. It opens from the **Concierge** button on every page and at `/chat`. The team works in a private panel at `/admin`, with owner and staff roles, notes, follow-ups, approved prices, orders and notifications. The chat never states a price, stock level, delivery promise or policy unless it comes from approved data.
 
 Setup, roles, daily use, notification connections, order checks, optional AI, migrations and tests are all in [docs/CONCIERGE.md](docs/CONCIERGE.md).
 
@@ -99,4 +99,4 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and [docs/BACKUPS.md](docs/BACKUPS.
 
 ## Addresses
 
-Category pages (`/bags`, `/bags/hermes`), product pages (`/product/REF`) and the Collection (`/collection?q=…`) have their own canonical addresses, titles and structured data. Older addresses (`/collection?category=…`, `/collection?item=…`) redirect permanently (308) to the new ones, keeping the language; old Accessories links go to Jewellery.
+Category pages (`/bags`, `/bags/hermes`), product pages (`/product/REF`) and the Collection (`/collection?q=…`) have their own canonical addresses, titles and structured data. Older addresses (`/collection?category=…`, `/collection?item=…`) redirect permanently (308) to the new ones; old Accessories links go to Jewellery. The site is English only: the retired `/ar`, `/ru` and `/fr` addresses redirect permanently to the same page in English.

@@ -22,14 +22,14 @@ The rule is enforced in several places, so no route can get around it:
 
 | Page | Address |
 | --- | --- |
-| Home | `/` (and `/ar`, `/ru`, `/fr`) |
+| Home | `/` (the retired `/ar`, `/ru` and `/fr` redirect to the English page) |
 | Category | `/bags`, `/shoes`, `/watches`, `/jewellery` |
 | Category and house | `/bags/hermes`, `/jewellery/cartier`, … |
 | Every category, search results | `/collection`, `/collection?q=kelly`, `/collection?brand=hermes` |
 | A piece | `/product/SH-0001` (a chosen version adds `?sku=…`) |
 | Checkout, confirmation | `/checkout`, `/checkout/received?ref=REQ-…` |
 
-Filters live in the query string (`?type=clutches&colour=noir&size=40.5&price_min=…&sort=price-asc`), so a link can be shared, and Back undoes the last change (changes made inside the filter panel count as one step). Older addresses redirect permanently (308): `/collection?category=bags` → `/bags`, `/collection?category=bags&designer=Hermès` → `/bags/hermes`, `/collection?category=accessories` → `/jewellery`, `/collection?item=REF` → `/product/REF`, with the language kept.
+Filters live in the query string (`?type=clutches&colour=noir&size=40.5&price_min=…&sort=price-asc`), so a link can be shared, and Back undoes the last change (changes made inside the filter panel count as one step). Older addresses redirect permanently (308): `/collection?category=bags` → `/bags`, `/collection?category=bags&designer=Hermès` → `/bags/hermes`, `/collection?category=accessories` → `/jewellery`, `/collection?item=REF` → `/product/REF`.
 
 Search engines: a category or house page with no genuine piece carries `noindex` and stays out of the sitemap until something is published. Drafts and demo records are never indexed or put in structured data. Product pages carry Product + BreadcrumbList data, with an Offer only where a price is actually listed.
 

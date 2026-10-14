@@ -570,11 +570,6 @@
   max-width: 62vw;
 }
 
-[dir="rtl"] .tool-select select {
-  padding: 0 14px 0 32px;
-  background-position: left 12px center;
-}
-
 .listing-search {
   display: flex;
   align-items: center;

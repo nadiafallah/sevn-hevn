@@ -8,7 +8,7 @@ import type { UiDictionary } from "./dictionaries";
 interface I18nValue {
   locale: Locale;
   t: UiDictionary;
-  /** Locale-aware internal link: href("/collection") → "/ar/collection" in Arabic. */
+  /** Internal link for a page (the site is English only, so the path is unchanged). */
   href: (path: string) => string;
   fmt: typeof fmt;
   plural: (n: number, forms: Plural, vars?: Record<string, string | number>) => string;
@@ -18,7 +18,7 @@ interface I18nValue {
 
 const I18nContext = createContext<I18nValue | null>(null);
 
-/** Gives client components the current language and its wording (only this language is sent). */
+/** Gives client components the site's (English) wording. */
 export function I18nProvider({ locale, ui, children }: { locale: Locale; ui: UiDictionary; children: ReactNode }) {
   const value = useMemo<I18nValue>(
     () => ({

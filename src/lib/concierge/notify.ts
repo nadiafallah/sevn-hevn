@@ -3,7 +3,6 @@ import nodemailer from "nodemailer";
 import { site } from "@/config/site";
 import { configuredChannels, conciergeServer, emailConfig, whatsappConfig } from "./config";
 import { rpc } from "./db";
-import { isLocale, localeEnglishNames } from "./i18n";
 
 /**
  * Team notifications for new requests. The request is always saved first; this outbox then tries
@@ -41,7 +40,6 @@ function summaryLines(r: Claimed["request"]) {
   return [
     `${r.is_test ? "[TEST] " : ""}New ${r.type === "purchase" ? "purchase" : "concierge"} request ${r.reference}`,
     `Type: ${TYPE[r.type] ?? r.type}`,
-    `Language: ${isLocale(r.locale) ? localeEnglishNames[r.locale] : r.locale}`,
     ...(r.needs_review ? [`Needs your confirmation: ${r.needs_review}`] : []),
     ...(r.destination_label ? [`Destination: ${r.destination_label}`] : []),
     `Received: ${when} (Dubai)`,

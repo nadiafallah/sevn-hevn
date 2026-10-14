@@ -5,12 +5,16 @@
  *
  * It is pure apart from the injected Deps, so the same logic serves the floating widget and the
  * /chat page, and it can be tested without a database or network.
+ *
+ * It always replies in English. Customers may write in another language: brands, categories,
+ * colours, countries, yes/no and common requests are still recognised (detect.ts, countries.ts),
+ * and the answer comes back in English.
  */
 import { extract, hasEnoughDetail, detectIntent, findItemRef, normaliseOrderRef, matchChoice, YES, NO, type CategoryKey, type Extracted, type Intent, type Topic } from "./detect";
 import { brandsFor, coreBrands } from "@/data/brands";
 import { countryName, matchCountry } from "./countries";
 import { isEmail, parsePhone, type Phone } from "./phone";
-import { ltr, t, type ContactMethod, type Locale, type RequestType } from "./i18n";
+import { t, type ContactMethod, type Locale, type RequestType } from "./i18n";
 import { menuPrompt } from "./intro";
 import type { Choice, Prompt } from "./types";
 
@@ -67,7 +71,6 @@ export type Input =
   | { type: "text"; value: string }
   | { type: "choice"; value: string }
   | { type: "submit"; consent: boolean }
-  | { type: "locale"; value: Locale }
   | { type: "restart" }
   | { type: "human" }
   | { type: "photo"; hint?: string };
@@ -86,8 +89,6 @@ export interface ItemInfo {
 export interface KnowledgeAnswer {
   title: string;
   body: string;
-  /** The entry is in English although the conversation is in Arabic. */
-  english: boolean;
 }
 
 export type VerifyResult =
@@ -139,13 +140,13 @@ export interface Deps {
   priceMaxAgeDays: number;
   now(): Date;
   lookupItem(ref: string): Promise<ItemInfo | null>;
-  knowledge(topic: string, country: string | undefined, locale: Locale): Promise<KnowledgeAnswer | null>;
+  knowledge(topic: string, country: string | undefined): Promise<KnowledgeAnswer | null>;
   submit(payload: SubmitPayload): Promise<{ reference: string; id: string }>;
   /** True only when a verification code can actually be delivered (e-mail configured). */
   orderVerification: boolean;
   startOrderCheck(ref: string): Promise<void>;
   verifyOrderCode(ref: string, code: string): Promise<VerifyResult>;
-  ai?: (text: string, locale: Locale) => Promise<AiExtraction | null>;
+  ai?: (text: string) => Promise<AiExtraction | null>;
 }
 
 export interface Turn {
@@ -172,7 +173,7 @@ function prompt(kind: Prompt["kind"], opts: Partial<Prompt> = {}): Prompt {
 }
 
 function reviewRows(s: State) {
-  const L = t(s.locale);
+  const L = t();
   const d = s.draft;
   const rows: { label: string; value: string }[] = [];
   const add = (label: string, value?: string) => {
@@ -199,12 +200,12 @@ function reviewRows(s: State) {
 
 /** The question for a step and the input it expects. */
 function ask(s: State): { text?: string; prompt: Prompt } {
-  const L = t(s.locale);
+  const L = t();
   const d = s.draft;
   const skip = choice("skip", L.ui.skip);
   switch (s.step) {
     case "menu":
-      return { text: L.a.menu, prompt: menuPrompt(s.locale) };
+      return { text: L.a.menu, prompt: menuPrompt() };
     case "src_describe":
       return { text: L.a.describe, prompt: prompt("text", { allowPhoto: true, multiline: true, maxLength: LIMIT.long }) };
     case "src_photo_confirm":
@@ -274,7 +275,7 @@ function ask(s: State): { text?: string; prompt: Prompt } {
 }
 
 function editableFields(s: State): [string, string][] {
-  const L = t(s.locale);
+  const L = t();
   const d = s.draft;
   const f: [string, string][] = [];
   if (d.intent === "sourcing") {
@@ -297,7 +298,7 @@ export function initialState(locale: Locale): State {
 export function begin(locale: Locale): Turn {
   const state = initialState(locale);
   const q = ask(state);
-  return { state, assistant: [t(locale).a.greeting, q.text!], prompt: q.prompt };
+  return { state, assistant: [t().a.greeting, q.text!], prompt: q.prompt };
 }
 
 /** The prompt for the current step (used when a conversation is reloaded). */
@@ -363,7 +364,7 @@ function fill(d: Draft, ex: Partial<AiExtraction>) {
 
 function notedList(s: State, before: Draft) {
   const d = s.draft;
-  const L = t(s.locale);
+  const L = t();
   const parts = [
     d.brand !== before.brand ? d.brand : undefined,
     d.model !== before.model ? d.model : undefined,
@@ -384,29 +385,27 @@ function money(amount: number | string, currency: string) {
   }
 }
 
-function dateLabel(iso: string, locale: Locale) {
-  const intl = { en: "en-GB", ar: "ar-AE-u-nu-latn", ru: "ru-RU", fr: "fr-FR" }[locale];
-  return new Intl.DateTimeFormat(intl, { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Dubai" }).format(new Date(iso));
+function dateLabel(iso: string) {
+  return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Dubai" }).format(new Date(iso));
 }
 
-function formatOrder(o: VerifiedOrder, locale: Locale) {
-  const L = t(locale).order;
-  const w = (s: string) => (locale === "ar" ? ltr(s) : s);
+function formatOrder(o: VerifiedOrder) {
+  const L = t().order;
   const lines = [
     L.title(o.reference),
     `${L.statusLabel}: ${L.status[o.status] ?? o.status} · ${L.paymentLabel}: ${L.payment[o.payment_status] ?? o.payment_status} · ${L.deliveryLabel}: ${L.fulfilment[o.fulfilment_status] ?? o.fulfilment_status}`,
   ];
-  if (o.carrier || o.tracking_number) lines.push(`${L.trackingLabel}: ${[o.carrier, o.tracking_number && w(o.tracking_number)].filter(Boolean).join(" ")}${o.tracking_url ? ` (${o.tracking_url})` : ""}`);
+  if (o.carrier || o.tracking_number) lines.push(`${L.trackingLabel}: ${[o.carrier, o.tracking_number].filter(Boolean).join(" ")}${o.tracking_url ? ` (${o.tracking_url})` : ""}`);
   if (o.items.length) lines.push(`${L.itemsLabel}: ${o.items.map((i) => `${i.description}${i.brand ? ` (${i.brand})` : ""}${i.quantity > 1 ? ` ×${i.quantity}` : ""}`).join("; ")}`);
-  lines.push(`${L.totalLabel}: ${w(money(o.total_amount, o.currency))}`);
+  lines.push(`${L.totalLabel}: ${money(o.total_amount, o.currency)}`);
   if (o.customer_note) lines.push(`${L.noteLabel}: ${o.customer_note}`);
-  lines.push(`${L.updatedLabel}: ${dateLabel(o.updated_at, locale)}`);
+  lines.push(`${L.updatedLabel}: ${dateLabel(o.updated_at)}`);
   return lines.join("\n");
 }
 
 export function buildSubmission(s: State, conversationId: string): SubmitPayload {
   const d = s.draft;
-  const L = t(s.locale);
+  const L = t();
   const type = requestType(d);
   const summary =
     type === "sourcing"
@@ -454,7 +453,7 @@ export function buildSubmission(s: State, conversationId: string): SubmitPayload
 
 /** Moves to `step`, adding its question (and the one-time contact introduction). */
 function go(s: State, step: Step, out: string[]) {
-  const L = t(s.locale);
+  const L = t();
   if (step.startsWith("c_") && step !== "c_review" && step !== "c_edit" && !s.contactIntro) {
     out.push(L.a.contactIntro);
     s.contactIntro = true;
@@ -467,12 +466,10 @@ function go(s: State, step: Step, out: string[]) {
 }
 
 async function answerKnowledge(s: State, topic: Topic, deps: Deps, out: string[]) {
-  const L = t(s.locale);
+  const L = t();
   const d = s.draft;
-  const k = await deps.knowledge(topic, d.destination?.code, s.locale).catch(() => null);
-  // English text quoted in another language goes in its own message (in Arabic it also keeps its own direction).
-  if (k?.english) out.push(L.a.knowledgeEnglish, `${k.title}:\n${k.body}`);
-  else if (k) out.push(L.a.knowledge(k.title, k.body));
+  const k = await deps.knowledge(topic, d.destination?.code).catch(() => null);
+  if (k) out.push(L.a.knowledge(k.title, k.body));
   else out.push(L.a.knowledgeMissing);
   if (topic === "shipping" && d.destination) out.push(L.a.shippingCountry(d.destination.label));
   d.needsReview = topic === "price" ? "price" : topic === "other" ? "other" : topic;
@@ -480,7 +477,7 @@ async function answerKnowledge(s: State, topic: Topic, deps: Deps, out: string[]
 }
 
 async function answerItem(s: State, text: string, deps: Deps, out: string[]) {
-  const L = t(s.locale);
+  const L = t();
   const d = s.draft;
   d.question = text;
   fill(d, extract(text));
@@ -508,7 +505,7 @@ async function answerItem(s: State, text: string, deps: Deps, out: string[]) {
   }
   const ageDays = item.updatedAt ? (deps.now().getTime() - new Date(item.updatedAt).getTime()) / 86_400_000 : Infinity;
   if (item.priceAED && item.priceAED > 0 && ageDays <= deps.priceMaxAgeDays) {
-    out.push(L.a.itemListed(label, money(item.priceAED, "AED"), dateLabel(item.updatedAt!, s.locale)));
+    out.push(L.a.itemListed(label, money(item.priceAED, "AED"), dateLabel(item.updatedAt!)));
     d.needsReview = "availability";
     return go(s, "q_followup", out);
   }
@@ -518,7 +515,7 @@ async function answerItem(s: State, text: string, deps: Deps, out: string[]) {
 }
 
 async function startOrder(s: State, ref: string, deps: Deps, out: string[]) {
-  const L = t(s.locale);
+  const L = t();
   const d = s.draft;
   d.intent = "order";
   d.orderRef = ref;
@@ -541,14 +538,14 @@ async function describe(s: State, text: string, deps: Deps, out: string[]) {
   d.description = text;
   fill(d, extract(text));
   if (deps.ai) {
-    const ai = await deps.ai(text, s.locale).catch(() => null);
+    const ai = await deps.ai(text).catch(() => null);
     if (ai) {
       const had = JSON.stringify(d);
       fill(d, ai);
       if (ai.budget && d.budget === undefined) d.budget = ai.budget.slice(0, 80);
       if (ai.timing && d.timing === undefined) d.timing = ai.timing.slice(0, 80);
       if (ai.destinationCountry && !d.destination && /^[A-Z]{2}$/.test(ai.destinationCountry)) {
-        d.destination = { code: ai.destinationCountry, label: countryName(ai.destinationCountry, s.locale) };
+        d.destination = { code: ai.destinationCountry, label: countryName(ai.destinationCountry) };
       }
       if (JSON.stringify(d) !== had) d.aiUsed = true;
     }
@@ -559,7 +556,7 @@ async function describe(s: State, text: string, deps: Deps, out: string[]) {
 }
 
 function setCountry(s: State, code: string | undefined, raw: string) {
-  s.draft.destination = code ? { code, label: countryName(code, s.locale) } : { label: raw.slice(0, 120) };
+  s.draft.destination = code ? { code, label: countryName(code) } : { label: raw.slice(0, 120) };
 }
 
 /**
@@ -572,7 +569,7 @@ export async function handle(prev: State, input: Input, deps: Deps): Promise<Tur
   const out: string[] = [];
   let customer: string | undefined;
   let submitted: Turn["submitted"];
-  const L = () => t(s.locale);
+  const L = () => t();
   const current = ask(s).prompt;
   const reask = () => {
     const q = ask(s);
@@ -581,11 +578,6 @@ export async function handle(prev: State, input: Input, deps: Deps): Promise<Tur
   const finish = (): Turn => ({ state: s, customer, assistant: out, prompt: ask(s).prompt, submitted });
 
   // ── Actions available at any step ──
-  if (input.type === "locale") {
-    s.locale = input.value;
-    reask();
-    return finish();
-  }
   if (input.type === "restart") {
     customer = L().ui.startOver;
     resetFlow(s);
@@ -814,7 +806,7 @@ export async function handle(prev: State, input: Input, deps: Deps): Promise<Tur
     case "q_after_item":
       if (id === "similar") {
         d.intent = "sourcing";
-        d.description = `${t(s.locale).a.findSimilar}: ${[d.brand, d.itemName].filter(Boolean).join(" ")} (${d.itemRef})`;
+        d.description = `${t().a.findSimilar}: ${[d.brand, d.itemName].filter(Boolean).join(" ")} (${d.itemRef})`;
         d.needsReview = undefined;
         go(s, nextStep(s), out);
       } else if (id === "team") {
@@ -874,7 +866,7 @@ export async function handle(prev: State, input: Input, deps: Deps): Promise<Tur
       customer = "••••••";
       const r = await deps.verifyOrderCode(d.orderRef!, code);
       if (r.ok) {
-        out.push(L().a.orderVerified, formatOrder(r.order, s.locale), L().a.anythingElse);
+        out.push(L().a.orderVerified, formatOrder(r.order), L().a.anythingElse);
         resetFlow(s);
         s.step = "menu";
       } else if (r.reason === "invalid") {

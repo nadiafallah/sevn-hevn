@@ -79,12 +79,6 @@ for (const p of data.products) {
     ]
       .filter(Boolean)
       .join(" "),
-    translations: Object.fromEntries(
-      Object.entries(p.t).map(([l, [name, description]]) => [
-        l,
-        { name, description, ...(p.site?.[l]?.colour ? { colour: p.site[l].colour } : {}), ...(p.site?.[l]?.material ? { material: p.site[l].material } : {}), imageAlts: images.map(() => `${p.brand} ${name}`) },
-      ]),
-    ),
   });
 }
 fs.writeFileSync(OUT_DATA, JSON.stringify(items, null, 2) + "\n");
