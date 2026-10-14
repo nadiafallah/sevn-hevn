@@ -13,6 +13,7 @@ export type AnalyticsEvent =
   | "sourcing_prepared"
   | "viewing_prepared"
   | "enquiry_sent"
+  | "newsletter_signup"
   | "add_to_bag"
   | "checkout_start"
   | "filter_change"

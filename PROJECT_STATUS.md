@@ -33,6 +33,8 @@ Branch `feat/shop-four-categories`. Not on the live site until it is merged and 
 | Product pages with gallery, zoom, versions (colour / size / hardware), details per category, related pieces, structured data | done |
 | Bag with versions; checkout (bag re-checked on the server → details → delivery → payment notice) storing a purchase request in the panel | done; **online payment not connected** (no provider or merchant account) |
 | Redirects from the old addresses (308) | done |
+| Footer: wordmark, then four columns (Support, Follow us, Contact, Newsletter) on black, legal lines underneath | done (14 Oct 2026) |
+| Newsletter sign-up in the footer: name + email, consent wording stored, rate limited, production only | done; needs migration `20261014120000_newsletter.sql` (independent of the others). Until it runs, the form answers "couldn't add you just now" and stores nothing |
 | Database migration `20261013120000_shop_four_categories.sql` | **not applied in production yet** (with the two pending earlier ones; the SQL file is with the owner) |
 | Real pieces | none published. Four documented pieces from the shop's own Instagram exist as private-preview drafts only, waiting for the owner's confirmation of price, stock and details |
 | Fix: home / chat / checkout answered 404 after a catalogue refresh (since the language release) | fixed in this branch |
