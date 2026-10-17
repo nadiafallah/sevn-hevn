@@ -18,6 +18,7 @@ import { categoryPath, toShopItem } from "@/lib/paths";
 import { baseOpenGraph } from "@/lib/seo";
 import { sortItems } from "@/lib/shop";
 import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
+import { HeroFilm } from "@/components/HeroFilm";
 import { ItemCard } from "@/components/ItemCard";
 import { PanelButton } from "@/components/PanelButton";
 import { ArrowIcon, WhatsAppIcon } from "@/components/icons";
@@ -80,10 +81,14 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
     <>
       {/* 1 · Hero */}
       <section className="hero" aria-labelledby="hero-title">
-        <div className="hero__media">
-          <Image src="/images/editorial/hero-emerald-noir.jpg" alt={t.heroAlt} width={1672} height={941} priority sizes="100vw" className="hero__img" />
-          <span className="media-label">{t.aiImage}</span>
-        </div>
+        <HeroFilm
+          wideSrc="/video/hero-maison-trio-1080.mp4"
+          narrowSrc="/video/hero-maison-trio-mobile.mp4"
+          pauseLabel={t.heroFilmPause}
+          playLabel={t.heroFilmPlay}
+        >
+          <Image src="/images/editorial/hero-maison-trio.jpg" alt={t.heroAlt} width={1672} height={941} priority sizes="100vw" className="hero__img" />
+        </HeroFilm>
         <div className="container hero__content">
           <p className="eyebrow hero__eyebrow">{t.heroEyebrow}</p>
           <h1 id="hero-title" className="hero__title">

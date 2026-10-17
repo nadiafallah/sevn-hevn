@@ -33,8 +33,10 @@ export const en = {
   },
 
   home: {
-    heroAlt: "An emerald top-handle bag and a black quilted shoulder bag on a travertine plinth in warm light",
-    aiImage: "AI-generated editorial image",
+    heroAlt:
+      "Three women in ivory, espresso and champagne satin on travertine in warm light, with a black top-handle bag on the plinth and an emerald tote on the arm",
+    heroFilmPause: "Pause the background film",
+    heroFilmPlay: "Play the background film",
     aiImageShort: "AI editorial image",
     heroEyebrow: "Bags · Shoes · Watches · Jewellery",
     heroLines: ["Welcome to", "your *happy*", "*place.*"],

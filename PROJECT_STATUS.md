@@ -1,6 +1,20 @@
 # Project status: SEVN HEVN
 
-Last updated: 14 October 2026
+Last updated: 17 October 2026
+
+## Home hero film (17 Oct 2026)
+
+Branch `feat/hero-video`. The home hero shows the new approved image (three women, a black top-handle bag, an emerald tote) with a cinemagraph made from it: a breeze through the hair and the satin dresses, the seated woman slowly uncrossing and recrossing her legs, the woman in espresso brushing back her hair, breathing and blinks; no camera move. Headline, buttons and links are unchanged and remain HTML over the empty wall.
+
+| Part | State |
+| --- | --- |
+| Film | Higgsfield, Kling O3 first-last-frame (pro, 10 s, 16:9, no sound), with the approved image as both start and end frame. Kling 3.0 was not used: Higgsfield refuses it on the account's Basic plan ("requires plus plan or higher"). Second version (17 Oct 2026), asked for by the owner because the first one only blinked. A take where the woman in espresso opened the emerald tote was rejected: the bag changed design (padlock gone, a flap appeared). The kept take was reviewed frame by frame: faces, skin tones, bags (the tote keeps its padlock), watches, jewellery and shoes keep their shape; legs stay sharp apart from light motion blur. Made into a seamless 9.5 s loop with a 0.5 s cross-fade |
+| Files | `public/video/hero-maison-trio-1080.mp4` (1920×1080, 1.7 MB) for screens 900 px and wider; `hero-maison-trio-mobile.mp4` (1092×900, 0.9 MB), cut to the phone framing. H.264, no audio track |
+| Loading | The still (`next/image`, priority) is the first paint and the fallback. The film is requested only after the page has loaded, and fades in once it is actually playing |
+| Motion preferences | With "reduce motion" or Data Saver on, the film is not downloaded and the still stays; the play button starts it on request. Autoplay refused by the browser (e.g. iOS Low Power Mode) leaves the still with the play button |
+| Controls | A small pause/play button in the hero's lower right corner (WCAG 2.2.2); the film also pauses while the hero is scrolled out of view |
+| Framing | Desktop: the photograph always keeps its full height (heads and shoes) on the right; on screens wider than 16:9 its wall continues behind the headline. Phones: the right-hand part of the image, with all three figures and every piece |
+| Labelling | No label on the hero: the owner asked for the "AI-generated editorial image" line to be removed (17 Oct 2026). The category cards keep their "AI editorial image" label |
 
 ## English only (14 Oct 2026)
 

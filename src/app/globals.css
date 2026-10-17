@@ -747,11 +747,62 @@ main:focus {
   overflow: hidden;
 }
 
-.hero__img {
+/* The photograph and its film share one frame, and settle in together. */
+.hero__frame {
+  position: absolute;
+  inset: 0;
+  animation: hero-settle 2.6s var(--ease-out) both;
+}
+
+.hero__img,
+.hero__film {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  animation: hero-settle 2.6s var(--ease-out) both;
+}
+
+/* The film lies exactly over the still and fades in only once it is playing (HeroFilm). */
+.hero__film {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.2s var(--ease);
+}
+
+.hero__film.is-on {
+  opacity: 1;
+}
+
+.hero__film-toggle {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid rgba(245, 240, 232, 0.4);
+  border-radius: 50%;
+  background: rgba(23, 21, 19, 0.36);
+  color: var(--ivory);
+  opacity: 0.78;
+  cursor: pointer;
+  transition:
+    opacity 0.3s var(--ease),
+    background-color 0.3s var(--ease);
+}
+
+.hero__film-toggle:hover,
+.hero__film-toggle:focus-visible {
+  opacity: 1;
+  background: rgba(23, 21, 19, 0.6);
+}
+
+.hero__film-toggle:focus-visible {
+  outline-color: var(--ivory);
+  outline-offset: 2px;
 }
 
 @keyframes hero-settle {
@@ -831,6 +882,16 @@ main:focus {
 @media (min-width: 900px) {
   .hero__media {
     height: clamp(600px, calc(100svh - 34px - var(--header-h) - 47px), 58vw);
+    container-type: size;
+    /* The photograph's wall and floor, continued to the left where the hero is wider than 16:9. */
+    background: linear-gradient(180deg, #f2e8dc 0%, #f6ede1 30%, #ecdfd2 52%, #e6d6c6 68%, #efe0cf 80%, #d9c6b3 100%);
+  }
+  /* The figures fill the photograph from head to shoe, so it is never cropped top or bottom: it keeps
+     its full height on the right, and only its empty wall is trimmed on narrower screens. */
+  .hero__frame {
+    left: auto;
+    width: 100%;
+    width: min(100%, 177.78cqh);
   }
   .hero__media::after {
     /* A soft ivory wash keeps the headline legible over the lit wall. */
@@ -840,8 +901,9 @@ main:focus {
     background: linear-gradient(90deg, rgba(245, 240, 232, 0.62) 0%, rgba(245, 240, 232, 0.28) 32%, rgba(245, 240, 232, 0) 52%);
     pointer-events: none;
   }
-  .hero__img {
-    object-position: 74% 55%;
+  .hero__img,
+  .hero__film {
+    object-position: 100% 50%;
   }
   .hero__content {
     position: absolute;
@@ -855,10 +917,17 @@ main:focus {
   .hero__content > * {
     pointer-events: auto;
   }
-  .hero .media-label {
-    right: auto;
-    left: var(--gutter);
-    bottom: 20px;
+  .hero__film-toggle {
+    right: var(--gutter);
+    bottom: 14px;
+  }
+}
+
+/* Where the photograph is narrower than the hero, its left edge fades into the continued wall. */
+@container (min-aspect-ratio: 9 / 5) {
+  .hero__frame {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 16%);
+    mask-image: linear-gradient(to right, transparent, #000 16%);
   }
 }
 
@@ -877,8 +946,9 @@ main:focus {
   .hero__media {
     aspect-ratio: 4 / 3.3;
   }
+  /* All three figures and their pieces. The phone film is cut to exactly this framing. */
   .hero__img {
-    object-position: 64% 50%;
+    object-position: 100% 50%;
   }
   .hero__actions .btn {
     flex: 1 1 100%;
