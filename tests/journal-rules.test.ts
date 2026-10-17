@@ -277,3 +277,10 @@ test("videos: a YouTube link's id is read by code", () => {
   assert.equal(videoId("https://www.youtube.com/@hermes"), null);
   assert.equal(OFFICIAL_CHANNELS["https://www.youtube.com/@hermes"], "Hermès");
 });
+
+test("headings: a brief heading with words added after it still counts as that section", () => {
+  const md = demoDraft(brief).replace("## First section", "## First section: a winter bag guide");
+  assert.deepEqual(checkDraft(md, brief, research, links).missingSections, []);
+  const changed = demoDraft(brief).replace("## First section", "## A different heading");
+  assert.deepEqual(checkDraft(changed, brief, research, links).missingSections, ["First section"]);
+});

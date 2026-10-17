@@ -103,8 +103,13 @@ export function checkDraft(
     min: Math.floor(brief.targetWords.min * (1 - WORD_TOLERANCE)),
     max: Math.ceil(brief.targetWords.max * (1 + WORD_TOLERANCE)),
   };
-  const headings = new Set(sectionHeadings(md));
-  const missingSections = brief.outline.map((s) => s.h2).filter((h) => !headings.has(plain(h)));
+  // A section counts when a "## " heading is the brief's heading, or begins with it (a keyword added
+  // after it, e.g. "Structure, size and colour: a winter bag guide", still marks the same section).
+  const headings = sectionHeadings(md);
+  const missingSections = brief.outline.map((s) => s.h2).filter((h) => {
+    const want = plain(h);
+    return !headings.some((got) => got === want || got.startsWith(`${want}:`) || got.startsWith(`${want} -`) || got.startsWith(`${want} —`));
+  });
 
   const byPath = new Map(links.map((l) => [l.href, l]));
   const sources = new Set([...research.facts.map((f) => f.sourceUrl), ...research.examples.flatMap((e) => (e.sourceUrl ? [e.sourceUrl] : []))]);

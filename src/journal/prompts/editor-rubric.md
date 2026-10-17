@@ -1,6 +1,6 @@
 ## Rubric (five parts, 0–20 each; the total is out of 100)
 
-**briefFit** — Does the article do what the brief asks: the audience, every section with its heading and points, the primary keyword used naturally (in the introduction and at least one heading), the length?
+**briefFit** — Does the article do what the brief asks: the audience, every section with its heading and points, the primary keyword used naturally in the text, the length? The headings are fixed by the brief: never ask the writer to change or add to a heading.
 - 18–20: all of it. 12–17: a section thin or a point missing. Below 12: off-brief.
 
 **accuracy** — Is every fact, figure and date in the research pack? Are the brand rules kept (no prices, stock, invented people, dealer or investment claims)?
