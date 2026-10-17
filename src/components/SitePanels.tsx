@@ -162,7 +162,7 @@ function PanelLink({ panel, children }: { panel: Panel; children: ReactNode }) {
 
 /** Phone and tablet menu: each category opens in place with its houses, types and newest pieces. */
 function MenuPanel() {
-  const { closePanel, openPanel, items } = useSite();
+  const { closePanel, openPanel, items, journal } = useSite();
   const { t, href, fmt } = useI18n();
   const s = t.shop;
   const [open, setOpen] = useState<CategoryId | null>(null);
@@ -252,6 +252,13 @@ function MenuPanel() {
             {s.allPieces}
           </Link>
         </li>
+        {journal && (
+          <li>
+            <Link href={href("/journal")} onClick={closePanel}>
+              {t.nav.journal}
+            </Link>
+          </li>
+        )}
         <li>
           <button type="button" onClick={() => openPanel({ type: "sourcing" })}>
             {t.panels.menuSourcing}

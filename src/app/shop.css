@@ -59,6 +59,16 @@
   transform: scaleX(1);
 }
 
+a.shop-nav__trigger {
+  text-decoration: none;
+}
+
+/* The Journal link after the four categories, set apart by a fine rule. */
+.shop-nav__item--journal {
+  padding-inline-start: clamp(28px, 4.4vw, 72px);
+  border-inline-start: 1px solid var(--rule);
+}
+
 .mega {
   position: absolute;
   inset-inline: 0;

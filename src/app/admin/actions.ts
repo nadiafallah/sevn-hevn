@@ -13,6 +13,7 @@ import { sendRecovery, signInWithPassword, signOut, signUp, updatePassword } fro
 import { clearSessionCookies, currentStaff, requireOwner, requireStaff, setSessionCookies } from "@/lib/admin/session";
 import { fromDubaiLocal, knowledgeTopics, languageCode, staffSettableStatuses } from "@/lib/admin/labels";
 import { CATALOG_TAG } from "@/lib/catalog";
+import { JOURNAL_TAG } from "@/lib/journal";
 import { PRODUCT_IMAGES_BUCKET } from "@/lib/supabase";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────────
@@ -531,4 +532,71 @@ export async function deleteProduct(form: FormData) {
   await storageRemove(ctx.api, PRODUCT_IMAGES_BUCKET, paths, ctx.token).catch(() => console.error("[admin] product photo files could not be removed"));
   refreshCatalogue();
   back("/admin/products", { ok: "product_deleted" });
+}
+
+// ── Journal (articles written by the journal pipeline) ─────────────────────────────────
+
+/** The journal pages show the change on the next visit. */
+const refreshJournal = () => revalidateTag(JOURNAL_TAG, { expire: 0 });
+
+export async function setJournalStatus(form: FormData) {
+  const ctx = await requireOwner();
+  const pid = id(form);
+  const status = str(form, "status", 10);
+  if (!["draft", "published", "archived"].includes(status)) back("/admin/journal", { error: "invalid_request" });
+  try {
+    await rpc(ctx.api, "admin_journal_set_status", { p_id: pid, p_status: status }, ctx.token);
+  } catch (e) {
+    const code = codeOf(e);
+    back("/admin/journal", { error: status === "published" && code === "invalid_request" ? "journal_meta" : code });
+  }
+  refreshJournal();
+  back("/admin/journal", { ok: `journal_${status}` });
+}
+
+export async function updateJournalPost(form: FormData) {
+  const ctx = await requireOwner();
+  const pid = id(form);
+  const slug = str(form, "slug", 70).toLowerCase();
+  if (slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) back("/admin/journal", { error: "invalid_request" });
+  try {
+    await rpc(ctx.api, "admin_journal_update", {
+      p_id: pid,
+      p_fields: {
+        title: str(form, "title", 120),
+        slug,
+        body_md: str(form, "body_md", 40000),
+        meta_title: str(form, "meta_title", 120),
+        meta_description: str(form, "meta_description", 300),
+        summary: str(form, "summary", 400),
+      },
+    }, ctx.token);
+  } catch (e) {
+    back("/admin/journal", { error: codeOf(e) });
+  }
+  refreshJournal();
+  back("/admin/journal", { ok: "journal_saved" });
+}
+
+export async function deleteJournalPost(form: FormData) {
+  const ctx = await requireOwner();
+  const pid = id(form);
+  try {
+    await rpc(ctx.api, "admin_journal_delete", { p_id: pid }, ctx.token);
+  } catch (e) {
+    back("/admin/journal", { error: codeOf(e) });
+  }
+  refreshJournal();
+  back("/admin/journal", { ok: "journal_deleted" });
+}
+
+export async function deleteJournalLesson(form: FormData) {
+  const ctx = await requireOwner();
+  const lid = id(form);
+  try {
+    await rpc(ctx.api, "admin_journal_delete_lesson", { p_id: lid }, ctx.token);
+  } catch (e) {
+    back("/admin/journal", { error: codeOf(e) });
+  }
+  back("/admin/journal", { ok: "lesson_deleted" });
 }

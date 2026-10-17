@@ -96,6 +96,7 @@ export const errorMessages: Record<string, string> = {
   brand_not_allowed: "Choose one of the shop’s houses: Hermès, Louis Vuitton, Gucci or Chanel — or, for Jewellery only, Cartier, Van Cleef & Arpels or Bvlgari.",
   out_of_scope: "This piece can’t be published: only Bags, Shoes, Watches and Jewellery from the shop’s houses can be on the website.",
   duplicate: "That already exists.",
+  journal_meta: "Add the meta title, meta description and summary before publishing (Edit → Save).",
   rate_limited: "Too many attempts. Please wait a few minutes and try again.",
   unreachable: "The database couldn’t be reached. Please try again.",
   db_error: "Something went wrong. Please try again.",

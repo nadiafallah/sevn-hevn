@@ -69,3 +69,8 @@ export function isPurchasable(item: Priced, variant?: Variant) {
 export function maxQuantity(item: Pick<Item, "stock" | "maxPerOrder">, variant?: Variant) {
   return Math.max(1, Math.min(unitStock(item, variant) ?? 1, item.maxPerOrder ?? 1));
 }
+
+/** "17 October 2026", in Dubai time (journal dates). */
+export function journalDate(iso: string) {
+  return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Dubai" }).format(new Date(iso));
+}
