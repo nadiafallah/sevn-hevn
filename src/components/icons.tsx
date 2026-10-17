@@ -99,3 +99,15 @@ export const ZoomIcon = ({ size = 18, className }: P) => (
     <path d="M15.5 15.5L20 20M10.5 8v5M8 10.5h5" />
   </svg>
 );
+
+export const PauseIcon = ({ size = 14, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <path d="M9 6v12M15 6v12" strokeWidth={1.75} />
+  </svg>
+);
+
+export const PlayIcon = ({ size = 14, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <path d="M8.5 6.5v11l9-5.5-9-5.5z" fill="currentColor" />
+  </svg>
+);
