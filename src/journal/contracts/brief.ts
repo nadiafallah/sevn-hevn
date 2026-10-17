@@ -21,28 +21,28 @@ export type StrategistInput = z.infer<typeof StrategistInputSchema>;
 
 export const BriefSchema = z.object({
   chosenIdeaId: z.string().describe("The id of one of the ideas you were given"),
-  choiceReason: z.string().min(10).max(400),
+  choiceReason: z.string().min(10).max(800).describe("Why this idea (one or two sentences)"),
   title: z.string().min(10).max(90).describe("Final article title, English"),
-  audience: z.string().min(10).max(300),
+  audience: z.string().min(10).max(800).describe("Who the reader is and what they want (one or two sentences)"),
   primaryKeyword: z.string().min(2).max(60),
   secondaryKeywords: z.array(z.string().min(2).max(60)).min(2).max(6),
   outline: z
     .array(
       z.object({
         h2: z.string().min(3).max(90).describe("Section heading, exactly as it should appear"),
-        goal: z.string().min(5).max(200).describe("What this section must achieve for the reader"),
-        points: z.array(z.string().min(3).max(200)).min(1).max(6),
+        goal: z.string().min(5).max(400).describe("What this section must achieve for the reader (one sentence)"),
+        points: z.array(z.string().min(3).max(400)).min(1).max(6),
       }),
     )
     .min(SECTIONS.min)
     .max(SECTIONS.max),
   targetWords: z.object({ min: z.number().int(), max: z.number().int() }),
   cta: z.object({
-    text: z.string().min(3).max(120).describe("The invitation to buy or enquire, in the article's voice"),
+    text: z.string().min(3).max(240).describe("The invitation to buy or enquire, in the article's voice (one sentence)"),
     href: z.string().max(200).describe("One href from the list of site links"),
   }),
   productLinks: z.array(z.string().max(200)).min(1).max(4).describe("hrefs from the site links (product, category or house pages)"),
-  avoid: z.array(z.string().min(3).max(200)).max(8).describe("Things the writer must not do or say in this article"),
+  avoid: z.array(z.string().min(3).max(400)).max(8).describe("Things the writer must not do or say in this article"),
   photos: z.array(z.string()).max(MAX_PHOTOS).describe("Ids of the shop's photos to show (from the photo list); empty only if there are none"),
 });
 export type Brief = z.infer<typeof BriefSchema>;

@@ -15,13 +15,13 @@ export const QueryPlanSchema = z.object({
     .array(
       z.object({
         q: z.string().min(3).max(200).describe("A web search query, English"),
-        why: z.string().min(3).max(200).describe("What this query should find"),
+        why: z.string().min(3).max(400).describe("What this query should find"),
       }),
     )
     .min(1)
     .max(MAX_SEARCH_QUERIES),
   videoQueries: z
-    .array(z.string().min(3).max(120))
+    .array(z.string().min(3).max(200))
     .max(2)
     .describe("Up to 2 searches for a short video from the house's own YouTube channel that suits the article; empty if none fits"),
 });
@@ -43,7 +43,7 @@ export const ResearchPackSchema = z.object({
     .array(
       z.object({
         id: z.string().regex(/^F[0-9]{1,2}$/).describe('"F1", "F2", …'),
-        claim: z.string().min(5).max(400).describe("One checkable statement, as the source supports it"),
+        claim: z.string().min(5).max(700).describe("One checkable statement, as the source supports it"),
         sourceUrl: z.string().max(500).describe("The url of the search result that supports it, copied exactly"),
       }),
     )
@@ -52,15 +52,15 @@ export const ResearchPackSchema = z.object({
     .array(
       z.object({
         id: z.string().regex(/^E[0-9]{1,2}$/),
-        text: z.string().min(5).max(400).describe("A concrete, vivid example the writer can use"),
+        text: z.string().min(5).max(700).describe("A concrete, vivid example the writer can use"),
         sourceUrl: z.string().max(500).nullable().describe("Source url, or null for a general styling example with no factual claim"),
       }),
     )
     .max(10),
   readerQuestions: z
-    .array(z.object({ q: z.string().min(5).max(200), basis: z.string().min(3).max(300).describe("Why readers ask this (source or reasoning)") }))
+    .array(z.object({ q: z.string().min(5).max(300), basis: z.string().min(3).max(600).describe("Why readers ask this (source or reasoning)") }))
     .max(10),
-  gaps: z.array(z.string().max(300)).max(10).describe("What the search could not establish; the writer must not claim these"),
+  gaps: z.array(z.string().max(600)).max(10).describe("What the search could not establish; the writer must not claim these"),
 });
 export type ResearchPack = z.infer<typeof ResearchPackSchema>;
 

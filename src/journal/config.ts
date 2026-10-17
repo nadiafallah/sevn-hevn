@@ -82,13 +82,14 @@ export const CONTRACT_RETRIES = 1;
 export const DEFAULT_MODEL = "claude-opus-5-5";
 
 /**
- * Model per agent (owner decision, Oct 2026: the low-cost mix). Writing and judging use Claude
- * Sonnet 5.5; the shorter structured jobs use Claude Haiku 5.5 ($0.10 / $0.50 per million tokens).
+ * Model per agent (owner decision, Oct 2026: the low-cost mix). Planning, writing and judging use
+ * Claude Sonnet 5.5; the shorter structured jobs use Claude Haiku 5.5 ($0.10 / $0.50 per million
+ * tokens). The strategist moved to Sonnet after its first live run broke the brief's contract twice.
  * JOURNAL_MODEL=<id> runs every agent on one model instead (e.g. claude-opus-5-5 for the highest quality).
  */
 export const MODELS = {
   ideator: "claude-haiku-5-5",
-  strategist: "claude-haiku-5-5",
+  strategist: "claude-sonnet-5-5",
   researcher: "claude-haiku-5-5",
   writer: "claude-sonnet-5-5",
   editor: "claude-sonnet-5-5",
