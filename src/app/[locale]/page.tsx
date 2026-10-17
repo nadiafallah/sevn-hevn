@@ -82,12 +82,12 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
       {/* 1 · Hero */}
       <section className="hero" aria-labelledby="hero-title">
         <HeroFilm
-          wideSrc="/video/hero-maison-trio-1080.mp4"
+          wideSrc="/video/hero-maison-trio-1440.mp4"
           narrowSrc="/video/hero-maison-trio-mobile.mp4"
           pauseLabel={t.heroFilmPause}
           playLabel={t.heroFilmPlay}
         >
-          <Image src="/images/editorial/hero-maison-trio.jpg" alt={t.heroAlt} width={1672} height={941} priority sizes="100vw" className="hero__img" />
+          <Image src="/images/editorial/hero-maison-trio-v2.jpg" alt={t.heroAlt} width={2688} height={1512} priority sizes="100vw" className="hero__img" />
         </HeroFilm>
         <div className="container hero__content">
           <p className="eyebrow hero__eyebrow">{t.heroEyebrow}</p>
