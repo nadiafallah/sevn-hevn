@@ -28,7 +28,7 @@ const HOVER_CLOSE_MS = 260;
  */
 export function Header() {
   const pathname = usePathname();
-  const { openPanel, cart, items } = useSite();
+  const { openPanel, cart, items, journal } = useSite();
   const { t, href, plural } = useI18n();
   const s = t.shop;
   const [open, setOpen] = useState<CategoryId | null>(null);
@@ -196,6 +196,13 @@ export function Header() {
                 </button>
               </li>
             ))}
+            {journal && (
+              <li className="shop-nav__item shop-nav__item--journal" onPointerEnter={(e) => hover(null, e.pointerType)}>
+                <Link href={href("/journal")} className="shop-nav__trigger">
+                  {t.nav.journal}
+                </Link>
+              </li>
+            )}
           </ul>
           {categories.map((c) => (
             <MegaPanel key={c.id} id={c.id} menu={menus[c.id]} open={open === c.id} onPointerEnter={(type) => hover(c.id, type)} />

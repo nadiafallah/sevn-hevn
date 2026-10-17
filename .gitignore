@@ -31,3 +31,6 @@ npm-debug.log*
 # Private design preview (scripts/drafts/build.mjs) — never committed
 /public/drafts/
 /src/data/drafts.generated.json
+
+# Journal pipeline: local dry runs and fake runs
+/.journal/

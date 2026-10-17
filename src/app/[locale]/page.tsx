@@ -12,6 +12,8 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { plural } from "@/i18n/format";
 import { rich } from "@/i18n/rich";
 import { getCatalog, getNewArrivals } from "@/lib/catalog";
+import { journalDate } from "@/lib/format";
+import { getJournalCards } from "@/lib/journal";
 import { categoryPath, toShopItem } from "@/lib/paths";
 import { baseOpenGraph } from "@/lib/seo";
 import { sortItems } from "@/lib/shop";
@@ -19,6 +21,7 @@ import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
 import { ItemCard } from "@/components/ItemCard";
 import { PanelButton } from "@/components/PanelButton";
 import { ArrowIcon, WhatsAppIcon } from "@/components/icons";
+import "../journal.css";
 
 /**
  * Category images: the newest listed piece's own photo. Until a category has one, the approved
@@ -50,6 +53,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const href = (path: string) => localePath(locale, path);
   const catalog = await getCatalog();
   const arrivals = (await getNewArrivals(4)).map(toShopItem);
+  const articles = (await getJournalCards()).slice(0, 3);
 
   const cards = categories.map((c) => {
     const pieces = sortItems(
@@ -205,6 +209,36 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           <p className="muted small house-list__fine">{t.brandsFine}</p>
         </div>
       </section>
+
+      {/* 4b · The latest journal articles (only once one is published) */}
+      {articles.length > 0 && (
+        <section className="container section section--tight" aria-labelledby="journal-title">
+          <div className="section__head" data-reveal>
+            <div>
+              <p className="eyebrow">{t.journalEyebrow}</p>
+              <h2 id="journal-title" className="h2">
+                {rich(t.journalTitle)}
+              </h2>
+            </div>
+            <Link href={href("/journal")} className="text-link">
+              {t.journalAll} <ArrowIcon size={14} />
+            </Link>
+          </div>
+          <ol className="journal-teasers" data-reveal>
+            {articles.map((a) => (
+              <li key={a.slug} className="journal-teaser">
+                <time className="journal-card__date" dateTime={a.publishedAt}>
+                  {journalDate(a.publishedAt)}
+                </time>
+                <h3 className="journal-teaser__title">
+                  <Link href={href(`/journal/${a.slug}`)}>{a.title}</Link>
+                </h3>
+                {a.summary && <p className="journal-teaser__summary">{a.summary}</p>}
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       {/* 5 · Special requests */}
       <section id="sourcing" className="band band--dark request-band" aria-labelledby="request-title">

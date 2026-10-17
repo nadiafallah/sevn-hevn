@@ -14,7 +14,7 @@ import { useSite } from "./SiteProvider";
  * Site footer: the wordmark, then four columns — Support, Follow us, Contact, Newsletter — and the
  * legal lines underneath.
  */
-export function Footer({ chat = false }: { chat?: boolean }) {
+export function Footer({ chat = false, journal = false }: { chat?: boolean; journal?: boolean }) {
   const { openPanel } = useSite();
   const { t, href, fmt } = useI18n();
   const f = t.footer;
@@ -37,6 +37,11 @@ export function Footer({ chat = false }: { chat?: boolean }) {
               <li>
                 <Link href={href("/collection")}>{f.collection}</Link>
               </li>
+              {journal && (
+                <li>
+                  <Link href={href("/journal")}>{f.journal}</Link>
+                </li>
+              )}
               <li>
                 <button type="button" onClick={() => openPanel({ type: "sourcing" })}>
                   {f.sourcing}

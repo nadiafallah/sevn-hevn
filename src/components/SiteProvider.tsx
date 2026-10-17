@@ -46,6 +46,8 @@ interface SiteContextValue {
   itemByRef: Record<string, ShopItem>;
   /** True only where the server can store website enquiries (the production deployment). */
   websiteEnquiries: boolean;
+  /** True once the journal has a published article (shows its links). */
+  journal: boolean;
   cart: {
     ready: boolean;
     lines: CartLine[];
@@ -78,7 +80,7 @@ function readStoredCart(): CartLine[] {
   }
 }
 
-export function SiteProvider({ items, websiteEnquiries, children }: { items: ShopItem[]; websiteEnquiries: boolean; children: ReactNode }) {
+export function SiteProvider({ items, websiteEnquiries, journal = false, children }: { items: ShopItem[]; websiteEnquiries: boolean; journal?: boolean; children: ReactNode }) {
   const [panel, setPanel] = useState<Panel | null>(null);
   const [lines, setLines] = useState<CartLine[]>([]);
   const [ready, setReady] = useState(false);
@@ -167,6 +169,7 @@ export function SiteProvider({ items, websiteEnquiries, children }: { items: Sho
       items,
       itemByRef,
       websiteEnquiries,
+      journal,
       cart: {
         ready,
         lines,
@@ -178,7 +181,7 @@ export function SiteProvider({ items, websiteEnquiries, children }: { items: Sho
         clear,
       },
     }),
-    [panel, openPanel, closePanel, items, itemByRef, websiteEnquiries, ready, lines, add, remove, setQty, clear],
+    [panel, openPanel, closePanel, items, itemByRef, websiteEnquiries, journal, ready, lines, add, remove, setQty, clear],
   );
 
   return <SiteContext.Provider value={value}>{children}</SiteContext.Provider>;

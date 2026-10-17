@@ -1,0 +1,55 @@
+name: Journal (new article)
+
+# Checks every Monday whether an article is due (every 14 days for now: JOURNAL_EVERY_DAYS) and, if
+# so, runs the journal pipeline (src/journal, docs/JOURNAL.md): ideas → brief → research →
+# writing and editing (at most 2 rewrites) → SEO → publish (score >= 75) or keep as a draft →
+# critic and lessons. Skips quietly until these are set in
+# GitHub → Settings → Secrets and variables → Actions:
+#   secret   ANTHROPIC_API_KEY          Claude API key (paid per use, about $0.20–0.40 per article)
+#   secret   TAVILY_API_KEY             Tavily search key (free plan, 1,000 searches a month)
+#   secret   JOURNAL_SERVER_KEY         The pipeline's database key (its hash is in private.server_keys)
+#   variable SUPABASE_URL               https://<project-ref>.supabase.co
+#   variable SUPABASE_PUBLISHABLE_KEY   The public key (sb_publishable_…)
+#   variable JOURNAL_AUTO_PUBLISH       "false" keeps every article as a draft (default: publish when it passes)
+#   variable JOURNAL_EVERY_DAYS         Days between articles (default 14; set 7 for weekly)
+# This repository is public, so the log shows only the run id, outcome, score and cost.
+
+on:
+  schedule:
+    - cron: "0 2 * * 1" # Mondays 06:00 Dubai time
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Write an article now, even if the last one is recent
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: journal
+  cancel-in-progress: false
+
+jobs:
+  journal:
+    if: github.repository == 'nadiafallah/sevn-hevn'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+      JOURNAL_SERVER_KEY: ${{ secrets.JOURNAL_SERVER_KEY }}
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+      JOURNAL_AUTO_PUBLISH: ${{ vars.JOURNAL_AUTO_PUBLISH }}
+      JOURNAL_EVERY_DAYS: ${{ vars.JOURNAL_EVERY_DAYS }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Write the next article (if due)
+        run: npm run journal --silent -- run --quiet ${{ inputs.force && '--force' || '' }}

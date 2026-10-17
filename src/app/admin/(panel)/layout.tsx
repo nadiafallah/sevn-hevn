@@ -17,6 +17,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           <Link href="/admin/products">Products</Link>
           <Link href="/admin/customers">Customers</Link>
           <Link href="/admin/orders">Orders</Link>
+          {isOwner && <Link href="/admin/journal">Journal</Link>}
           {isOwner && <Link href="/admin/knowledge">Store knowledge</Link>}
           {isOwner && <Link href="/admin/team">Team</Link>}
           <Link href="/admin/settings">Settings</Link>
