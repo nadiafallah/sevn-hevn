@@ -23,13 +23,13 @@ export type IdeatorInput = z.infer<typeof IdeatorInputSchema>;
 export const IdeaSchema = z.object({
   id: z.string().regex(/^I[0-9]{1,2}$/).describe('"I1", "I2", …'),
   title: z.string().min(10).max(90).describe("Working title, English"),
-  angle: z.string().min(10).max(300).describe("What the article says that others don't"),
-  reader: z.string().min(5).max(160).describe("Who it is for, concretely"),
+  angle: z.string().min(10).max(600).describe("What the article says that others don't (one or two sentences)"),
+  reader: z.string().min(5).max(400).describe("Who it is for, concretely (one sentence)"),
   primaryKeyword: z.string().min(2).max(60).describe("The search phrase the article should rank for"),
   category: z.enum(["bags", "shoes", "watches", "jewellery", "mixed"]),
   houses: z.array(z.enum(brandIds)).max(4).describe("Permitted houses only; empty if none"),
   score: z.number().int().min(0).max(100),
-  scoreReason: z.string().min(10).max(400).describe("Why this score: reader value, buying intent, fit with SEVN HEVN, freshness"),
+  scoreReason: z.string().min(10).max(800).describe("Why this score: reader value, buying intent, fit with SEVN HEVN, freshness (two or three sentences)"),
 });
 export type Idea = z.infer<typeof IdeaSchema>;
 

@@ -55,14 +55,14 @@ export type CriticInput = z.infer<typeof CriticInputSchema>;
 // ── Critic: output ──────────────────────────────────────────────────────────────────
 
 export const CriticSchema = z.object({
-  wentWell: z.array(z.string().min(5).max(300)).max(5),
-  wentBadly: z.array(z.string().min(5).max(300)).max(5),
+  wentWell: z.array(z.string().min(5).max(600)).max(5),
+  wentBadly: z.array(z.string().min(5).max(600)).max(5),
   lessons: z
     .array(
       z.object({
         agent: z.enum(LESSON_AGENTS),
         rule: z.string().min(10).max(240).describe("One general instruction that changes one behaviour, written to that agent"),
-        evidence: z.string().min(5).max(400).describe("What in this run shows the lesson is needed"),
+        evidence: z.string().min(5).max(800).describe("What in this run shows the lesson is needed"),
       }),
     )
     .max(5),

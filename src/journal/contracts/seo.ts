@@ -18,10 +18,10 @@ export const SeoSchema = z.object({
   slug: z.string().min(3).max(120).describe(`Lower-case words joined by hyphens, at most ${SLUG_MAX} characters`),
   metaTitle: z.string().min(10).max(120).describe(`${META_TITLE.min}–${META_TITLE.max} characters`),
   metaDescription: z.string().min(50).max(300).describe(`${META_DESCRIPTION.min}–${META_DESCRIPTION.max} characters`),
-  summary: z.string().min(40).max(300).describe("Two sentences for the journal index and sharing"),
+  summary: z.string().min(40).max(400).describe("Two sentences for the journal index and sharing"),
   keywords: z.array(z.string().min(2).max(60)).min(3).max(8),
   faq: z
-    .array(z.object({ q: z.string().min(5).max(160), a: z.string().min(10).max(600).describe("Answer using only what the article says") }))
+    .array(z.object({ q: z.string().min(5).max(250), a: z.string().min(10).max(800).describe("Answer using only what the article says") }))
     .min(3)
     .max(5),
 });

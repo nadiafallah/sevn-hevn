@@ -223,7 +223,8 @@ test("schedule: an article every 14 days for now; the Monday job skips until one
 test("models: the low-cost mix by default, one model when forced; costs priced by model family", () => {
   assert.equal(modelFor("writer"), "claude-sonnet-5-5");
   assert.equal(modelFor("editor"), "claude-sonnet-5-5");
-  for (const a of ["ideator", "strategist", "researcher", "seo", "critic"]) assert.equal(modelFor(a), "claude-haiku-5-5");
+  assert.equal(modelFor("strategist"), "claude-sonnet-5-5");
+  for (const a of ["ideator", "researcher", "seo", "critic"]) assert.equal(modelFor(a), "claude-haiku-5-5");
   assert.equal(modelFor("writer", "claude-opus-5-5"), "claude-opus-5-5");
   assert.equal(Object.keys(MODELS).length, 7);
   // $0.10/$0.50 per million for Haiku 5.5, $1/$5 for Haiku 4.5 (also by its dated id), $2/$10 for Sonnet 5.5; unknown models at the highest price.

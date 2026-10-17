@@ -42,7 +42,7 @@ The input and output contracts are zod schemas in `src/journal/contracts/`. The 
 | Lessons per run / active per agent | 3 / 5 (the oldest is retired) |
 | Cost cap per run | $1. Above it the run stops, nothing is published, and the critic is skipped |
 | How often | One article every 14 days (`JOURNAL_EVERY_DAYS`); the Monday job skips until one is due. A manual run with `--force` writes one anyway |
-| Models (low-cost mix) | Writer and editor on `claude-sonnet-5-5`; ideator, strategist, researcher, SEO and critic on `claude-haiku-5-5` (`MODELS`). `JOURNAL_MODEL=claude-opus-5-5` runs every agent on Opus for the highest quality (about 3× the cost). On Sonnet and Opus, a declined request is retried on another model by the API's server-side fallback |
+| Models (low-cost mix) | Strategist, writer and editor on `claude-sonnet-5-5`; ideator, researcher, SEO and critic on `claude-haiku-5-5` (`MODELS`). `JOURNAL_MODEL=claude-opus-5-5` runs every agent on Opus for the highest quality (about 3× the cost). On Sonnet and Opus, a declined request is retried on another model by the API's server-side fallback |
 
 **Published automatically only if all of these hold:**
 - the editor approved;

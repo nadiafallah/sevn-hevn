@@ -49,10 +49,10 @@ export function draftProblems(c: DraftChecks): string[] {
 export const IssueSchema = z.object({
   id: z.string().regex(/^[RC][0-9]{1,2}$/).describe('"R1", "R2", …'),
   severity: z.enum(["blocker", "major", "minor"]),
-  section: z.string().max(120).describe("The heading of the section, or \"Introduction\""),
-  quote: z.string().min(3).max(200).describe("Words copied exactly from the draft, showing where the problem is"),
-  problem: z.string().min(5).max(400),
-  fix: z.string().min(5).max(400).describe("What the writer should change, concretely"),
+  section: z.string().max(200).describe("The heading of the section, or \"Introduction\""),
+  quote: z.string().min(3).max(300).describe("Words copied exactly from the draft, showing where the problem is"),
+  problem: z.string().min(5).max(800),
+  fix: z.string().min(5).max(800).describe("What the writer should change, concretely"),
 });
 export type Issue = z.infer<typeof IssueSchema>;
 
