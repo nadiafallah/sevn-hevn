@@ -85,13 +85,9 @@ Setup, roles, daily use, notification connections, order checks, optional AI, mi
 
 ## Payments
 
-No payment provider is connected. The checkout (`/checkout`) re-checks the bag on the server (`/api/checkout` ignores prices sent by the browser), takes the customer's details and delivery choice, and stores a **purchase request** for the team (`/api/purchase-request` → the panel's Requests). It says plainly that nothing is charged. Where requests can't be stored it hands over to WhatsApp with the bag in the message. To connect a provider, implement `PaymentProvider` in `src/lib/payments/index.ts`. The requirements are:
+No payment provider is connected. The checkout (`/checkout`) re-checks the bag on the server (`/api/checkout` ignores prices sent by the browser), takes the customer's details and delivery choice, and stores a **purchase request** for the team (`/api/purchase-request` → the panel's Requests). It says plainly that nothing is charged. Where requests can't be stored it hands over to WhatsApp with the bag in the message.
 
-- Use a hosted or tokenised checkout, with secrets stored server-side only.
-- Start from a stored purchase request, re-check price and stock, and reserve one-off pieces.
-- Mark an order paid only from a verified webhook (`src/app/api/payments/webhook`), never from a redirect.
-- Make webhook handling idempotent, and handle failed and cancelled payments.
-- Start in test mode.
+The order lifecycle behind it is built: orders, quotes, stock holds, payments from verified provider events only, sourcing, quality checks, shipments, returns and refunds, the customer's private order page (`/order#t=…`) and the team's work queues. See [docs/ORDERS.md](docs/ORDERS.md). Online payment switches on by itself once a provider adapter is added in `src/lib/payments/index.ts` (hosted checkout, signed webhooks, refunds; test mode first) and the owner has set VAT, a shipping zone and approved the terms and returns policy. The local test stack uses a fake provider (`PAYMENTS_TEST_PROVIDER`), refused on Vercel.
 
 ## Deployment, backups
 

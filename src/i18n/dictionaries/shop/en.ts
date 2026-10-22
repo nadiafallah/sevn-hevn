@@ -231,6 +231,22 @@ export const shopEn = {
     unavailableStrong: "Sending from the website isn’t available right now.",
     unavailableText: "Send your request on WhatsApp instead — your selection and details are already in the message. Opening WhatsApp doesn’t send anything until you press Send.",
     whatsapp: "Continue on WhatsApp",
+    online: {
+      notice: "You pay on our payment provider’s secure page; your card details never reach our website. We hold the piece for you while you pay, and your order is confirmed once the provider confirms the payment.",
+      transit: "Delivery takes {min}–{max} days in transit after dispatch.",
+      duties: "Import duties and taxes at the destination are paid by you on arrival.",
+      dutiesLabel: "Import duties",
+      dutiesShort: "Paid by you on arrival",
+      accept: "I agree that SEVN HEVN may contact me about this order, and I accept the",
+      and: "and the",
+      pay: "Pay {amount} securely",
+      opening: "Opening the secure payment page…",
+      total: "Total to pay",
+      vatIncluded: "Includes {rate}%: {amount}",
+      vatAdded: "{rate}%: {amount}",
+      zeroRated: "Zero-rated (export)",
+      providerDown: "The payment page couldn’t be opened just now. Your order is saved: please try again in a moment.",
+    },
   },
 
   received: {

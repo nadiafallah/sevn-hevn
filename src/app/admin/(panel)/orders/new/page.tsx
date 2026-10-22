@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { select } from "@/lib/concierge/db";
 import { requireOwner } from "@/lib/admin/session";
 import { Flash, one, type SP } from "@/components/admin/Flash";
-import { createOrder } from "../../../actions";
+import { QuoteFields } from "@/components/admin/QuoteForm";
+import { createOrder } from "../../../order-actions";
 
 export const metadata = { title: "New order" };
 
@@ -13,38 +14,57 @@ export default async function NewOrder({ searchParams }: { searchParams: SP }) {
   const customerId = one(sp.customer) ?? "";
   const requestId = one(sp.request) ?? "";
   if (!/^[0-9a-f-]{36}$/.test(customerId)) notFound();
-  const [customers, requests] = await Promise.all([
-    select<{ id: string; name: string | null; email: string | null }[]>(api, "customers", { id: `eq.${customerId}`, select: "id,name,email" }, token),
+  const [customers, requests, settings] = await Promise.all([
+    select<{ id: string; name: string | null; email: string | null; country_code: string | null }[]>(api, "customers", { id: `eq.${customerId}`, select: "id,name,email,country_code" }, token),
     /^[0-9a-f-]{36}$/.test(requestId)
-      ? select<{ id: string; reference: string; summary: string; destination_label: string | null; details: Record<string, string> }[]>(api, "requests", { id: `eq.${requestId}`, select: "id,reference,summary,destination_label,details" }, token)
+      ? select<{ id: string; reference: string; type: string; summary: string; destination_country: string | null; destination_label: string | null; details: Record<string, unknown> }[]>(
+          api, "requests", { id: `eq.${requestId}`, select: "id,reference,type,summary,destination_country,destination_label,details" }, token)
       : Promise.resolve([]),
+    select<{ vat_rate_percent: string | null }[]>(api, "shop_settings", { select: "vat_rate_percent" }, token).catch(() => []),
   ]);
   const c = customers[0];
   if (!c) notFound();
   const r = requests[0];
+  const d = (r?.details ?? {}) as Record<string, unknown>;
+  // A website purchase request carries its verified lines; a sourcing request becomes one on-request line.
+  const fromBag = Array.isArray(d.lines)
+    ? (d.lines as { ref: string; sku?: string; brand?: string; name: string; options?: string; qty: number; unitAED: number }[]).map((l) => ({
+        description: l.name, brand: l.brand, product_ref: l.ref, sku: l.sku, options: l.options, quantity: l.qty, unit_amount: l.unitAED, availability: "in_stock",
+      }))
+    : null;
+  const lines = fromBag ?? (r ? [{
+    description: [d.model, d.colour, d.size].filter(Boolean).join(" ") || r.summary.slice(0, 120),
+    brand: typeof d.brand === "string" ? d.brand : null,
+    availability: r.type === "sourcing" ? "on_request" : "in_stock",
+  }] : []);
+  const delivery = (d.delivery ?? {}) as Record<string, string | null>;
   return (
     <>
       <p className="adm-crumbs"><Link href={r ? `/admin/requests/${r.id}` : `/admin/customers/${c.id}`}>← Back</Link></p>
       <Flash error={one(sp.error)} />
-      <h1 className="adm-h1">New order for {c.name || "customer"}</h1>
+      <h1 className="adm-h1">New quote for {c.name || "customer"}</h1>
       {r && <p className="adm-muted">From request {r.reference}: <span dir="auto">{r.summary.slice(0, 200)}</span></p>}
-      <section className="adm-card adm-narrow">
+      <section className="adm-card">
+        <p className="adm-muted adm-small">
+          This creates a draft quote. Nothing is sent or held until you press “Send the quote” on the order. The customer pays the full amount before sourcing starts.
+        </p>
         <form action={createOrder} className="adm-form">
           <input type="hidden" name="customer_id" value={c.id} />
           <input type="hidden" name="request_id" value={r?.id ?? ""} />
-          <label>
-            Items — one per line: <code>description | brand | quantity</code>
-            <textarea name="items" rows={4} required defaultValue={r ? [[r.details?.model, r.details?.colour, r.details?.size].filter(Boolean).join(" ") || r.summary.slice(0, 120), r.details?.brand ?? "", "1"].join(" | ") : ""} />
-          </label>
-          <div className="adm-row">
-            <label>Approved total<input name="total" required inputMode="decimal" pattern="[0-9,]+(\.[0-9]{1,2})?" /></label>
-            <label>Currency<input name="currency" defaultValue="AED" maxLength={3} pattern="[A-Za-z]{3}" required /></label>
-          </div>
-          <label>Ship to<input name="shipping_destination" defaultValue={r?.destination_label ?? ""} maxLength={160} /></label>
-          <label>Verification email (lets the customer check this order in the chat with a one-time code)<input name="contact_email" type="email" defaultValue={c.email ?? ""} maxLength={254} /></label>
-          <label>Note shown to the customer (optional)<input name="customer_note" maxLength={600} /></label>
-          <p className="adm-muted adm-small">The total is recorded as approved by you, with the time. Payment starts as “Unpaid” and delivery as “Not started”.</p>
-          <button type="submit" className="adm-btn adm-btn--dark">Create order</button>
+          <QuoteFields
+            lines={lines}
+            vatRate={settings[0]?.vat_rate_percent ?? null}
+            q={{
+              channel: r?.type === "purchase" ? "website" : "panel",
+              delivery_mode: delivery.mode === "collect" ? "collect" : "deliver",
+              shipping_country: delivery.country ?? r?.destination_country ?? c.country_code,
+              shipping_address: delivery.address ?? null,
+              shipping_destination: r?.destination_label ?? null,
+              contact_email: c.email,
+              duties_treatment: (delivery.country ?? r?.destination_country ?? c.country_code) === "AE" ? "not_applicable" : "unknown",
+            }}
+          />
+          <button type="submit" className="adm-btn adm-btn--dark">Create the draft quote</button>
         </form>
       </section>
     </>

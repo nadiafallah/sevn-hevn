@@ -1,6 +1,29 @@
 # Project status: SEVN HEVN
 
-Last updated: 17 October 2026
+Last updated: 22 October 2026
+
+## Order lifecycle (22 Oct 2026)
+
+Branch `feat/order-lifecycle`. Details, roles, open decisions, deploy and rollback: [docs/ORDERS.md](docs/ORDERS.md).
+
+Owner decisions (22 Oct 2026): stay on the existing Supabase + panel (not Shopify); no merchant account yet; international shipping; VAT-registered (rate and export treatment to be confirmed by the accountant); sourced pieces are paid in full before sourcing; change-of-mind returns accepted for in-stock pieces (window still open).
+
+| Part | State |
+| --- | --- |
+| One order record from quote to completion; order, payment, delivery and return status kept apart; history of every change with time, actor and reason | done |
+| Quotes (WhatsApp, phone, in person, sourcing): pieces in stock or on request, discount, shipping, VAT worked out from Settings, duties, delivery estimate kept apart from transit time, cancellation terms, expiry | done |
+| Stock holds: the last unit can't be sold twice; holds expire; a late payment is recorded and waits for the owner if the piece has gone | done |
+| Payments: paid only from a verified provider event (each event applied once; mismatches kept as discrepancies); bank transfers count only when the owner has seen the funds | done; **no provider connected** (no merchant account). A local test provider proves the flow end to end |
+| Website checkout with online payment: real totals (VAT, delivery, duties), approved terms accepted and recorded | done, **off** until a provider, VAT, a shipping zone and approved policies exist; until then checkout sends purchase requests as before |
+| Sourcing tasks with supplier deadlines; quality checks needing photos; packing; shipments with declared value, insurance, carrier cover; handover only on scan or signed handover; delivered only on proof | done (carriers entered by hand) |
+| Cancellation before dispatch, returns (owner decides, inspection before restock), refunds (owner, against the original payment, never more than is left, pending until confirmed) | done |
+| Customer order page `/order#t=…` (private link, token never in a URL), messages, cancellation and return requests; owner-approved policy pages `/terms/…` | done |
+| Panel work queues; Settings → Shop rules, shipping zones, policies | done |
+| Customer order e-mails | built, **off** until the owner approves the wording and SMTP is connected |
+| Database | migration `20261022120000_order_lifecycle.sql`, **not in production**. Owner's files on the Desktop: `SEVN-HEVN-shop-update.sql` (any time), then `SEVN-HEVN-orders-update.sql` (right before this branch goes live) |
+
+Tests (22 Oct 2026, on a copy outside iCloud): `npm run typecheck`, `npm run lint`, `npm run build`; `npm run test:unit` 72 of 72; `npm run db:test` 70 of 70 (16 new: checkout settings, payment events and duplicates, two buyers for the last unit, late and mismatched payments, quotes, sourcing, checks, shipments and proof, refunds, returns, cancellation, customer links, access, transitions, rollback, customer e-mails); `tests/e2e/run.sh` 33 of 33 (5 new: phone checkout with the test provider, signed webhook and retries, link without a token, the team's check/packing/handover/delivery in the panel, the customer's return request). Not run: a real provider's test mode (no account), real phones, HawkScan (no CLI or API key).
+
 
 ## Home hero film (17 Oct 2026)
 

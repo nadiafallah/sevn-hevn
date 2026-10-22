@@ -28,6 +28,13 @@ const KNOWN = [
   "rate_limited", "conflict", "conversation_not_found", "conversation_too_long", "photo_limit", "photo_missing",
   "not_authorized", "owner_only", "invalid_request", "not_found", "last_owner", "has_order", "not_retryable",
   "needs_photo", "available_incomplete", "brand_not_allowed", "out_of_scope",
+  // Orders (20261022120000_order_lifecycle.sql)
+  "invalid_transition", "reason_required", "already_dispatched", "not_delivered", "insufficient_stock", "not_for_sale",
+  "bag_changed", "destination_unsupported", "shipping_quote_needed", "vat_unconfirmed", "duties_unconfirmed", "policies_unapproved",
+  "invalid_amounts", "quote_incomplete", "quote_sent", "quote_expired", "quote_not_accepted", "order_closed", "unknown_version",
+  "unknown_piece", "country_in_another_zone", "version_exists", "not_editable", "checks_missing", "shipment_missing",
+  "shipment_incomplete", "photo_required", "coverage_unconfirmed", "evidence_required", "refund_exceeds_payment",
+  "refund_not_confirmed", "not_restockable", "task_exists",
 ];
 
 function codeOf(message: string | undefined, status: number) {

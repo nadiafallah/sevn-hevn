@@ -234,9 +234,10 @@ test("staff see every customer, request and order but cannot read team emails or
   const db = await setup();
   const { id: reqId } = await submit(db, await startConversation(db));
   const customer = (await db.query("select id from public.customers")).rows[0].id;
-  await asUser(db, OWNER, "select public.admin_create_order($1, $2, 'AED', 85000, $3, 'buyer@example.test', 'Dubai', null)", [
-    customer, reqId, JSON.stringify([{ description: "Birkin 25", brand: "Hermès" }]),
-  ]);
+  await asUser(db, OWNER, "select public.admin_create_order($1)", [{
+    customer_id: customer, request_id: reqId, contact_email: "buyer@example.test", shipping_destination: "Dubai",
+    items: [{ description: "Birkin 25", brand: "Hermès", unit_amount: 85000 }],
+  }]);
   for (const t of ["customers", "requests", "orders", "order_items", "notifications"]) {
     const n = (await asUser(db, STAFF, `select count(*)::int as n from public.${t}`)).rows[0].n;
     assert.ok(n > 0, t);
@@ -266,7 +267,7 @@ test("staff changes are limited server-side; the owner's are not", async () => {
     ["select public.admin_update_request($1, $2)", [reqId, { status: "converted" }]],
     ["select public.admin_update_request($1, $2)", [reqId, { needs_review: null }]],
     ["select public.admin_record_price($1, 'Birkin 25', 85000, 'AED', 'available', null, null)", [reqId]],
-    ["select public.admin_create_order($1, $2, 'AED', 1000, '[{\"description\":\"x\"}]', null, null, null)", [customer, reqId]],
+    ["select public.admin_create_order($1)", [{ customer_id: customer, request_id: reqId, items: [{ description: "x" }] }]],
     ["select public.admin_export('requests', false)", []],
     ["select public.admin_delete_request($1)", [reqId]],
     ["select public.admin_add_staff('new@example.test', 'New', 'owner')", []],
@@ -282,16 +283,17 @@ test("staff changes are limited server-side; the owner's are not", async () => {
   await rejects(asUser(db, STAFF, "delete from public.requests"), /permission denied/);
   await rejects(asUser(db, STAFF, "update public.orders set payment_status = 'paid'"), /permission denied/);
 
-  // Orders: staff may update delivery fields only.
-  const { id: orderId } = (await asUser(db, OWNER, "select public.admin_create_order($1, $2, 'AED', 85000, $3, null, null, null) as o", [
-    customer, reqId, JSON.stringify([{ description: "Birkin 25" }]),
+  // Orders: staff may update operational fields only. Payment status is never typed in, not even by the owner.
+  const { id: orderId } = (await asUser(db, OWNER, "select public.admin_create_order($1) as o", [
+    { customer_id: customer, request_id: reqId, items: [{ description: "Birkin 25", unit_amount: 85000 }] },
   ])).rows[0].o;
-  await asUser(db, STAFF, "select public.admin_update_order($1, $2)", [orderId, { fulfilment_status: "shipped", carrier: "Aramex", tracking_number: "AX123" }]);
-  await rejects(asUser(db, STAFF, "select public.admin_update_order($1, $2)", [orderId, { payment_status: "paid" }]), /owner_only/);
-  await rejects(asUser(db, STAFF, "select public.admin_update_order($1, $2)", [orderId, { total_amount: 1 }]), /owner_only/);
-  await asUser(db, OWNER, "select public.admin_update_order($1, $2)", [orderId, { payment_status: "paid" }]);
-  const o = (await db.query("select payment_status, fulfilment_status, tracking_number from public.orders where id = $1", [orderId])).rows[0];
-  assert.deepEqual(o, { payment_status: "paid", fulfilment_status: "shipped", tracking_number: "AX123" });
+  await asUser(db, STAFF, "select public.admin_update_order($1, $2, null)", [orderId, { delivery_estimate_note: "Sourcing 7–10 days", assigned_to: staffId }]);
+  await rejects(asUser(db, STAFF, "select public.admin_update_order($1, $2, null)", [orderId, { contact_email: "x@example.test" }]), /owner_only/);
+  await rejects(asUser(db, STAFF, "select public.admin_update_order($1, $2, null)", [orderId, { items: [{ description: "y", unit_amount: 1 }] }]), /owner_only/);
+  await rejects(asUser(db, OWNER, "select public.admin_update_order($1, $2, null)", [orderId, { payment_status: "paid" }]), /invalid_request/);
+  await rejects(asUser(db, OWNER, "select public.admin_update_order($1, $2, null)", [orderId, { total_amount: 1 }]), /invalid_request/);
+  const o = (await db.query("select payment_status, delivery_estimate_note, assigned_to from public.orders where id = $1", [orderId])).rows[0];
+  assert.deepEqual(o, { payment_status: "unpaid", delivery_estimate_note: "Sourcing 7–10 days", assigned_to: staffId });
   assert.equal((await db.query("select status from public.requests where id = $1", [reqId])).rows[0].status, "converted");
 });
 
@@ -328,9 +330,15 @@ test("order status is shown only to the verified owner of the order", async () =
   const db = await setup();
   const { id: reqId } = await submit(db, await startConversation(db));
   const customer = (await db.query("select id from public.customers")).rows[0].id;
-  const { reference } = (await asUser(db, OWNER, "select public.admin_create_order($1, $2, 'AED', 85000, $3, 'buyer@example.test', 'Dubai', 'Ready for delivery next week') as o", [
-    customer, reqId, JSON.stringify([{ description: "Birkin 25", brand: "Hermès" }]),
-  ])).rows[0].o;
+  const { id: orderId, reference } = (await asUser(db, OWNER, "select public.admin_create_order($1) as o", [{
+    customer_id: customer, request_id: reqId, contact_email: "buyer@example.test", shipping_destination: "Dubai",
+    customer_note: "Ready for delivery next week", delivery_mode: "collect", vat_treatment: "not_applicable",
+    items: [{ description: "Birkin 25", brand: "Hermès", unit_amount: 85000 }],
+  }])).rows[0].o;
+  // A draft quote is not shown to anyone; a sent one is.
+  const conv0 = await startConversation(db, { clientHash: "early" });
+  assert.equal((await as(db, "anon", "select public.concierge_order_challenge($1, $2, $3, $4, $5) as e", [KEY, conv0.id, conv0.tokenHash, reference, sha("1")])).rows[0].e, null);
+  await asUser(db, OWNER, "select public.admin_send_quote($1, 24)", [orderId]);
   await asUser(db, OWNER, "select public.admin_add_note($1, 'note', null, 'INTERNAL: supplier is X')", [reqId]);
 
   const conv = await startConversation(db, { clientHash: "tracker" });

@@ -6,6 +6,13 @@ export function formatAED(amount: number) {
   return aed.format(amount);
 }
 
+const aedFils = new Intl.NumberFormat("en-AE", { style: "currency", currency: "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/** Amounts that can have fils (VAT, totals, refunds): two decimals when there are any. */
+export function formatAEDExact(amount: number) {
+  return Number.isInteger(amount) ? aed.format(amount) : aedFils.format(amount);
+}
+
 const englishPriceWords = { preview: "Editorial preview", sold: "Sold", enquire: "Price on request", from: "From {price}" };
 export type PriceWords = typeof englishPriceWords;
 

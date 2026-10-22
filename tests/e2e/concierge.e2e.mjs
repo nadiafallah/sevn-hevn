@@ -386,13 +386,21 @@ describe("private panel", () => {
     assert.match(await page.locator("body").innerText(), /AED\s82,500/, "kept after reload");
     assert.equal(await page.locator("input[name=next_action]").inputValue(), "Confirm price with supplier");
 
+    // A quote for the sourcing request: on request, collected in Dubai, with its terms.
     await page.getByRole("link", { name: "Create an order" }).click();
-    await page.locator("input[name=total]").fill("82500");
+    assert.equal(await page.locator("select[name=item_availability_0]").inputValue(), "on_request");
+    await page.locator("input[name=item_unit_0]").fill("82,500");
+    await page.locator("select[name=delivery_mode]").selectOption("collect");
+    await page.locator("select[name=vat_treatment]").selectOption("not_applicable");
+    await page.locator("input[name=delivery_estimate_note]").fill("Sourcing 7–10 days");
+    await page.locator("textarea[name=cancellation_terms]").fill("Full refund if the supplier can't deliver.");
     await page.locator("input[name=contact_email]").fill("buyer@test.local");
-    await page.getByRole("button", { name: "Create order" }).click();
+    await page.getByRole("button", { name: "Create the draft quote" }).click();
     await page.getByText("Order created.").waitFor();
     state.orderRef = (await page.locator("h1").innerText()).match(/ORD-[A-Z0-9]{6}/)[0];
-    state.orderUrl = page.url();
+    state.orderUrl = page.url().split("?")[0];
+    await page.getByRole("button", { name: "Send the quote" }).click();
+    await page.getByText(/Quote sent\. Create a customer link/).waitFor();
     const [r] = await sql("select status from public.requests where reference = $1", [state.desktopRef]);
     assert.equal(r.status, "converted");
     const audit = await sql("select action, actor_label from public.audit_log where entity_id = $1 order by id", [state.desktopRequestId]);
@@ -478,14 +486,13 @@ describe("private panel", () => {
     });
     assert.equal(update.status, 403, "no direct table writes");
 
-    // Allowed: delivery details on the order, and a call result.
+    // Allowed: operational details on the order, and a call result. Not: prices, payments, cancelling.
     await page.goto(state.orderUrl);
-    await page.locator("select[name=fulfilment_status]").selectOption("shipped");
-    await page.locator("input[name=carrier]").fill("Aramex");
-    await page.locator("input[name=tracking_number]").fill("AX123456");
-    await page.getByRole("button", { name: "Save" }).click();
+    await page.locator("input[name=customer_note]").fill("Ready to collect next week");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
     await page.getByText("Saved.").waitFor();
-    assert.doesNotMatch(await page.locator("body").innerText(), /Owner only/);
+    const orderPage = await page.locator("body").innerText();
+    assert.doesNotMatch(orderPage, /Approve a refund|Cancel the order|Confirm the order|Save the quote/);
     await page.goto(`${BASE}/admin/requests/${state.desktopRequestId}`);
     await page.locator("select[name=outcome]").selectOption("no_answer");
     await page.getByRole("button", { name: "Log call" }).click();
@@ -504,12 +511,12 @@ describe("private panel", () => {
     const code = codeMail.raw.match(/is (\d{6})\./)[1];
     await answer(page, code === "000000" ? "111111" : "000000");
     assert.match(await lastAssistant(page), /attempts? left/);
-    assert.doesNotMatch(await page.locator(".cc__log").innerText(), /Aramex/);
+    assert.doesNotMatch(await page.locator(".cc__log").innerText(), /Ready to collect/);
     await answer(page, code);
     await page.getByText(/you’re verified/).waitFor();
     const log = await page.locator(".cc__log").innerText();
-    assert.match(log, /Shipped/);
-    assert.match(log, /Aramex AX123456/);
+    assert.match(log, /Waiting for your confirmation and payment/);
+    assert.match(log, /Ready to collect next week/);
     assert.doesNotMatch(log, /supplier|Confirm price/i, "no internal notes");
     assert.doesNotMatch(log, new RegExp(code), "the code is not echoed in the transcript");
     await context.close();
@@ -520,7 +527,7 @@ describe("private panel", () => {
     await api({ action: "reply", conversation: c, clientMsgId: "other-0002", input: { type: "text", value: state.orderRef } });
     const guess = await api({ action: "reply", conversation: c, clientMsgId: "other-0003", input: { type: "text", value: code } });
     const t = guess.data.messages.map((m) => m.body).join(" ");
-    assert.doesNotMatch(t, /Aramex|Shipped|82,500/);
+    assert.doesNotMatch(t, /Ready to collect|Waiting for your confirmation|82,500/);
   });
 
   it("an e-mail failure keeps the request, shows the error in the panel, and can be retried", async () => {
