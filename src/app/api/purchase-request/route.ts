@@ -1,17 +1,12 @@
 import { NextResponse } from "next/server";
-import { verifyBag, sameOrigin } from "@/lib/checkout";
+import { parseCheckoutDetails, verifyBag, sameOrigin } from "@/lib/checkout";
 import { clientHash, conciergeServer } from "@/lib/concierge/config";
 import { DbError, rpc } from "@/lib/concierge/db";
-import { isEmail, parsePhone } from "@/lib/concierge/phone";
 import { en } from "@/i18n/dictionaries/en";
 
 export const dynamic = "force-dynamic";
 
 const MAX_BODY_BYTES = 8_000;
-const COUNTRY = /^[A-Z]{2}$/;
-const IDEM = /^[A-Za-z0-9-]{16,64}$/;
-
-const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const fail = (status: number, code: string, extra: Record<string, unknown> = {}) => NextResponse.json({ code, ...extra }, { status });
 
 /**
@@ -38,37 +33,14 @@ export async function POST(request: Request) {
   }
   if (!body || typeof body !== "object") return fail(400, "invalid_request");
   // Honeypot: real visitors never see or fill this field.
-  if (str(body.website, 200)) return fail(400, "invalid_request");
+  if (typeof body.website === "string" && body.website.trim()) return fail(400, "invalid_request");
 
   const bag = await verifyBag(body.items);
   if (!bag.ok) return fail(bag.status, bag.status === 409 ? "bag_changed" : "invalid_request", bag.issues ? { issues: bag.issues } : {});
 
-  const c = (body.customer ?? {}) as Record<string, unknown>;
-  const d = (body.delivery ?? {}) as Record<string, unknown>;
-  const name = str(c.name, 80);
-  const email = str(c.email, 254).toLowerCase();
-  const method = c.method === "call" || c.method === "email" ? c.method : "whatsapp";
-  const phone = parsePhone(str(c.phone, 30));
-  const mode = d.mode === "collect" ? "collect" : "deliver";
-  const country = str(d.country, 2).toUpperCase();
-  const city = str(d.city, 80);
-  const address = str(d.address, 300);
-  const notes = str(d.notes, 600);
-  const idem = str(body.idempotencyKey, 64);
-
-  const errors: string[] = [];
-  if (!name) errors.push("name");
-  if (!phone.ok) errors.push("phone");
-  if (email && !isEmail(email)) errors.push("email");
-  if (method === "email" && !email) errors.push("emailNeeded");
-  if (mode === "deliver") {
-    if (!COUNTRY.test(country)) errors.push("country");
-    if (!city) errors.push("city");
-    if (!address) errors.push("address");
-  }
-  if (body.consent !== true) errors.push("consent");
-  if (!IDEM.test(idem)) errors.push("invalid_request");
-  if (errors.length) return fail(400, "invalid_details", { fields: errors });
+  const parsed = parseCheckoutDetails(body);
+  if (!parsed.ok) return fail(400, "invalid_details", { fields: parsed.fields });
+  const { name, email, method, phone, mode, country, city, address, notes, idem } = parsed;
 
   const verified = { lines: bag.lines, subtotalAED: bag.subtotalAED, subtotalLabel: bag.subtotalLabel };
   const db = conciergeServer();
@@ -87,7 +59,7 @@ export async function POST(request: Request) {
         idempotency_key: `checkout:${idem}`,
         locale: "en",
         contact_name: name,
-        contact_phone: phone.ok ? phone.phone.e164 : null,
+        contact_phone: phone,
         contact_email: email || null,
         contact_method: method,
         destination_country: mode === "deliver" ? country : "AE",

@@ -1,6 +1,7 @@
 import "server-only";
 import { findItem, getCatalog, isGenuine } from "@/lib/catalog";
 import { findVariant, formatAED, isPurchasable, maxQuantity, unitPrice, unitStock } from "@/lib/format";
+import { isEmail, parsePhone } from "@/lib/concierge/phone";
 import { variantText } from "@/lib/whatsapp";
 
 /** `message` is English for logs; the site shows its own wording for `code` in the visitor's language. */
@@ -84,4 +85,39 @@ export function sameOrigin(request: Request) {
   } catch {
     return false;
   }
+}
+
+const COUNTRY = /^[A-Z]{2}$/;
+const IDEM = /^[A-Za-z0-9-]{16,64}$/;
+const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+
+/** The customer, delivery and consent fields of a checkout submission, checked on the server. */
+export function parseCheckoutDetails(body: Record<string, unknown>) {
+  const c = (body.customer ?? {}) as Record<string, unknown>;
+  const d = (body.delivery ?? {}) as Record<string, unknown>;
+  const name = str(c.name, 80);
+  const email = str(c.email, 254).toLowerCase();
+  const method: "whatsapp" | "call" | "email" = c.method === "call" || c.method === "email" ? c.method : "whatsapp";
+  const phone = parsePhone(str(c.phone, 30));
+  const mode: "deliver" | "collect" = d.mode === "collect" ? "collect" : "deliver";
+  const country = str(d.country, 2).toUpperCase();
+  const city = str(d.city, 80);
+  const address = str(d.address, 300);
+  const notes = str(d.notes, 600);
+  const idem = str(body.idempotencyKey, 64);
+
+  const fields: string[] = [];
+  if (!name) fields.push("name");
+  if (!phone.ok) fields.push("phone");
+  if (email && !isEmail(email)) fields.push("email");
+  if (method === "email" && !email) fields.push("emailNeeded");
+  if (mode === "deliver") {
+    if (!COUNTRY.test(country)) fields.push("country");
+    if (!city) fields.push("city");
+    if (!address) fields.push("address");
+  }
+  if (body.consent !== true) fields.push("consent");
+  if (!IDEM.test(idem)) fields.push("invalid_request");
+  if (fields.length || !phone.ok) return { ok: false as const, fields };
+  return { ok: true as const, name, email, method, phone: phone.phone.e164, mode, country, city, address, notes, idem };
 }

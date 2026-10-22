@@ -147,7 +147,8 @@ const smtp = new SMTPServer({
     let raw = "";
     stream.on("data", (c) => (raw += c));
     stream.on("end", () => {
-      const subject = /^Subject: (.*)$/im.exec(raw)?.[1] ?? "";
+      // Long subjects are folded over several lines (RFC 5322); unfold them.
+      const subject = (/^Subject: (.*(?:\r?\n[ \t].*)*)/im.exec(raw)?.[1] ?? "").replace(/\r?\n[ \t]+/g, " ");
       mail.push({ to: s.envelope.rcptTo.map((r) => r.address), subject, raw });
       cb();
     });
@@ -363,6 +364,9 @@ const env = {
   CONCIERGE_AI_ENABLED: "true",
   ANTHROPIC_API_KEY: "local-test-not-a-real-key",
   ANTHROPIC_BASE_URL: `${GW}/__ai`,
+  // The local test payment provider (src/lib/payments): webhooks signed with this secret.
+  PAYMENTS_TEST_PROVIDER: "true",
+  PAYMENTS_TEST_SECRET: "local-payments-test-secret-0123456789abcdef",
 };
 writeFileSync(join(DIR, "env"), Object.entries(env).map(([k, v]) => `${k}='${v}'`).join("\n") + "\n");
 writeFileSync(join(DIR, "users.json"), JSON.stringify({ owner: OWNER, staff: STAFF }));

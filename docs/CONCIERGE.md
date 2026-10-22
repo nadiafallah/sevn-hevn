@@ -114,10 +114,10 @@ No one can sign up on their own. Only e-mail addresses the owner adds under **Te
 | See all requests, customers, conversations, photos and orders | ✓ | ✓ |
 | Add notes, log call results, assign, set next action and follow-up date | ✓ | ✓ |
 | Change request status (except “Converted to an order”) | ✓ | ✓ |
-| Update delivery status, carrier and tracking on orders | ✓ | ✓ |
+| Sourcing, quality checks, shipments and delivery updates on orders (see docs/ORDERS.md §6) | ✓ | ✓ |
 | Retry a failed notification | ✓ | ✓ |
 | Record approved price / availability | ✓ | – |
-| Create orders; change totals, currency, payment status and order status | ✓ | – |
+| Create and send quotes, confirm and cancel orders, record payments, refunds, return decisions (docs/ORDERS.md §6) | ✓ | – |
 | Edit customer details | ✓ | – |
 | Store knowledge (approve, edit, retire) | ✓ | – |
 | Team (add, change role, deactivate) | ✓ | – |
@@ -175,21 +175,7 @@ Each request page shows:
 
 ### 4.3 Orders
 
-The owner creates an order from a request or a customer record:
-
-- items (`description | brand | quantity`, one per line);
-- approved total and currency;
-- shipping destination;
-- an optional note the customer may see;
-- the **verification e-mail** (§6).
-
-The order then has:
-
-- a reference `ORD-XXXXXX`;
-- payment status, kept separate from delivery status;
-- carrier, tracking number and tracking link.
-
-All changes are logged. Online payment is not part of this version, and the chat never asks for card details.
+Orders, quotes, payments, sourcing, checks, shipments, returns and refunds are described in [ORDERS.md](ORDERS.md). In short: the owner turns a request into a draft quote (pieces, amounts, delivery, VAT, terms), sends it, and gives the customer a private link to their order page. Payment status comes from recorded payments only. The order's **e-mail** is also where the chat's order-check codes go (§6). The chat never asks for card details.
 
 ### 4.4 Customers
 

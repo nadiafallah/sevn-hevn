@@ -6,6 +6,8 @@
  * never promises prices, stock, delivery times or policies it has not been given.
  */
 
+import { fulfilmentText, orderStatusText, paymentText } from "@/lib/orders/customer";
+
 /** The chat's only language. Conversations and requests are stored with this code. */
 export type Locale = "en";
 export const isLocale = (v: unknown): v is Locale => v === "en";
@@ -189,12 +191,9 @@ const en = {
   },
   order: {
     title: (ref: string) => `Order ${ref}`,
-    status: { open: "Open", completed: "Completed", cancelled: "Cancelled" } as Record<string, string>,
-    payment: { unpaid: "Awaiting payment", partially_paid: "Partly paid", paid: "Paid", refunded: "Refunded" } as Record<string, string>,
-    fulfilment: {
-      not_started: "Being arranged", preparing: "Being prepared", ready: "Ready", shipped: "Shipped",
-      delivered: "Delivered", collected: "Collected", cancelled: "Cancelled",
-    } as Record<string, string>,
+    status: orderStatusText,
+    payment: paymentText,
+    fulfilment: fulfilmentText,
     statusLabel: "Status",
     paymentLabel: "Payment",
     deliveryLabel: "Delivery",

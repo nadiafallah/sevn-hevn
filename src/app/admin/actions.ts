@@ -247,64 +247,6 @@ export async function updateCustomer(form: FormData) {
   back(`/admin/customers/${cid}`, { ok: "saved" });
 }
 
-export async function createOrder(form: FormData) {
-  const ctx = await requireOwner();
-  const customer = id(form, "customer_id");
-  const request = str(form, "request_id", 40);
-  const total = Number(str(form, "total", 20).replace(/,/g, ""));
-  const items = str(form, "items", 4000)
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .slice(0, 30)
-    .map((line) => {
-      const [description, brand, qty] = line.split("|").map((p) => p.trim());
-      return { description: description.slice(0, 300), brand: brand?.slice(0, 80) || null, quantity: Number(qty) > 0 ? Math.min(50, Math.floor(Number(qty))) : 1 };
-    });
-  const email = str(form, "contact_email", 254);
-  const backTo = `/admin/orders/new?customer=${customer}${UUID.test(request) ? `&request=${request}` : ""}`;
-  if (!(total > 0) || !items.length || (email && !isEmail(email))) redirect(`${backTo}&error=invalid_request`);
-  let created: { id: string; reference: string } | null = null;
-  try {
-    created = await rpc<{ id: string; reference: string }>(ctx.api, "admin_create_order", {
-      p_customer: customer,
-      p_request: UUID.test(request) ? request : null,
-      p_currency: str(form, "currency", 3).toUpperCase() || "AED",
-      p_total: total,
-      p_items: items,
-      p_contact_email: email || null,
-      p_shipping_destination: str(form, "shipping_destination", 160) || null,
-      p_customer_note: str(form, "customer_note", 600) || null,
-    }, ctx.token);
-  } catch (e) {
-    redirect(`${backTo}&error=${codeOf(e)}`);
-  }
-  back(`/admin/orders/${created!.id}`, { ok: "order_created" });
-}
-
-export async function updateOrder(form: FormData) {
-  const ctx = await requireStaff();
-  const oid = id(form);
-  const changes: Record<string, unknown> = {};
-  for (const k of ["fulfilment_status", "carrier", "tracking_number", "tracking_url", "shipping_destination"]) {
-    if (form.has(k)) changes[k] = str(form, k, 500);
-  }
-  const url = changes.tracking_url as string | undefined;
-  if (url && !/^https:\/\/\S+$/.test(url)) back(`/admin/orders/${oid}`, { error: "invalid_request" });
-  if (ctx.isOwner) {
-    for (const k of ["status", "payment_status", "contact_email", "customer_note"]) if (form.has(k)) changes[k] = str(form, k, 600);
-    const total = str(form, "total_amount", 20).replace(/,/g, "");
-    if (total) changes.total_amount = Number(total);
-    if (form.has("currency") && str(form, "currency", 3)) changes.currency = str(form, "currency", 3).toUpperCase();
-  }
-  try {
-    await rpc(ctx.api, "admin_update_order", { p_id: oid, p_changes: changes }, ctx.token);
-  } catch (e) {
-    back(`/admin/orders/${oid}`, { error: codeOf(e) });
-  }
-  back(`/admin/orders/${oid}`, { ok: "saved" });
-}
-
 // ── Knowledge, team, settings ───────────────────────────────────────────────────────
 
 export async function saveKnowledge(form: FormData) {

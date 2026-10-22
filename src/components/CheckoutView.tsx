@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { getCountries } from "libphonenumber-js/min";
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useI18n } from "@/i18n/I18nProvider";
-import { formatAED } from "@/lib/format";
+import { formatAED, formatAEDExact } from "@/lib/format";
 import { productPath } from "@/lib/paths";
 import { purchaseMessage, whatsappUrl, type PurchaseLine } from "@/lib/whatsapp";
 import { track } from "@/lib/analytics";
@@ -19,9 +19,17 @@ type Verified = { lines: Line[]; subtotalAED: number; subtotalLabel: string };
 type Check = { kind: "checking" } | { kind: "ok"; verified: Verified } | { kind: "issues"; issues: { ref: string; sku?: string; code: string; max?: number }[] } | { kind: "error" };
 type Details = { name: string; email: string; phone: string; method: "whatsapp" | "call" | "email"; mode: "deliver" | "collect"; country: string; city: string; address: string; notes: string; consent: boolean };
 type Submit = { kind: "idle" } | { kind: "sending" } | { kind: "unavailable"; verified?: Verified } | { kind: "error"; message: string };
+type Quote = {
+  subtotal: number; shipping: number; vat: number; vat_rate: number | null; vat_treatment: string; prices_include_vat: boolean | null;
+  duties_treatment: string; duties_note: string | null; total: number; transit_days_min: number | null; transit_days_max: number | null;
+};
+/** Online payment is offered only when the server says this bag, to this destination, can be paid now. */
+type Online = { kind: "unknown" } | { kind: "off" } | { kind: "on"; quote: Quote; policies: { kind: string; version: string; title: string }[] };
+const policyPath: Record<string, string> = { terms_of_sale: "/terms/terms-of-sale", returns: "/terms/returns" };
 
 const DETAILS_KEY = "sevn-hevn-checkout-details";
 const IDEM_KEY = "sevn-hevn-checkout-key";
+const ORDER_TOKEN_KEY = "sevn-hevn-order-token";
 export const RECEIVED_KEY = "sevn-hevn-last-request";
 const FIRST = ["AE", "SA", "KW", "QA", "BH", "OM"];
 
@@ -60,6 +68,7 @@ export function CheckoutView() {
   const [details, setDetails] = useState<Details>(emptyDetails);
   const [errors, setErrors] = useState<Partial<Record<keyof Details | "emailNeeded", string>>>({});
   const [submit, setSubmit] = useState<Submit>({ kind: "idle" });
+  const [online, setOnline] = useState<Online>({ kind: "unknown" });
   const restored = useRef(false);
 
   const bagKey = JSON.stringify(cart.lines);
@@ -84,6 +93,22 @@ export function CheckoutView() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cart.ready, bagKey]);
+
+  // At the payment step: can this bag be paid online now, and what exactly does it cost?
+  useEffect(() => {
+    if (step !== 3 || check.kind !== "ok") return;
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOnline({ kind: "unknown" });
+    fetch("/api/checkout/quote", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ items: cart.lines, mode: details.mode, country: details.country }) })
+      .then((res) => res.json())
+      .then((data) => !cancelled && setOnline(data?.online && data.quote ? { kind: "on", quote: data.quote, policies: data.policies ?? [] } : { kind: "off" }))
+      .catch(() => !cancelled && setOnline({ kind: "off" }));
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, check.kind, bagKey, details.mode, details.country]);
 
   useEffect(() => {
     if (restored.current) return;
@@ -218,6 +243,71 @@ export function CheckoutView() {
         return;
       }
       if (res.status === 503) return setSubmit({ kind: "unavailable", verified: data.verified });
+      setSubmit({ kind: "error", message: res.status === 429 ? c.errors.rate : c.errors.generic });
+    } catch {
+      setSubmit({ kind: "error", message: c.errors.network });
+    }
+  }
+
+  /** Pays online: the order is created and held, then the provider's secure page opens. */
+  async function pay(e: FormEvent) {
+    e.preventDefault();
+    if (!details.consent) {
+      setErrors({ consent: c.errors.consent });
+      requestAnimationFrame(() => document.getElementById(id("consent"))?.focus());
+      return;
+    }
+    // One idempotency key and one order token per bag: a retry reopens the same order and payment.
+    const saved = readSession<{ bag: string; key: string; token?: string }>(IDEM_KEY);
+    let key: { bag: string; key: string; token: string };
+    if (saved?.bag === bagKey && saved.token) {
+      key = { ...saved, token: saved.token };
+    } else {
+      const bytes = crypto.getRandomValues(new Uint8Array(32));
+      const token = btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      key = { bag: bagKey, key: saved?.bag === bagKey ? saved.key : crypto.randomUUID(), token };
+      writeSession(IDEM_KEY, key);
+    }
+    setSubmit({ kind: "sending" });
+    try {
+      const res = await fetch("/api/checkout/pay", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          items: cart.lines,
+          customer: { name: details.name, email: details.email, phone: details.phone, method: details.method },
+          delivery: { mode: details.mode, country: details.country, city: details.city, address: details.address, notes: details.notes },
+          consent: true,
+          idempotencyKey: key.key,
+          orderToken: key.token,
+          website: (document.getElementById(id("website")) as HTMLInputElement | null)?.value ?? "",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      const target = typeof data.redirectUrl === "string" ? data.redirectUrl : typeof data.orderUrl === "string" ? data.orderUrl : null;
+      if (res.ok && target) {
+        try {
+          window.sessionStorage.setItem(ORDER_TOKEN_KEY, key.token);
+        } catch {}
+        cart.clear();
+        window.location.assign(target);
+        return;
+      }
+      if (res.status === 409 && data.code === "online_unavailable") {
+        setOnline({ kind: "off" });
+        setSubmit({ kind: "idle" });
+        return;
+      }
+      if (res.status === 409) {
+        setCheck({ kind: "issues", issues: data.issues ?? [] });
+        setStep(0);
+        setSubmit({ kind: "idle" });
+        return;
+      }
+      if (typeof data.orderUrl === "string") {
+        setSubmit({ kind: "error", message: c.online.providerDown });
+        return;
+      }
       setSubmit({ kind: "error", message: res.status === 429 ? c.errors.rate : c.errors.generic });
     } catch {
       setSubmit({ kind: "error", message: c.errors.network });
@@ -380,6 +470,41 @@ export function CheckoutView() {
 
           {/* 4 · Payment */}
           <Step n={3} active={step} title={c.steps.payment} uid={uid} editLabel={c.edit}>
+            {online.kind === "unknown" && <p className="muted" role="status">{c.checking}</p>}
+            {online.kind === "on" && (
+              <form noValidate onSubmit={pay}>
+                <div className="notice">
+                  <p>{c.online.notice}</p>
+                  {online.quote.transit_days_min !== null && online.quote.transit_days_max !== null && details.mode === "deliver" && (
+                    <p>{fmt(c.online.transit, { min: online.quote.transit_days_min, max: online.quote.transit_days_max })}</p>
+                  )}
+                  {online.quote.duties_treatment === "recipient_pays" && <p>{online.quote.duties_note ?? c.online.duties}</p>}
+                </div>
+                <div className="visually-hidden" aria-hidden="true">
+                  <label htmlFor={id("website")}>{t.websiteSend.honeypot}</label>
+                  <input id={id("website")} tabIndex={-1} autoComplete="off" />
+                </div>
+                <label className="consent">
+                  <input id={id("consent")} type="checkbox" checked={details.consent} onChange={(e) => set("consent", e.target.checked)} aria-invalid={!!errors.consent} aria-describedby={errors.consent ? id("consent-err") : undefined} />
+                  <span>
+                    {c.online.accept}{" "}
+                    {online.policies.map((p, i) => (
+                      <span key={p.kind}>
+                        {i > 0 && ` ${c.online.and} `}
+                        <Link href={href(policyPath[p.kind] ?? "/")} target="_blank">{p.title}</Link>
+                      </span>
+                    ))}
+                    .
+                  </span>
+                </label>
+                {errors.consent && <p id={id("consent-err")} className="field__error">{errors.consent}</p>}
+                {submit.kind === "error" && <p className="field__error" role="alert">{submit.message}</p>}
+                <button type="submit" className="btn btn--dark btn--block" disabled={submit.kind === "sending" || check.kind !== "ok"} aria-busy={submit.kind === "sending"}>
+                  {submit.kind === "sending" ? c.online.opening : fmt(c.online.pay, { amount: formatAEDExact(Number(online.quote.total)) })}
+                </button>
+              </form>
+            )}
+            {online.kind === "off" && (
             <form noValidate onSubmit={send}>
               <div className="notice">
                 <p>
@@ -424,30 +549,62 @@ export function CheckoutView() {
                 </>
               )}
             </form>
+            )}
           </Step>
         </div>
 
         <aside className="checkout__summary" aria-label={c.summary}>
           <h2 className="checkout__summary-title">{c.summary}</h2>
-          <dl className="totals">
-            <div>
-              <dt>{c.subtotal}</dt>
-              <dd dir="ltr">{verified ? verified.subtotalLabel : "—"}</dd>
-            </div>
-            <div>
-              <dt>{c.delivery}</dt>
-              <dd>{c.deliveryValue}</dd>
-            </div>
-            <div>
-              <dt>{c.vat}</dt>
-              <dd>{c.vatValue}</dd>
-            </div>
-            <div className="totals__due">
-              <dt>{c.dueNow}</dt>
-              <dd>{c.dueNowValue}</dd>
-            </div>
-          </dl>
-          <p className="muted small">{s.bag.note}</p>
+          {online.kind === "on" && step === 3 ? (
+            <dl className="totals">
+              <div>
+                <dt>{c.subtotal}</dt>
+                <dd dir="ltr">{formatAEDExact(Number(online.quote.subtotal))}</dd>
+              </div>
+              <div>
+                <dt>{c.delivery}</dt>
+                <dd dir="ltr">{formatAEDExact(Number(online.quote.shipping))}</dd>
+              </div>
+              <div>
+                <dt>{c.vat}</dt>
+                <dd>
+                  {online.quote.vat_treatment === "zero_rated"
+                    ? c.online.zeroRated
+                    : fmt(online.quote.prices_include_vat ? c.online.vatIncluded : c.online.vatAdded, { rate: online.quote.vat_rate ?? 0, amount: formatAEDExact(Number(online.quote.vat)) })}
+                </dd>
+              </div>
+              {online.quote.duties_treatment === "recipient_pays" && (
+                <div>
+                  <dt>{c.online.dutiesLabel}</dt>
+                  <dd>{c.online.dutiesShort}</dd>
+                </div>
+              )}
+              <div className="totals__due">
+                <dt>{c.online.total}</dt>
+                <dd dir="ltr">{formatAEDExact(Number(online.quote.total))}</dd>
+              </div>
+            </dl>
+          ) : (
+            <dl className="totals">
+              <div>
+                <dt>{c.subtotal}</dt>
+                <dd dir="ltr">{verified ? verified.subtotalLabel : "—"}</dd>
+              </div>
+              <div>
+                <dt>{c.delivery}</dt>
+                <dd>{c.deliveryValue}</dd>
+              </div>
+              <div>
+                <dt>{c.vat}</dt>
+                <dd>{c.vatValue}</dd>
+              </div>
+              <div className="totals__due">
+                <dt>{c.dueNow}</dt>
+                <dd>{c.dueNowValue}</dd>
+              </div>
+            </dl>
+          )}
+          {!(online.kind === "on" && step === 3) && <p className="muted small">{s.bag.note}</p>}
         </aside>
       </div>
     </div>

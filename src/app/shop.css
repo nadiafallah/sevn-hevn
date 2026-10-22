@@ -1693,3 +1693,65 @@ a.shop-nav__trigger {
     transform: none;
   }
 }
+
+/* ── Customer order page (/order) and policy pages (/terms/…) ───────────────────── */
+
+.order-page__status {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 28px;
+}
+
+.order-page__status > div {
+  padding: 14px 16px;
+  border: 1px solid var(--rule);
+}
+
+.order-page__status dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.order-page__status dd {
+  margin: 4px 0 0;
+}
+
+.order-page__timeline,
+.order-page__messages {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.order-page__messages li {
+  display: grid;
+  gap: 4px;
+  padding: 10px 14px;
+  border-inline-start: 2px solid var(--rule);
+}
+
+.order-page__messages li[data-from="us"] {
+  border-inline-start-color: var(--champagne);
+}
+
+.order-page .notice + .notice,
+.order-page .checkout-step__body > p + p {
+  margin-top: 8px;
+}
+
+.terms {
+  max-width: 760px;
+  padding-block: clamp(36px, 5vw, 64px) clamp(64px, 8vw, 112px);
+  display: grid;
+  gap: 14px;
+}
+
+@media (max-width: 599px) {
+  .order-page__status {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
