@@ -700,3 +700,76 @@ details.adm-card {
   width: 100%;
   min-width: 0;
 }
+
+/* ── Compliance (/admin/compliance) ── */
+.adm-section {
+  margin-bottom: 28px;
+}
+
+.adm-section > details.adm-card {
+  margin-bottom: 8px;
+}
+
+.adm-section > details.adm-card summary {
+  line-height: 1.6;
+}
+
+.adm-pre {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  background: var(--ivory);
+  border: 1px solid var(--rule);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Persian text: right to left, with a system font that has the glyphs. */
+.adm-fa {
+  direction: rtl;
+  text-align: right;
+  font-family: Tahoma, "Segoe UI", "Noto Sans Arabic", system-ui, sans-serif;
+  line-height: 1.8;
+}
+
+.adm-quote.adm-fa {
+  border-left: 0;
+  border-right: 2px solid var(--champagne);
+}
+
+p.adm-pre.adm-fa {
+  font-family: Tahoma, "Segoe UI", "Noto Sans Arabic", system-ui, sans-serif;
+  font-size: 13px;
+}
+
+.adm-stat__n--text {
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.adm-badge--c-confirmed {
+  border-color: #5d7a5a;
+  color: #3f5c3c;
+}
+
+.adm-badge--c-disputed,
+.adm-badge--c-needs_lawyer {
+  border-color: #8a4b1b;
+  color: #8a4b1b;
+}
+
+.adm-badge--c-unverified,
+.adm-badge--s-medium {
+  border-color: #8a6d1b;
+  color: #6f5714;
+}
+
+.adm-badge--s-high {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.adm-badge--s-low {
+  color: var(--muted);
+}

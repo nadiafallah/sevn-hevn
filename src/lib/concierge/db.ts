@@ -27,7 +27,7 @@ export interface Api {
 const KNOWN = [
   "rate_limited", "conflict", "conversation_not_found", "conversation_too_long", "photo_limit", "photo_missing",
   "not_authorized", "owner_only", "invalid_request", "not_found", "last_owner", "has_order", "not_retryable",
-  "needs_photo", "available_incomplete", "brand_not_allowed", "out_of_scope",
+  "needs_photo", "available_incomplete", "brand_not_allowed", "out_of_scope", "already_decided",
 ];
 
 function codeOf(message: string | undefined, status: number) {
