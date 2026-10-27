@@ -590,6 +590,22 @@ export async function deleteJournalPost(form: FormData) {
   back("/admin/journal", { ok: "journal_deleted" });
 }
 
+// ── Compliance (UAE rules ledger, kept current by the weekly monitor) ──────────────────
+
+export async function decideComplianceChange(form: FormData) {
+  const ctx = await requireOwner();
+  const cid = id(form);
+  const decision = str(form, "decision", 10);
+  if (decision !== "approved" && decision !== "rejected") back("/admin/compliance", { error: "invalid_request" });
+  let result = "";
+  try {
+    result = await rpc<string>(ctx.api, "admin_compliance_decide", { p_id: cid, p_decision: decision, p_note: str(form, "note", 300) || null }, ctx.token);
+  } catch (e) {
+    back("/admin/compliance", { error: codeOf(e) });
+  }
+  back("/admin/compliance", { ok: `compliance_${result || decision}` });
+}
+
 export async function deleteJournalLesson(form: FormData) {
   const ctx = await requireOwner();
   const lid = id(form);

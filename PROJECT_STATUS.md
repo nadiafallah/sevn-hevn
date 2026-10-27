@@ -1,6 +1,20 @@
 # Project status: SEVN HEVN
 
-Last updated: 17 October 2026
+Last updated: 27 October 2026
+
+## Compliance ledger (27 Oct 2026)
+
+Branch `feat/compliance-ledger`. A ledger of the UAE rules for selling online, with a weekly monitor and owner approval. Details: [docs/COMPLIANCE.md](docs/COMPLIANCE.md).
+
+| Part | State |
+| --- | --- |
+| Database: rules, official sources, monitor runs, changes; owner-only decision function | done; migration `20261027191858_compliance.sql` **applied in production** 27 Oct 2026 |
+| Starting data: 22 rules, 12 official sources | loaded in production. 15 confirmed by several sources, 2 disputed (change-of-mind returns, personal data law), 2 for a lawyer (free-zone selling, insurance), 3 single-source. 2 checked against the official text so far |
+| Weekly monitor ("Seven Heaven compliance monitor", Mondays 08:31 Dubai) | scheduled in Claude; first run 2 Nov 2026. Emails the owner a Persian report; approvals by reply or in the panel |
+| Panel → Compliance (`/admin/compliance`, owner only) | done: pending changes with Approve / Reject, rules, sources, runs, decisions |
+| Website reading the rules (checkout, returns policy, invoices) | **not yet**. Policies in `src/content/policies.ts` are unchanged |
+
+Tests: `supabase/tests/compliance.test.mjs` (access rules, owner-only decisions, amendment, rejection, new rule, repeal, verification). Run in CI; the session that built this had no npm registry access, so local checks were not run.
 
 ## Home hero film (17 Oct 2026)
 

@@ -41,6 +41,7 @@ npm start                    # serves the build on http://localhost:3000
 | Logo | `src/components/Wordmark.tsx` |
 | Concierge chat (wording, flow, server) | `src/lib/concierge/` (`i18n.ts` wording, `engine.ts` conversation), `src/components/concierge/` |
 | Private panel | `src/app/admin/`, `src/lib/admin/` |
+| UAE rules the shop follows (returns, VAT, e-invoicing, AML, data), kept current by a weekly monitor | Panel → Compliance; [docs/COMPLIANCE.md](docs/COMPLIANCE.md) |
 | Image sources | [ASSETS.md](ASSETS.md) |
 
 ## Changing contact details

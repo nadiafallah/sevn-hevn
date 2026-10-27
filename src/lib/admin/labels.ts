@@ -82,6 +82,54 @@ export const availabilityLabels: Record<string, string> = {
 
 export const knowledgeTopics = ["shipping", "returns", "authenticity", "warranty", "payment", "viewing", "general"];
 
+/** Compliance ledger (UAE rules the website follows; see docs/COMPLIANCE.md). */
+export const complianceAreaLabels: Record<string, string> = {
+  licensing: "Licensing",
+  disclosure: "Information shown to buyers",
+  returns: "Returns and refunds",
+  pricing: "Pricing and discounts",
+  vat: "VAT",
+  e_invoicing: "E-invoicing",
+  insurance: "Insurance",
+  aml: "Anti-money-laundering",
+  privacy: "Personal data",
+  security: "Security",
+  enforcement: "Enforcement and penalties",
+};
+
+export const certaintyLabels: Record<string, string> = {
+  confirmed: "Confirmed",
+  disputed: "Sources disagree",
+  needs_lawyer: "Ask a lawyer",
+  unverified: "Not yet verified",
+};
+
+export const appliesToLabels: Record<string, string> = {
+  all: "All sales",
+  pre_owned: "Pre-owned pieces",
+  new_goods: "New pieces",
+  precious_metals_stones: "Precious metals and stones",
+  b2b: "Sales to companies",
+  free_zone: "Free-zone licence",
+};
+
+export const changeTypeLabels: Record<string, string> = {
+  new_rule: "New rule",
+  amended: "Change",
+  repealed: "Repealed",
+  verified: "Checked against the official text",
+  deadline: "Deadline",
+};
+
+export const severityLabels: Record<string, string> = { high: "Important", medium: "Medium", low: "Minor" };
+
+export const changeStatusLabels: Record<string, string> = {
+  pending_review: "Waiting for you",
+  approved: "Approved",
+  applied: "Approved and applied",
+  rejected: "Rejected",
+};
+
 export const errorMessages: Record<string, string> = {
   owner_only: "Only the owner can do that.",
   not_authorized: "You don’t have access to that.",
@@ -97,6 +145,7 @@ export const errorMessages: Record<string, string> = {
   out_of_scope: "This piece can’t be published: only Bags, Shoes, Watches and Jewellery from the shop’s houses can be on the website.",
   duplicate: "That already exists.",
   journal_meta: "Add the meta title, meta description and summary before publishing (Edit → Save).",
+  already_decided: "That change was already decided (perhaps by your reply to the weekly email).",
   rate_limited: "Too many attempts. Please wait a few minutes and try again.",
   unreachable: "The database couldn’t be reached. Please try again.",
   db_error: "Something went wrong. Please try again.",
