@@ -11,7 +11,7 @@
  * and the answer comes back in English.
  */
 import { extract, hasEnoughDetail, detectIntent, findItemRef, normaliseOrderRef, matchChoice, YES, NO, type CategoryKey, type Extracted, type Intent, type Topic } from "./detect";
-import { brandsFor, coreBrands } from "@/data/brands";
+import { brands, brandsFor } from "@/data/brands";
 import { countryName, matchCountry } from "./countries";
 import { isEmail, parsePhone, type Phone } from "./phone";
 import { t, type ContactMethod, type Locale, type RequestType } from "./i18n";
@@ -214,7 +214,7 @@ function ask(s: State): { text?: string; prompt: Prompt } {
       return { text: L.a.category, prompt: prompt("choices", { choices: CATEGORIES.map((c) => choice(c, L.categories[c])) }) };
     case "src_brand": {
       // The shop's houses for this category as quick choices (data/brands.ts); typing stays possible.
-      const houses = d.category && d.category !== "other" ? brandsFor(d.category) : coreBrands;
+      const houses = d.category && d.category !== "other" ? brandsFor(d.category) : brands;
       return { text: L.a.brand, prompt: prompt("text", { choices: [...houses.map((b) => choice(b.name, b.name)), choice("skip", L.a.notSure)], maxLength: LIMIT.name }) };
     }
     case "src_details":

@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState, type FormEvent } from "react";
 import { categories, isCategoryId } from "@/data/taxonomy";
-import { brandAllowedIn, brandsFor, coreBrands, findBrand } from "@/data/brands";
+import { brandAllowedIn, brands, brandsFor, findBrand } from "@/data/brands";
 import { useI18n } from "@/i18n/I18nProvider";
 import { sourcingMessage } from "@/lib/whatsapp";
 import { track } from "@/lib/analytics";
@@ -39,7 +39,7 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
   const set = (k: keyof Values) => (e: { target: { value: string } }) =>
     setValues((v) => {
       const next = { ...v, [k]: e.target.value };
-      // Cartier, Van Cleef & Arpels and Bvlgari are offered for jewellery only.
+      // Miu Miu and Loro Piana are offered for bags and shoes only.
       if (k === "category" && next.brand && isCategoryId(next.category) && !brandAllowedIn(next.category, next.brand)) next.brand = "";
       return next;
     });
@@ -166,7 +166,7 @@ export function SourcingForm({ prefill, tone = "light" }: { prefill?: SourcingPr
             aria-describedby={errors.describe ? id("describe-err") : undefined}
           >
             <option value="">{f.anyHouse}</option>
-            {(isCategoryId(values.category) ? brandsFor(values.category) : coreBrands).map((b) => (
+            {(isCategoryId(values.category) ? brandsFor(values.category) : brands).map((b) => (
               <option key={b.id} value={b.name} lang="en">
                 {b.name}
               </option>

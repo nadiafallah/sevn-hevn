@@ -1,5 +1,6 @@
-// The shop rules (20261013120000_shop_four_categories.sql): four categories, permitted houses,
-// versions of a piece, and purchase requests from the checkout.
+// The shop rules (20261013120000_shop_four_categories.sql): four categories, permitted houses
+// (as changed by 20261028120000_shop_houses.sql), versions of a piece, and purchase requests from
+// the checkout.
 // Run with: npm run db:test   (in-process Postgres; never touches a remote database)
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -30,21 +31,25 @@ test("houses: spellings are normalised, and only permitted houses are accepted p
   const db = await setup();
   const kelly = await save(db, null, { name: "Kelly Dépêches 25", category: "bags", brand: "HERMES" });
   assert.equal((await product(db, kelly)).brand, "Hermès");
-  const ring = await save(db, null, { name: "Love ring", category: "jewellery", brand: "cartier" });
-  assert.equal((await product(db, ring)).brand, "Cartier");
-  const serpenti = await save(db, null, { name: "Serpenti", category: "jewellery", brand: "Bulgari" });
-  assert.equal((await product(db, serpenti)).brand, "Bvlgari");
-  assert.equal((await product(db, await save(db, null, { name: "Alhambra", category: "jewellery", brand: "Van Cleef and Arpels" }))).brand, "Van Cleef & Arpels");
+  const slides = await save(db, null, { name: "Matelassé slides", category: "shoes", brand: "miu-miu" });
+  assert.equal((await product(db, slides)).brand, "Miu Miu");
+  const pocket = await save(db, null, { name: "Extra Pocket L19", category: "bags", brand: "LORO PIANA" });
+  assert.equal((await product(db, pocket)).brand, "Loro Piana");
+  assert.equal((await product(db, await save(db, null, { name: "Coco Crush ring", category: "jewellery", brand: "chanel" }))).brand, "Chanel");
 
-  // A house outside the list, or a jewellery-only house anywhere but Jewellery, is refused.
-  await rejects(save(db, null, { name: "Extra Pocket L19", category: "bags", brand: "Loro Piana" }), /brand_not_allowed/);
-  await rejects(save(db, null, { name: "Santos", category: "watches", brand: "Cartier" }), /brand_not_allowed/);
-  await rejects(save(db, null, { name: "Octo", category: "watches", brand: "Bvlgari" }), /brand_not_allowed/);
+  // A house the shop doesn't hold, or a bags-and-shoes house anywhere else, is refused.
+  for (const brand of ["Louis Vuitton", "Gucci", "Cartier", "Van Cleef & Arpels", "Bvlgari"]) {
+    await rejects(save(db, null, { name: "x", category: "jewellery", brand }), /brand_not_allowed/, brand);
+  }
+  await rejects(save(db, null, { name: "Bracelet", category: "jewellery", brand: "Miu Miu" }), /brand_not_allowed/);
+  await rejects(save(db, null, { name: "Watch", category: "watches", brand: "Loro Piana" }), /brand_not_allowed/);
   await rejects(save(db, null, { name: "No house", category: "shoes" }), /brand_not_allowed/);
-  // Moving a jewellery-only piece into another category is refused too.
-  await rejects(save(db, ring, { category: "watches" }), /brand_not_allowed/);
+  // Moving a bags-and-shoes piece into another category is refused too.
+  await rejects(save(db, slides, { category: "watches" }), /brand_not_allowed/);
   // Types must belong to the category; familiar names become their id.
-  await rejects(save(db, null, { name: "x", category: "bags", brand: "Gucci", subcategory: "Rings" }), /invalid_request/);
+  await rejects(save(db, null, { name: "x", category: "bags", brand: "Chanel", subcategory: "Rings" }), /invalid_request/);
+  const case_ = await save(db, null, { name: "Bride-à-Brac", category: "bags", brand: "Hermès", subcategory: "Toiletry case" });
+  assert.equal((await product(db, case_)).subcategory, "pouches");
   const oz = await save(db, null, { name: "Oz mules", category: "shoes", brand: "Hermès", subcategory: "Mules", size: "40.5", size_system: "EU" });
   const row = await product(db, oz);
   assert.equal(row.subcategory, "loafers");
@@ -58,7 +63,7 @@ test("houses: spellings are normalised, and only permitted houses are accepted p
 test("imports and dashboard edits can't publish outside the shop; drafts can be kept and hidden", async () => {
   const db = await setup();
   // As the server / dashboard would write (bypassing the panel functions).
-  await as(db, "service_role", `insert into public.products (ref, name, category, brand) values ('IM-1', 'Imported', 'bags', 'Loro Piana')`);
+  await as(db, "service_role", `insert into public.products (ref, name, category, brand) values ('IM-1', 'Imported', 'bags', 'Gucci')`);
   await rejects(as(db, "service_role", `update public.products set published = true where ref = 'IM-1'`), /out_of_scope/);
   await rejects(as(db, "service_role", `insert into public.products (ref, published, name, category, brand) values ('IM-2', true, 'Belt', 'accessories', 'Hermès')`), /out_of_scope/);
   await rejects(as(db, "service_role", `insert into public.products (ref, published, name, category, brand) values ('IM-3', true, 'Santos', 'watches', 'Cartier')`), /out_of_scope/);
@@ -98,11 +103,26 @@ test("running the migration hides out-of-scope rows without deleting anything, a
   assert.deepEqual(orders.map((o) => [o.reference, Number(o.total_amount)]), [["ORD-KEEP1", 52000]]);
 });
 
+test("the houses update unpublishes pieces of houses the shop no longer holds, deleting nothing", async () => {
+  const db = await freshDb({ before: "20261028120000" });
+  await as(db, "service_role", `
+    insert into public.products (ref, published, name, category, brand) values
+      ('H-1', true, 'Speedy', 'bags', 'Louis Vuitton'),
+      ('H-2', true, 'Love bracelet', 'jewellery', 'Cartier'),
+      ('H-3', true, 'Kelly 28', 'bags', 'Hermès'),
+      ('H-4', true, 'Classic Flap', 'bags', 'Chanel')`);
+  await applyMigration(db, "20261028120000");
+  const rows = Object.fromEntries((await db.query("select ref, published from public.products")).rows.map((r) => [r.ref, r.published]));
+  assert.deepEqual(rows, { "H-1": false, "H-2": false, "H-3": true, "H-4": true });
+  await as(db, "service_role", `insert into public.products (ref, published, name, category, brand) values ('H-5', true, 'Slides', 'shoes', 'Miu Miu')`);
+  await rejects(as(db, "service_role", `update public.products set published = true where ref = 'H-1'`), /out_of_scope/);
+});
+
 test("versions: public only with a published piece, own codes, own photos, owner-only changes", async () => {
   const db = await setup();
   const ref = await save(db, null, { name: "Oran sandals", category: "shoes", brand: "Hermès" });
   const photoA = await addPhoto(db, ref);
-  const other = await save(db, null, { name: "Other", category: "shoes", brand: "Gucci" });
+  const other = await save(db, null, { name: "Other", category: "shoes", brand: "Chanel" });
   const foreign = await addPhoto(db, other);
   const add = (fields, user = OWNER) => asUser(db, user, "select public.admin_save_variant($1, null, $2) as id", [ref, fields]).then((r) => r.rows[0].id);
   const v1 = await add({ sku: "SH-OR-38", size: "38", colour: "Gold", price_aed: "3900", stock: "1", image_id: String(photoA) });

@@ -24,7 +24,7 @@ before(async () => {
   await sqlAll(`
     insert into public.products (ref, published, status, name, category, subcategory, brand, colour, listed_at) values
       ('SH-0101', true, 'enquiry_only', 'Classic Flap', 'bags', 'shoulder', 'Chanel', 'Black', '2026-10-09'),
-      ('SH-0103', true, 'sold', 'Love bracelet', 'jewellery', 'bracelets', 'Cartier', null, '2026-10-01');
+      ('SH-0103', true, 'sold', 'Coco Crush bracelet', 'jewellery', 'bracelets', 'Chanel', null, '2026-10-01');
     insert into public.products (ref, published, status, name, category, subcategory, brand, price_aed, stock, delivery, material, listed_at) values
       ('SH-0102', true, 'available', 'Oran sandals', 'shoes', 'sandals', 'hermes', 3900, 2, 'Delivery in Dubai arranged personally', 'Calfskin', '2026-10-08');
     update public.products set material = '18k yellow gold' where ref = 'SH-0103';
@@ -184,6 +184,7 @@ describe("shop", () => {
     await page.getByRole("button", { name: "Send purchase request" }).click();
     await page.getByText(/Please confirm we may contact you/).waitFor();
     await page.getByLabel(/may contact me/).check();
+    await page.getByLabel(/I have read the returns notice/).check();
     await page.getByRole("button", { name: "Send purchase request" }).click();
     await page.waitForURL(/\/checkout\/received\?ref=REQ-/);
     const ref = new URL(page.url()).searchParams.get("ref");
@@ -206,7 +207,7 @@ describe("shop", () => {
         fetch("/api/purchase-request", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ items: [{ ref: "SH-0102", sku: "SH-0102-38", qty: 1 }], customer: { name: "Twice", phone: "+447700900457", method: "whatsapp" }, delivery: { mode: "collect" }, consent: true, locale: "en", idempotencyKey: "e2e-twice-0000000001" }),
+          body: JSON.stringify({ items: [{ ref: "SH-0102", sku: "SH-0102-38", qty: 1 }], customer: { name: "Twice", phone: "+447700900457", method: "whatsapp" }, delivery: { mode: "collect" }, consent: true, termsAccepted: true, locale: "en", idempotencyKey: "e2e-twice-0000000001" }),
         }).then((r) => r.json());
       return [await send(), await send()];
     });
@@ -229,6 +230,7 @@ describe("shop", () => {
     await page.getByLabel(/Collect in Dubai/).check();
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByLabel(/may contact me/).check();
+    await page.getByLabel(/I have read the returns notice/).check();
     await page.getByRole("button", { name: "Send purchase request" }).click();
     await page.getByText("Sending from the website isn’t available right now.").waitFor();
     const wa = await page.getByRole("link", { name: "Continue on WhatsApp" }).getAttribute("href");
@@ -286,9 +288,9 @@ describe("shop", () => {
       const target = new URL(r.headers.get("location"), BASE);
       assert.equal(`${target.pathname}${target.search}`, to, from);
     }
-    for (const path of ["/watches/cartier", "/bags/loro-piana", "/accessories", "/product/NOPE-1"]) assert.equal((await fetch(`${BASE}${path}`)).status, 404, path);
+    for (const path of ["/jewellery/cartier", "/bags/gucci", "/watches/loro-piana", "/accessories", "/product/NOPE-1"]) assert.equal((await fetch(`${BASE}${path}`)).status, 404, path);
     const sitemap = await (await fetch(`${BASE}/sitemap.xml`)).text();
-    for (const path of ["/bags", "/bags/hermes", "/shoes/hermes", "/product/SH-0102", "/jewellery/cartier"]) assert.ok(sitemap.includes(`${path}<`), path);
+    for (const path of ["/bags", "/bags/hermes", "/shoes/hermes", "/product/SH-0102", "/jewellery/chanel"]) assert.ok(sitemap.includes(`${path}<`), path);
     assert.ok(!sitemap.includes("/watches<"), "an empty category is not in the sitemap");
     const watches = await (await fetch(`${BASE}/watches`)).text();
     assert.match(watches, /<meta name="robots" content="noindex, follow"/);

@@ -122,7 +122,7 @@ test("the strategist sees the top 3 ideas sorted by code, and a choice outside t
 
 test("too few valid ideas: the run fails, nothing is saved, the critic still reviews it", async () => {
   const { ideas } = demoIdeas();
-  const invalid = ideas.map((i) => ({ ...i, category: "watches" as const, houses: ["cartier" as const] }));
+  const invalid = ideas.map((i) => ({ ...i, category: "watches" as const, houses: ["miu-miu" as const] }));
   const valid = ideas.slice(0, 2).map((i, k) => ({ ...i, id: `I${7 + k}` }));
   const { summary, data, calls } = await run({ ideator: [{ ideas: [...invalid.slice(0, 4), ...valid] }] });
   assert.equal(summary.status, "failed");

@@ -37,6 +37,8 @@ export const categories: Category[] = [
       { id: "handbags", label: "Handbags", aliases: ["handbag", "top handle", "top-handle", "tote", "totes"] },
       { id: "shoulder", label: "Shoulder & crossbody", aliases: ["shoulder bags", "shoulder bag", "crossbody", "crossbody bags", "cross-body"] },
       { id: "clutches", label: "Clutches", aliases: ["clutch", "evening bags"] },
+      // Canvas and leather cases carried by hand, e.g. Hermès Bride-à-Brac.
+      { id: "pouches", label: "Pouches & cases", aliases: ["pouch", "case", "cases", "toiletry case", "toiletry cases"] },
     ],
   },
   {

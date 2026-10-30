@@ -14,6 +14,7 @@ export const shopEn = {
     handbags: "Handbags",
     shoulder: "Shoulder & crossbody",
     clutches: "Clutches",
+    pouches: "Pouches & cases",
     sandals: "Sandals",
     sneakers: "Sneakers",
     loafers: "Loafers & mules",
@@ -84,10 +85,10 @@ export const shopEn = {
     request: "Request a piece",
     clearFilters: "Clear filters",
     categoryIntro: {
-      bags: "Hermès, Louis Vuitton, Gucci and Chanel.",
-      shoes: "Hermès, Louis Vuitton, Gucci and Chanel.",
-      watches: "Hermès, Louis Vuitton, Gucci and Chanel.",
-      jewellery: "Hermès, Louis Vuitton, Gucci and Chanel — and Cartier, Van Cleef & Arpels and Bvlgari.",
+      bags: "Hermès, Chanel, Miu Miu and Loro Piana.",
+      shoes: "Hermès, Chanel, Miu Miu and Loro Piana.",
+      watches: "Hermès and Chanel.",
+      jewellery: "Hermès and Chanel.",
     },
   },
 

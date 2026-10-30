@@ -14,24 +14,24 @@ const piece = (over: Partial<Item>): Item => ({ ref: "SH-0001", status: "enquiry
 test("houses: one spelling per house, and the permitted list per category", () => {
   assert.equal(findBrand("HERMES")?.name, "Hermès");
   assert.equal(findBrand("hermès paris")?.name, "Hermès");
-  assert.equal(findBrand("Bulgari")?.name, "Bvlgari");
-  assert.equal(findBrand("Van Cleef and Arpels")?.name, "Van Cleef & Arpels");
-  assert.equal(findBrand("LV")?.name, "Louis Vuitton");
-  assert.equal(findBrand("Loro Piana"), undefined);
-  assert.equal(findBrand("Rolex"), undefined);
-  for (const c of ["bags", "shoes", "watches"] as const) {
-    assert.deepEqual(brandsFor(c).map((b) => b.name), ["Hermès", "Louis Vuitton", "Gucci", "Chanel"]);
-    assert.equal(brandAllowedIn(c, "Cartier"), false, `Cartier is jewellery only, not ${c}`);
+  assert.equal(findBrand("miu-miu")?.name, "Miu Miu");
+  assert.equal(findBrand("LORO PIANA")?.name, "Loro Piana");
+  // Houses the shop no longer holds (until 28 Oct 2026) and houses it never listed.
+  for (const gone of ["Louis Vuitton", "LV", "Gucci", "Cartier", "Van Cleef & Arpels", "Bvlgari", "Rolex"]) assert.equal(findBrand(gone), undefined, gone);
+  for (const c of ["bags", "shoes"] as const) assert.deepEqual(brandsFor(c).map((b) => b.name), ["Hermès", "Chanel", "Miu Miu", "Loro Piana"]);
+  for (const c of ["watches", "jewellery"] as const) {
+    assert.deepEqual(brandsFor(c).map((b) => b.name), ["Hermès", "Chanel"]);
+    assert.equal(brandAllowedIn(c, "Miu Miu"), false, `Miu Miu is bags and shoes only, not ${c}`);
   }
-  assert.deepEqual(brandsFor("jewellery").map((b) => b.name), ["Hermès", "Louis Vuitton", "Gucci", "Chanel", "Cartier", "Van Cleef & Arpels", "Bvlgari"]);
-  assert.equal(brandAllowedIn("jewellery", "cartier"), true);
-  assert.equal(brandAllowedIn("bags", "Loro Piana"), false);
+  assert.equal(brandAllowedIn("shoes", "miu miu"), true);
+  assert.equal(brandAllowedIn("jewellery", "Cartier"), false);
 });
 
 test("types resolve from familiar names and stay within their category", () => {
   assert.equal(subcategoryId("shoes", "Mules"), "loafers");
   assert.equal(subcategoryId("bags", "Clutch"), "clutches");
   assert.equal(subcategoryId("bags", "Crossbody bags"), "shoulder");
+  assert.equal(subcategoryId("bags", "Toiletry case"), "pouches");
   assert.equal(subcategoryId("jewellery", "Necklace"), "necklaces");
   assert.equal(subcategoryId("bags", "Rings"), undefined);
 });
@@ -71,7 +71,7 @@ const shop: Item[] = [
   piece({ ref: "SH-0003", name: "Oz mules", category: "shoes", subcategory: "loafers", colour: "Pink", size: "40.5", priceAED: 6200, listedAt: "2026-10-07" }),
   piece({ ref: "SH-0004", name: "Chypre sandals", category: "shoes", subcategory: "sandals", variants: [{ sku: "SH-0004-41", size: "41", colour: "Étoupe" }, { sku: "SH-0004-42", size: "42", colour: "Noir" }], priceAED: 4800, listedAt: "2026-10-02" }),
   piece({ ref: "SH-0005", name: "Farandole necklace", category: "jewellery", subcategory: "necklaces", material: "Silver", listedAt: "2026-10-06" }),
-  piece({ ref: "SH-0006", name: "Love bracelet", category: "jewellery", brand: "Cartier", brandId: "cartier", subcategory: "bracelets", material: "18k yellow gold", priceAED: 30000, status: "sold" }),
+  piece({ ref: "SH-0006", name: "Coco Crush bracelet", category: "jewellery", brand: "Chanel", brandId: "chanel", subcategory: "bracelets", material: "18k yellow gold", priceAED: 30000, status: "sold" }),
 ];
 const state = (q: string, fixed = {}) => readListing(new URLSearchParams(q), fixed);
 
@@ -120,7 +120,7 @@ test("search: house (with or without accents), model, product code and version c
   assert.deepEqual(find("Hermès kelly"), ["SH-0001"]);
   assert.deepEqual(find("sh-0003"), ["SH-0003"]);
   assert.deepEqual(find("SH-0004-42"), ["SH-0004"]);
-  assert.deepEqual(find("chanel"), ["SH-0002"]);
+  assert.deepEqual(find("chanel"), ["SH-0002", "SH-0006"]);
   assert.deepEqual(find("rolex"), []);
 });
 

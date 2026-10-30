@@ -5,18 +5,18 @@ How the store works: what it lists, its pages, the bag and checkout, and how the
 ## What the shop lists
 
 - **Four categories, in this order:** Bags | Shoes | Watches | Jewellery (`src/data/taxonomy.ts`). Jewellery replaces Accessories and is for fine jewellery only. Clothing, fragrance, eyewear, home, beauty and anything else are never shown, searched or suggested.
-- **Types:** a few per category. Bags: handbags, shoulder & crossbody, clutches. Shoes: sandals, sneakers, loafers & mules, heels. Watches: women's, men's, unisex. Jewellery: rings, bracelets, necklaces, earrings. A type, a house or a filter appears only when at least one listed piece has it, so nothing empty is ever offered.
-- **Houses:** Hermès, Louis Vuitton, Gucci and Chanel in every category. Cartier, Van Cleef & Arpels and Bvlgari in **Jewellery only**, for genuine pieces SEVN HEVN actually holds (`src/data/brands.ts`). Spellings are unified ("Hermes" → "Hermès", "Bulgari" → "Bvlgari").
+- **Types:** a few per category. Bags: handbags, shoulder & crossbody, clutches, pouches & cases. Shoes: sandals, sneakers, loafers & mules, heels. Watches: women's, men's, unisex. Jewellery: rings, bracelets, necklaces, earrings. A type, a house or a filter appears only when at least one listed piece has it, so nothing empty is ever offered.
+- **Houses (owner decision, 28 Oct 2026): only the houses SEVN HEVN actually holds.** Hermès and Chanel in every category; Miu Miu and Loro Piana in **Bags and Shoes only** (`src/data/brands.ts`). Louis Vuitton, Gucci, Cartier, Van Cleef & Arpels and Bvlgari were listed until then and are no longer offered anywhere; add a house back (code and database) when a piece of it is held. Spellings are unified ("Hermes" → "Hermès", "miu-miu" → "Miu Miu").
 
 The rule is enforced in several places, so no route can get around it:
 
 | Where | How |
 | --- | --- |
-| Database | A trigger refuses to publish a piece outside the four categories or the permitted houses (`out_of_scope`). The panel's save function refuses such a house (`brand_not_allowed`). Rows from before these rules are only hidden, never deleted. Migration `20261013120000_shop_four_categories.sql`. |
+| Database | A trigger refuses to publish a piece outside the four categories or the permitted houses (`out_of_scope`). The panel's save function refuses such a house (`brand_not_allowed`). Rows from before these rules are only hidden, never deleted. Migrations `20261013120000_shop_four_categories.sql` and `20261028120000_shop_houses.sql` (the houses as of 28 Oct 2026). |
 | Website catalogue | `lib/catalog.ts` drops any piece outside the shop before it reaches a page, the menu, search or the sitemap. |
 | Panel | The house and type fields are pick-lists of the permitted values. |
 | Sourcing form and chat | The form's house field offers only the permitted houses for the chosen category, and `/api/enquiries` refuses others. The chat offers the same houses as quick choices. |
-| Addresses | `/watches/cartier` or `/bags/loro-piana` do not exist (404). |
+| Addresses | `/bags/gucci` or `/watches/loro-piana` do not exist (404). |
 
 ## Pages and addresses
 
@@ -79,6 +79,21 @@ To take card payments later, see README → Payments: you need a provider with a
 - **Products → Add a piece:** name, house and category are required. Add photos, then the price, stock and delivery details when they are confirmed, then press "Publish on the website". The website updates within a minute.
 - **Versions:** on a piece's page, add one per colour, size or hardware you can actually supply. Each version has its own code and, where it differs, its own price, stock and photo.
 - **Requests:** purchase requests appear here as "Purchase request (website checkout)", with the verified lines, subtotal and delivery choice, marked "Not paid". Confirm availability and the total with the customer, then create an order from the request. Staff and owner rights are unchanged.
+
+## Adding a batch of pieces at once
+
+`scripts/stock/import.mjs` puts a prepared batch on the website: it uploads each piece's photos to the `product-images` bucket and writes the products, photos and versions, the same rows the panel writes. Re-running it replaces those pieces' photos and versions. It needs `SUPABASE_URL` and `SUPABASE_SECRET_KEY` in `.env.local` (never committed); its changes are not in the panel's activity log.
+
+```
+node --env-file=.env.local scripts/stock/import.mjs scripts/stock/2026-10-28.json <photos folder>
+```
+
+The first batch (`scripts/stock/2026-10-28.json`, 28 Oct 2026) is 15 pieces from the owner's inventory and photos:
+
+- Photos: the owner's own, given one treatment (`scripts/stock/studio.py`; Python with `rembg[cpu] pillow numpy scipy`, the BiRefNet model on the CPU provider, because the CoreML provider stalls on this Mac). The piece is cut out of its full-resolution photo, out of its box or tissue too, its colour and exposure balanced against the white table with highlights rolled off so white leather keeps its grain, and placed on one beige travertine set: a slab in front of a plaster wall for side views, the same stone from above for top-down shots. 3:4, 3000 × 4000. The piece itself is never redrawn. The stone sets are AI-generated backgrounds with no product in them. Each gallery starts the same way: bags from the front, shoes from above.
+- Exceptions to replace with new photos: the Farandole stays on its Hermès display board, because the board's straps hide parts of the chain and a cut-out would look broken. The Kelly Dépêches keeps its felt protector, and the Chaîne d'Ancre bracelet has one view, from above.
+- Prices: the prices in the owner's Instagram posts; where there was none, the owner's estimate (inventory "Dubai asking" price), and for Miu Miu and Oran an estimate from UAE retail prices, to be confirmed by the owner.
+- Five pieces held but not photographed yet (Constance Élan, Birkin 25, Evelyne 16, Chanel mini flap, Chaîne d'Ancre pendant) are listed enquiry-only with a branded "photographs coming soon" card that shows no product. The card is made by `scripts/stock/placeholder.py` with the site's fonts (Jost, Cormorant Garamond). Replace the card with real photos in the panel when they exist. Photos of other sellers or of the brands are never used.
 
 ## Private design preview (drafts)
 

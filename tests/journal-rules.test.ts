@@ -29,9 +29,9 @@ const research = {
 
 test("ideas: sorted by score in code, whatever order the model used; invalid and repeated ideas dropped", () => {
   const { ideas } = demoIdeas();
-  const cartierWatch: Idea = { ...ideas[0], id: "I7", category: "watches", houses: ["cartier"], score: 99 };
+  const miuMiuWatch: Idea = { ...ideas[0], id: "I7", category: "watches", houses: ["miu-miu"], score: 99 };
   const repeat: Idea = { ...ideas[0], id: "I8", primaryKeyword: "Already Written", score: 98 };
-  const { ranked, dropped } = rankIdeas([...ideas, cartierWatch, repeat], [{ title: "x", primaryKeyword: "already written" }]);
+  const { ranked, dropped } = rankIdeas([...ideas, miuMiuWatch, repeat], [{ title: "x", primaryKeyword: "already written" }]);
   assert.deepEqual(ranked.map((i) => i.id), ["I4", "I2", "I3", "I1", "I6", "I5"]);
   assert.deepEqual(dropped.map((d) => d.id), ["I7", "I8"]);
   // Equal scores keep a stable order by id.
@@ -49,11 +49,11 @@ test("brief: chosen idea must be in the top list; every href must be a real page
   assert.match(p.join("\n"), /concierge page, not a product/);
 });
 
-test("site links: only houses offered in each category (never Cartier watches)", () => {
+test("site links: only houses offered in each category (never Miu Miu watches)", () => {
   const hrefs = links.map((l) => l.href);
   assert.ok(hrefs.includes("/bags/hermes"));
-  assert.ok(hrefs.includes("/jewellery/cartier"));
-  assert.ok(!hrefs.includes("/watches/cartier"));
+  assert.ok(hrefs.includes("/shoes/miu-miu"));
+  assert.ok(!hrefs.includes("/watches/miu-miu"));
   assert.ok(hrefs.includes("/chat"));
 });
 
@@ -203,7 +203,8 @@ test("prompts: every agent has one; brand rules, houses and lessons are included
   for (const a of ["ideator", "strategist", "researcher", "writer", "editor", "seo", "critic"] as const) {
     const p = systemPrompt(a, ["Lesson text"], { TODAY: "2026-10-19" });
     assert.match(p, /SEVN HEVN/);
-    assert.match(p, /Jewellery: Hermès, Louis Vuitton, Gucci, Chanel, Cartier, Van Cleef & Arpels, Bvlgari/);
+    assert.match(p, /Jewellery: Hermès, Chanel\b/);
+    assert.match(p, /Shoes: Hermès, Chanel, Miu Miu, Loro Piana/);
     assert.match(p, /Lesson text/);
     assert.doesNotMatch(p, /\{\{[A-Z_]+\}\}/);
   }

@@ -172,7 +172,8 @@ async function asRole(claims, fn) {
   await c.connect();
   try {
     await c.query("begin");
-    await c.query(`set local role ${claims ? "authenticated" : "anon"}`);
+    // A service-role token (a secret key on Supabase) bypasses row-level security, as on the platform.
+    await c.query(`set local role ${claims?.role === "service_role" ? "service_role" : claims ? "authenticated" : "anon"}`);
     await c.query("select set_config('request.jwt.claims', $1, true)", [claims ? JSON.stringify(claims) : ""]);
     const out = await fn(c);
     await c.query("commit");
@@ -303,7 +304,7 @@ const server = http.createServer(async (req, res) => {
         if (b.file_size_limit && bytes.length > Number(b.file_size_limit)) return send(res, 413, { message: "Payload too large" });
         if (b.allowed_mime_types && !b.allowed_mime_types.includes(req.headers["content-type"])) return send(res, 415, { message: "mime type not supported" });
         try {
-          await asRole(claims, (c) => c.query("insert into storage.objects (bucket_id, name, owner) values ($1, $2, $3)", [bucket, name, claims?.sub ?? null]));
+          await asRole(claims, (c) => c.query(`insert into storage.objects (bucket_id, name, owner) values ($1, $2, $3)${req.headers["x-upsert"] === "true" ? " on conflict (bucket_id, name) do nothing" : ""}`, [bucket, name, claims?.sub ?? null]));
         } catch (e) {
           return send(res, 403, { statusCode: "403", error: "Unauthorized", message: e.message });
         }
