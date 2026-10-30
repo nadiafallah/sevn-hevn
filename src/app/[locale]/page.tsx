@@ -4,9 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { site } from "@/config/site";
-import { coreBrands, jewelleryOnlyBrands, type Brand } from "@/data/brands";
-import { categories, type CategoryId } from "@/data/taxonomy";
-import type { ItemImage } from "@/data/types";
+import { brands, type Brand } from "@/data/brands";
+import { categories } from "@/data/taxonomy";
 import { isLocale, localePath } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { plural } from "@/i18n/format";
@@ -23,17 +22,6 @@ import { ItemCard } from "@/components/ItemCard";
 import { PanelButton } from "@/components/PanelButton";
 import { ArrowIcon, WhatsAppIcon } from "@/components/icons";
 import "../journal.css";
-
-/**
- * Category images: the newest listed piece's own photo. Until a category has one, the approved
- * AI-generated editorial image (always labelled as such) stands in; Jewellery has none, so its card
- * is typographic. Never shown as a piece for sale.
- */
-const editorialFallback: Partial<Record<CategoryId, ItemImage & { position: string }>> = {
-  bags: { src: "/images/editorial/bag-cognac.jpg", width: 1122, height: 1028, alt: "", position: "50% 60%" },
-  shoes: { src: "/images/editorial/loafer-cobalt-suede.jpg", width: 1122, height: 1402, alt: "", position: "50% 55%" },
-  watches: { src: "/images/editorial/watch-gold-rectangular.jpg", width: 1122, height: 1402, alt: "", position: "50% 45%" },
-};
 
 export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
   const { locale } = await params;
@@ -56,13 +44,15 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const arrivals = (await getNewArrivals(4)).map(toShopItem);
   const articles = (await getJournalCards()).slice(0, 3);
 
+  // Category images: the newest listed piece's own photo. A category with nothing listed yet has a
+  // quiet typographic card — never a stand-in image.
   const cards = categories.map((c) => {
     const pieces = sortItems(
       catalog.filter((i) => i.category === c.id),
       "newest",
     );
     const real = pieces.find((i) => i.images.length && i.status !== "sold")?.images[0];
-    return { id: c.id, count: pieces.length, image: real ? { ...real, position: "50% 50%" } : editorialFallback[c.id], ai: !real && !!editorialFallback[c.id] };
+    return { id: c.id, count: pieces.length, image: real };
   });
   const listedBrands = new Set(catalog.map((i) => i.brandId));
   const brandLink = (b: Brand) => (listedBrands.has(b.id) ? href(`/collection?brand=${b.id}`) : null);
@@ -131,15 +121,13 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
                   {c.image && (
                     <Image
                       src={c.image.src}
-                      alt={c.ai ? t.categoryAlt[c.id] : c.image.alt}
+                      alt={c.image.alt}
                       width={c.image.width}
                       height={c.image.height}
                       sizes="(min-width: 1000px) 24vw, 46vw"
                       className="cat-card__img"
-                      style={{ objectPosition: c.image.position }}
                     />
                   )}
-                  {c.ai && <span className="media-label">{t.aiImageShort}</span>}
                 </span>
                 <span className="cat-card__text">
                   <span className="cat-card__name">{ui.categories[c.id]}</span>
@@ -195,19 +183,9 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             </div>
           </div>
           <ul className="house-list" data-reveal>
-            {coreBrands.map((b) => (
+            {brands.map((b) => (
               <li key={b.id}>
                 <HouseLink brand={b} link={brandLink(b)} requestLabel={t.brandsRequest} />
-              </li>
-            ))}
-          </ul>
-          <p className="house-list__label" data-reveal>
-            {t.brandsJewellery}
-          </p>
-          <ul className="house-list house-list--small" data-reveal>
-            {jewelleryOnlyBrands.map((b) => (
-              <li key={b.id}>
-                <HouseLink brand={b} link={brandLink(b)} requestLabel={t.brandsRequest} jewellery />
               </li>
             ))}
           </ul>
@@ -272,7 +250,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
 }
 
 /** A house: a link to its pieces when any are listed, otherwise a sourcing request for it. */
-function HouseLink({ brand, link, requestLabel, jewellery }: { brand: Brand; link: string | null; requestLabel: string; jewellery?: boolean }) {
+function HouseLink({ brand, link, requestLabel }: { brand: Brand; link: string | null; requestLabel: string }) {
   if (link) {
     return (
       <Link href={link} className="house" lang="en" dir="ltr">
@@ -281,7 +259,7 @@ function HouseLink({ brand, link, requestLabel, jewellery }: { brand: Brand; lin
     );
   }
   return (
-    <PanelButton panel={{ type: "sourcing", prefill: { brand: brand.name, ...(jewellery ? { category: "jewellery" } : {}) } }} className="house house--request">
+    <PanelButton panel={{ type: "sourcing", prefill: { brand: brand.name } }} className="house house--request">
       <span lang="en" dir="ltr">
         {brand.name}
       </span>

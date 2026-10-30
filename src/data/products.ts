@@ -18,7 +18,7 @@ import type { Item } from "./types";
  *   ref: "SH-0001",                      // unique, letters/numbers/dashes only
  *   status: "enquiry_only",
  *   name: "Birkin 30",
- *   brand: "Hermès",                     // Hermès | Louis Vuitton | Gucci | Chanel (+ Cartier, Van Cleef & Arpels, Bvlgari for jewellery) — data/brands.ts
+ *   brand: "Hermès",                     // Hermès | Chanel (+ Miu Miu, Loro Piana for bags and shoes) — data/brands.ts
  *   category: "bags",                    // bags | shoes | watches | jewellery
  *   subcategory: "handbags",             // a type id from data/taxonomy.ts
  *   modelReference: "",                  // e.g. watch reference "15202ST"

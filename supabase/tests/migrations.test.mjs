@@ -125,7 +125,7 @@ test("newsletter sign-ups are rate limited per sender", async () => {
 
 test("catalogue changes notify the website only when Vault is configured", async () => {
   const db = await freshDb();
-  await db.exec(`insert into public.products (ref, name, category, brand) values ('SH-1', 'x', 'bags', 'Gucci')`);
+  await db.exec(`insert into public.products (ref, name, category, brand) values ('SH-1', 'x', 'bags', 'Chanel')`);
   assert.equal((await db.query("select count(*)::int as n from net.calls")).rows[0].n, 0);
   await db.exec(`insert into vault.store values ('catalog_revalidate_url', 'https://example.test/api/revalidate'), ('catalog_revalidate_secret', 's3cret')`);
   await as(db, "service_role", `update public.products set published = true where ref = 'SH-1'`);

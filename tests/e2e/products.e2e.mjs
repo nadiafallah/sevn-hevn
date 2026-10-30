@@ -61,7 +61,7 @@ describe("products in the panel", () => {
     const cats = (await page.locator("select[name=category] option").allTextContents()).map((t) => t.trim());
     assert.deepEqual(cats, ["Choose…", "Bags", "Shoes", "Watches", "Jewellery"]);
     const houses = (await page.locator("select[name=brand] option:not([disabled])").allTextContents()).map((t) => t.trim());
-    assert.deepEqual(houses, ["Hermès", "Louis Vuitton", "Gucci", "Chanel", "Cartier", "Van Cleef & Arpels", "Bvlgari"]);
+    assert.deepEqual(houses, ["Hermès", "Chanel", "Miu Miu (bags and shoes)", "Loro Piana (bags and shoes)"]);
     await page.locator("input[name=name]").fill("Constance 24");
     await page.locator("select[name=brand]").selectOption("Hermès");
     await page.locator("select[name=category]").selectOption("bags");

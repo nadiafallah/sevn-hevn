@@ -1483,7 +1483,7 @@ a.shop-nav__trigger {
   transform: scale(1.04);
 }
 
-/* Jewellery until a real photo exists: a quiet typographic card. */
+/* A category with nothing listed yet: a quiet typographic card. */
 .cat-card--plain .cat-card__media {
   background:
     linear-gradient(180deg, rgba(198, 178, 140, 0.18), rgba(198, 178, 140, 0) 60%),
@@ -1587,26 +1587,6 @@ a.shop-nav__trigger {
   color: var(--muted);
 }
 
-.house-list__label {
-  margin-top: 28px;
-  margin-bottom: 0;
-  font-size: 0.64rem;
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.house-list--small {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 12px;
-}
-
-.house-list--small .house {
-  min-height: 84px;
-  font-size: clamp(1.2rem, 1.8vw, 1.6rem);
-}
-
 .house-list__fine {
   margin-top: 22px;
 }
@@ -1617,12 +1597,6 @@ a.shop-nav__trigger {
   }
   .house-list li:nth-child(odd) {
     border-inline-start: 0;
-  }
-  .house-list--small {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .house-list--small li {
-    border-inline-start: 0 !important;
   }
 }
 

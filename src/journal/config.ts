@@ -30,16 +30,12 @@ export const MAX_VIDEOS = 1;
 /**
  * The houses' official YouTube channels (checked 17 Oct 2026 with YouTube's oEmbed `author_url`).
  * A video is offered to the writer only if YouTube says it belongs to one of these channels and
- * allows embedding.
+ * allows embedding. Only houses the shop lists (data/brands.ts); Miu Miu and Loro Piana are not
+ * here until their channels have been checked the same way.
  */
 export const OFFICIAL_CHANNELS: Record<string, string> = {
   "https://www.youtube.com/@hermes": "Hermès",
   "https://www.youtube.com/@chanel": "Chanel",
-  "https://www.youtube.com/@louisvuitton": "Louis Vuitton",
-  "https://www.youtube.com/@gucci": "Gucci",
-  "https://www.youtube.com/@cartier": "Cartier",
-  "https://www.youtube.com/@vancleefarpels": "Van Cleef & Arpels",
-  "https://www.youtube.com/@bvlgariofficial": "Bvlgari",
 };
 /** How far a draft may stray from the brief's target before the check fails. */
 export const WORD_TOLERANCE = 0.1;

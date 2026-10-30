@@ -141,7 +141,7 @@ export const errorMessages: Record<string, string> = {
   needs_photo: "Add at least one photo before publishing. A published piece must keep at least one photo.",
   available_incomplete: "“Available to buy” needs a price, stock (at least 1) and delivery details. Fill them in or choose “Enquire only”.",
   photo_limit: "A piece can have up to 12 photos.",
-  brand_not_allowed: "Choose one of the shop’s houses: Hermès, Louis Vuitton, Gucci or Chanel — or, for Jewellery only, Cartier, Van Cleef & Arpels or Bvlgari.",
+  brand_not_allowed: "Choose one of the shop’s houses: Hermès or Chanel — or, for Bags and Shoes only, Miu Miu or Loro Piana.",
   out_of_scope: "This piece can’t be published: only Bags, Shoes, Watches and Jewellery from the shop’s houses can be on the website.",
   duplicate: "That already exists.",
   journal_meta: "Add the meta title, meta description and summary before publishing (Edit → Save).",

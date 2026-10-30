@@ -1,0 +1,545 @@
+{
+ "listed": "2026-10-28",
+ "products": [
+  {
+   "ref": "HER-BAB-SMALL",
+   "status": "available",
+   "name": "Bride-à-Brac case, small model",
+   "brand": "Hermès",
+   "category": "bags",
+   "subcategory": "pouches",
+   "model_reference": "H104222M",
+   "material": "Canvas",
+   "hardware": "Silver-tone snaps",
+   "size": "Small model",
+   "description": "Hermès Bride-à-Brac case in the small size: canvas with an embroidered H and a striped webbing handle that snaps closed. Two colours, one of each. Brand new.",
+   "price_aed": 4200,
+   "stock": 2,
+   "condition": "new",
+   "authentication": "Bought new from a Hermès boutique. The original receipt can be seen on request.",
+   "delivery": "Delivery options, timing and any costs are confirmed with you personally before you pay.",
+   "featured": true,
+   "listed_at": "2026-10-28",
+   "photos": [
+    {
+     "file": "her-bab-small/01.jpg",
+     "alt": "Hermès Bride-à-Brac case in orange canvas, front"
+    },
+    {
+     "file": "her-bab-small/02.jpg",
+     "alt": "Orange Bride-à-Brac case at an angle, with its bordeaux and orange handle"
+    },
+    {
+     "file": "her-bab-small/03.jpg",
+     "alt": "Orange Bride-à-Brac case from above, handle snapped closed"
+    },
+    {
+     "file": "her-bab-small/04.jpg",
+     "alt": "Hermès Bride-à-Brac case in pink canvas, front"
+    },
+    {
+     "file": "her-bab-small/05.jpg",
+     "alt": "Pink Bride-à-Brac case at an angle, with its bordeaux and orange handle"
+    },
+    {
+     "file": "her-bab-small/06.jpg",
+     "alt": "Pink Bride-à-Brac case from above, handle snapped closed"
+    }
+   ],
+   "variants": [
+    {
+     "sku": "HER-BAB-SMALL-ORANGE",
+     "colour": "Orange",
+     "stock": 1,
+     "photo": 0
+    },
+    {
+     "sku": "HER-BAB-SMALL-PINK",
+     "colour": "Pink",
+     "stock": 1,
+     "photo": 3
+    }
+   ],
+   "published": true
+  },
+  {
+   "ref": "CHA-VANITY-NOIR",
+   "status": "available",
+   "name": "Vanity case with chain",
+   "brand": "Chanel",
+   "category": "bags",
+   "subcategory": "handbags",
+   "colour": "Black",
+   "material": "Crocodile-embossed leather",
+   "hardware": "Gold-tone",
+   "description": "Chanel vanity case in glossy black crocodile-embossed leather, with a top handle, a zip around the top, the gold-tone CC and a removable chain-and-leather shoulder strap. Brand new.",
+   "price_aed": 16500,
+   "stock": 1,
+   "condition": "new",
+   "authentication": "Bought new from a Chanel boutique. The original receipt can be seen on request.",
+   "delivery": "Delivery options, timing and any costs are confirmed with you personally before you pay.",
+   "featured": true,
+   "listed_at": "2026-10-28",
+   "photos": [
+    {
+     "file": "cha-vanity-noir/01.jpg",
+     "alt": "Chanel vanity case in black crocodile-embossed leather, front"
+    },
+    {
+     "file": "cha-vanity-noir/02.jpg",
+     "alt": "Chanel vanity case at an angle with its chain strap"
+    },
+    {
+     "file": "cha-vanity-noir/03.jpg",
+     "alt": "Chanel vanity case from above, top handle and chain strap"
+    },
+    {
+     "file": "cha-vanity-noir/04.jpg",
+     "alt": "Chanel vanity case from above at an angle"
+    }
+   ],
+   "published": true
+  },
+  {
+   "ref": "HER-CHYPRE-ETOUPE-42",
+   "status": "available",
+   "name": "Chypre sandal",
+   "brand": "Hermès",
+   "category": "shoes",
+   "subcategory": "sandals",
+   "model_reference": "H252916ZH",
+   "colour": "Étoupe",
+   "material": "Epsom calfskin",
+   "size": "42",
+   "size_system": "EU",
+   "audience": "men",
+   "description": "Hermès Chypre sandals for men in Étoupe Epsom calfskin, with the cut-out H and an adjustable strap. Size 42. Brand new.",
+   "price_aed": 4800,
+   "stock": 1,
+   "condition": "new",
+   "authentication": "Bought new from a Hermès boutique. The original receipt can be seen on request.",
+   "delivery": "Delivery options, timing and any costs are confirmed with you personally before you pay.",
+   "featured": true,
+   "listed_at": "2026-10-27",
+   "photos": [
+    {
+     "file": "her-chypre-etoupe-42/01.jpg",
+     "alt": "Hermès Chypre sandals in Étoupe, from above"
+    },
+    {
+     "file": "her-chypre-etoupe-42/02.jpg",
+     "alt": "Chypre sandals in Étoupe at an angle"
+    },
+    {
+     "file": "her-chypre-etoupe-42/03.jpg",
+     "alt": "Chypre sandals in Étoupe, one crossed over the other"
+    },
+    {
+     "file": "her-chypre-etoupe-42/04.jpg",
+     "alt": "Chypre sandal in Étoupe with the sole of the other, Hermès Made in Italy"
+    }
+   ],
+   "published": true
+  },
+  {
+   "ref": "MIU-SLIDE-SILVER-395",
+   "status": "available",
+   "name": "Matelassé nappa leather slides",
+   "brand": "Miu Miu",
+   "category": "shoes",
+   "subcategory": "sandals",
+   "colour": "Silver",
+   "material": "Metallic matelassé nappa leather",
+   "hardware": "Metal logo",
+   "size": "39.5",
+   "size_system": "EU",
+   "audience": "women",
+   "description": "Miu Miu slides in silver metallic matelassé nappa leather with the metal Miu Miu logo and a low heel. Made in Italy. Size 39.5.",
+   "price_aed": 4200,
+   "stock": 1,
+   "delivery": "Delivery options, timing and any costs are confirmed with you personally before you pay.",
+   "featured": true,
+   "listed_at": "2026-10-28",
+   "photos": [
+    {
+     "file": "miu-slide-silver-395/01.jpg",
+     "alt": "Miu Miu silver matelassé slides, from above"
+    },
+    {
+     "file": "miu-slide-silver-395/02.jpg",
+     "alt": "Miu Miu silver matelassé slides at an angle"
+    },
+    {
+     "file": "miu-slide-silver-395/03.jpg",
+     "alt": "Miu Miu silver slides, one crossed over the other"
+    },
+    {
+     "file": "miu-slide-silver-395/04.jpg",
+     "alt": "Miu Miu silver slide with the sole of the other, size 39½"
+    }
+   ],
+   "published": true
+  },
+  {
+   "ref": "HER-OZ-PINK-40",
+   "status": "available",
+   "name": "Oz mule",
+   "brand": "Hermès",
+   "category": "shoes",
+   "subcategory": "loafers",
+   "colour": "Pink",
+   "material": "Goatskin suede",
+   "hardware": "Gold-tone Kelly buckle",
+   "size": "40",
+   "size_system": "EU",
+   "audience": "women",
+   "description": "Hermès Oz mules in pink goatskin suede with the gold-tone Kelly buckle and a leather sole. Size 40. Brand new.",
+   "price_aed": 6200,
+   "stock": 1,
+   "condition": "new",
+   "delivery": "Delivery options, timing and any costs are confirmed with you personally before you pay.",
+   "featured": true,
+   "listed_at": "2026-10-28",
+   "photos": [
+    {
+     "file": "her-oz-pink-40/01.jpg",
+     "alt": "Hermès Oz mules in pink suede, side view"
+    },
+    {
+     "file": "her-oz-pink-40/02.jpg",
+     "alt": "Hermès Oz mules in pink suede, from above"
+    },
+    {
+     "file": "her-oz-pink-40/03.jpg",
+     "alt": "Oz mules at an angle, gold-tone Kelly buckle"
+    },
+    {
+     "file": "her-oz-pink-40/04.jpg",
+     "alt": "Oz mules from the front, Kelly buckle"
+    },
+    {
+     "file": "her-oz-pink-40/05.jpg",
+     "alt": "Oz mule with the leather sole of the other, size 40"
+    }
+   ],
+   "published": true
+  },
+  {
+   "ref": "HER-ORAN-BLANC-405",
+   "status": "available",
+   "name": "Oran sandal",
+   "brand": "Hermès",
+   "category": "shoes",
+   "subcategory": "sandals",
+   "colour": "Blanc (white)",
+   "material": "Box calfskin",
+   "size": "40.5",
+   "size_system": "EU",
+   "audience": "women",
+   "description": "Hermès Oran sandals in white box calfskin with the iconic H cut-out and a leather sole. Size 40.5.",
+   "price_aed": 4300,
+   "stock": 1,
+   "delivery": "Delivery options, timing and any costs are confirmed with you personally before you pay.",
+   "featured": true,
+   "listed_at": "2026-10-28",
+   "photos": [
+    {
+     "file": "her-oran-blanc-405/01.jpg",
+     "alt": "Hermès Oran sandals in white, from above"
+    },
+    {
+     "file": "her-oran-blanc-405/02.jpg",
+     "alt": "Oran sandals in white at an angle"
+    },
+    {
+     "file": "her-oran-blanc-405/03.jpg",
+     "alt": "Oran sandals in white, one crossed over the other"
+    },
+    {
+     "file": "her-oran-blanc-405/04.jpg",
+     "alt": "Oran sandal with the leather sole of the other, size 40½"
+    }
+   ],
+   "published": true
+  },
+  {
+   "ref": "HER-CDA-BANGLE",
+   "status": "available",
+   "name": "Chaîne d’Ancre Enchaînée bracelet, medium model",
+   "brand": "Hermès",
+   "category": "jewellery",
+   "subcategory": "bracelets",
+   "model_reference": "H109509B",
+   "purity": "925 sterling silver",
+   "description": "Hermès Chaîne d’Ancre Enchaînée open bangle in sterling silver, a line of linked anchor-chain motifs. Brand new in its Hermès box.",
+   "price_aed": 3900,
+   "stock": 1,
+   "condition": "new",
+   "included": [
+    "Hermès box"
+   ],
+   "authentication": "Bought new from a Hermès boutique. The original receipt can be seen on request.",
+   "delivery": "Delivery options, timing and any costs are confirmed with you personally before you pay.",
+   "featured": true,
+   "listed_at": "2026-10-28",
+   "photos": [
+    {
+     "file": "her-cda-bangle/01.jpg",
+     "alt": "Hermès Chaîne d’Ancre Enchaînée bangle in silver on its Hermès box"
+    },
+    {
+     "file": "her-cda-bangle/02.jpg",
+     "alt": "The bangle on its suede cushion in the Hermès box, from above"
+    },
+    {
+     "file": "her-cda-bangle/03.jpg",
+     "alt": "The bangle in its open Hermès box at an angle"
+    },
+    {
+     "file": "her-cda-bangle/04.jpg",
+     "alt": "The bangle in its box beside the lid"
+    }
+   ],
+   "published": true
+  },
+  {
+   "ref": "HER-KD25-NOIR",
+   "status": "available",
+   "name": "Kelly Dépêches 25",
+   "brand": "Hermès",
+   "category": "bags",
+   "subcategory": "clutches",
+   "model_reference": "H082312CC",
+   "colour": "Noir (black)",
+   "material": "Box calfskin (Veau Box)",
+   "hardware": "Gold-tone",
+   "description": "Hermès Kelly Dépêches 25 pouch in Noir Box calfskin, with the gold-tone Kelly turn-lock and a wrist strap. Brand new, with its box and dust bag.",
+   "price_aed": 52000,
+   "stock": 1,
+   "condition": "new",
+   "included": [
+    "Hermès box",
+    "Dust bag"
+   ],
+   "authentication": "Bought new from a Hermès boutique. The original receipt can be seen on request.",
+   "delivery": "Delivery options, timing and any costs are confirmed with you personally before you pay.",
+   "featured": true,
+   "listed_at": "2026-10-26",
+   "photos": [
+    {
+     "file": "her-kd25-noir/01.jpg",
+     "alt": "Hermès Kelly Dépêches 25 in Noir Box calfskin in its box"
+    },
+    {
+     "file": "her-kd25-noir/02.jpg",
+     "alt": "Kelly Dépêches 25 in its box with the Hermès ribbon"
+    },
+    {
+     "file": "her-kd25-noir/03.jpg",
+     "alt": "Gold-tone Kelly turn-lock, close-up"
+    },
+    {
+     "file": "her-kd25-noir/04.jpg",
+     "alt": "Wrist strap and Hermès stamp, close-up"
+    },
+    {
+     "file": "her-kd25-noir/05.jpg",
+     "alt": "Top of the Kelly Dépêches with its strap tab"
+    }
+   ],
+   "published": true
+  },
+  {
+   "ref": "LP-EXTRAPOCKET-L19",
+   "status": "available",
+   "name": "Extra Pocket L19",
+   "brand": "Loro Piana",
+   "category": "bags",
+   "subcategory": "handbags",
+   "model_reference": "FLW02191",
+   "material": "Canvas and leather",
+   "description": "Loro Piana Extra Pocket L19 in canvas and leather, with a braided top handle, a zip-around opening and hand-stitched leather corners. Brand new.",
+   "price_aed": 22500,
+   "stock": 1,
+   "condition": "new",
+   "included": [
+    "Loro Piana box",
+    "Dust bag"
+   ],
+   "authentication": "Bought new from a Loro Piana boutique. The original receipt can be seen on request.",
+   "delivery": "Delivery options, timing and any costs are confirmed with you personally before you pay.",
+   "featured": true,
+   "listed_at": "2026-10-26",
+   "photos": [
+    {
+     "file": "lp-extrapocket-l19/01.jpg",
+     "alt": "Loro Piana Extra Pocket L19, front, with its tag"
+    },
+    {
+     "file": "lp-extrapocket-l19/02.jpg",
+     "alt": "Extra Pocket L19 at an angle, braided handle"
+    },
+    {
+     "file": "lp-extrapocket-l19/03.jpg",
+     "alt": "Extra Pocket L19, back"
+    },
+    {
+     "file": "lp-extrapocket-l19/04.jpg",
+     "alt": "Zip pulls and charm, close-up"
+    },
+    {
+     "file": "lp-extrapocket-l19/05.jpg",
+     "alt": "Hand-stitched leather corner, close-up"
+    }
+   ],
+   "published": true
+  },
+  {
+   "ref": "HER-FARANDOLE-120",
+   "status": "available",
+   "name": "Farandole long necklace, 120 cm",
+   "brand": "Hermès",
+   "category": "jewellery",
+   "subcategory": "necklaces",
+   "model_reference": "H104568B",
+   "purity": "925 sterling silver",
+   "size": "120 cm",
+   "description": "Hermès Farandole long necklace in sterling silver, 120 cm of anchor-chain links with a toggle clasp; wear it long or wrapped. Brand new in its Hermès box.",
+   "price_aed": 10400,
+   "stock": 1,
+   "condition": "new",
+   "included": [
+    "Hermès box"
+   ],
+   "authentication": "Bought new from a Hermès boutique.",
+   "delivery": "Delivery options, timing and any costs are confirmed with you personally before you pay.",
+   "featured": true,
+   "listed_at": "2026-10-26",
+   "photos": [
+    {
+     "file": "her-farandole-120/01.jpg",
+     "alt": "Hermès Farandole long necklace in silver in its open Hermès box"
+    }
+   ],
+   "published": true
+  },
+  {
+   "ref": "HER-CONSTANCE-ELAN-NOIR",
+   "status": "enquiry_only",
+   "name": "Constance Élan",
+   "brand": "Hermès",
+   "category": "bags",
+   "subcategory": "shoulder",
+   "description": "Hermès Constance Élan in Noir Chèvre Chamkila goatskin. Brand new. Photographs of this piece are coming soon; ask us and we’ll send pictures in the meantime.",
+   "price_aed": 62000,
+   "stock": 1,
+   "featured": false,
+   "listed_at": "2026-10-20",
+   "photos": [
+    {
+     "file": "her-constance-elan-noir/01.jpg",
+     "alt": "Hermès Constance Élan: photographs coming soon"
+    }
+   ],
+   "colour": "Noir (black)",
+   "material": "Chèvre Chamkila goatskin",
+   "condition": "new",
+   "authentication": "Bought new from a Hermès boutique. The original receipt can be seen on request.",
+   "published": true
+  },
+  {
+   "ref": "HER-BIRKIN-25-VERT-ANIS",
+   "status": "enquiry_only",
+   "name": "Birkin 25",
+   "brand": "Hermès",
+   "category": "bags",
+   "subcategory": "handbags",
+   "description": "Hermès Birkin 25 in Vert Anis Togo calfskin with palladium hardware. Pre-owned. Photographs of this piece are coming soon; ask us and we’ll send pictures in the meantime.",
+   "price_aed": 90000,
+   "stock": 1,
+   "featured": false,
+   "listed_at": "2026-10-20",
+   "photos": [
+    {
+     "file": "her-birkin-25-vert-anis/01.jpg",
+     "alt": "Hermès Birkin 25: photographs coming soon"
+    }
+   ],
+   "colour": "Vert Anis",
+   "material": "Togo calfskin",
+   "hardware": "Palladium",
+   "published": true,
+   "condition": "excellent"
+  },
+  {
+   "ref": "HER-EVELYNE-16-AMAZONE",
+   "status": "enquiry_only",
+   "name": "Evelyne 16 Amazone",
+   "brand": "Hermès",
+   "category": "bags",
+   "subcategory": "shoulder",
+   "description": "Hermès Evelyne 16 Amazone in Taurillon calfskin. Brand new. Photographs of this piece are coming soon; ask us and we’ll send pictures in the meantime.",
+   "price_aed": 13500,
+   "stock": 1,
+   "featured": false,
+   "listed_at": "2026-10-20",
+   "photos": [
+    {
+     "file": "her-evelyne-16-amazone/01.jpg",
+     "alt": "Hermès Evelyne 16 Amazone: photographs coming soon"
+    }
+   ],
+   "material": "Taurillon calfskin",
+   "condition": "new",
+   "authentication": "Bought new from a Hermès boutique. The original receipt can be seen on request.",
+   "published": true
+  },
+  {
+   "ref": "CHA-MINI-FLAP-RAFFIA-PINK",
+   "status": "enquiry_only",
+   "name": "Mini Flap Bag",
+   "brand": "Chanel",
+   "category": "bags",
+   "subcategory": "shoulder",
+   "description": "Chanel mini flap bag in pink raffia with aged gold-tone hardware. Never used. Photographs of this piece are coming soon; ask us and we’ll send pictures in the meantime.",
+   "price_aed": 31500,
+   "stock": 1,
+   "featured": false,
+   "listed_at": "2026-10-20",
+   "photos": [
+    {
+     "file": "cha-mini-flap-raffia-pink/01.jpg",
+     "alt": "Chanel Mini Flap Bag: photographs coming soon"
+    }
+   ],
+   "colour": "Pink",
+   "material": "Raffia",
+   "hardware": "Aged gold-tone",
+   "published": true,
+   "condition": "unworn"
+  },
+  {
+   "ref": "HER-CDA-PENDANT",
+   "status": "enquiry_only",
+   "name": "Chaîne d’Ancre Enchaînée pendant, large model",
+   "brand": "Hermès",
+   "category": "jewellery",
+   "subcategory": "necklaces",
+   "description": "Hermès Chaîne d’Ancre Enchaînée pendant, large model. Brand new. Photographs of this piece are coming soon; ask us and we’ll send pictures in the meantime.",
+   "price_aed": 16500,
+   "stock": 1,
+   "featured": false,
+   "listed_at": "2026-10-20",
+   "photos": [
+    {
+     "file": "her-cda-pendant/01.jpg",
+     "alt": "Hermès Chaîne d’Ancre Enchaînée pendant, large model: photographs coming soon"
+    }
+   ],
+   "model_reference": "H122305B",
+   "condition": "new",
+   "authentication": "Bought new from a Hermès boutique. The original receipt can be seen on request.",
+   "published": true
+  }
+ ]
+}

@@ -107,10 +107,13 @@ test("the brand question offers only the shop's houses for the category", async 
   const watches = await play(deps, [choice("sourcing"), "I am looking for a watch"]);
   const askW = watches.turns.find((t) => t.state.step === "src_brand");
   assert.ok(askW, "the brand question is asked");
-  assert.deepEqual(askW.prompt.choices.map((c) => c.id), ["Hermès", "Louis Vuitton", "Gucci", "Chanel", "skip"]);
+  assert.deepEqual(askW.prompt.choices.map((c) => c.id), ["Hermès", "Chanel", "skip"]);
   const rings = await play(makeDeps().deps, [choice("sourcing"), "I am looking for a ring"]);
   const askJ = rings.turns.find((t) => t.state.step === "src_brand");
-  assert.deepEqual(askJ?.prompt.choices.map((c) => c.id), ["Hermès", "Louis Vuitton", "Gucci", "Chanel", "Cartier", "Van Cleef & Arpels", "Bvlgari", "skip"]);
+  assert.deepEqual(askJ?.prompt.choices.map((c) => c.id), ["Hermès", "Chanel", "skip"]);
+  const shoes = await play(makeDeps().deps, [choice("sourcing"), "I am looking for sandals"]);
+  const askS = shoes.turns.find((t) => t.state.step === "src_brand");
+  assert.deepEqual(askS?.prompt.choices.map((c) => c.id), ["Hermès", "Chanel", "Miu Miu", "Loro Piana", "skip"]);
 });
 
 const ARABIC = /[\u0600-\u06ff]/;

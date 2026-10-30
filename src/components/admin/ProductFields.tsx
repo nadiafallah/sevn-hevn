@@ -1,4 +1,4 @@
-import { coreBrands, findBrand, jewelleryOnlyBrands } from "@/data/brands";
+import { brands, findBrand } from "@/data/brands";
 import { categories, subcategoryId, isCategoryId } from "@/data/taxonomy";
 import { conditionLabels } from "@/lib/admin/labels";
 import { productStatusOptions, type PanelProduct } from "@/lib/admin/products";
@@ -29,20 +29,12 @@ export function ProductFields({ p, compliance = false }: { p?: PanelProduct; com
               <option value="" disabled>
                 Choose…
               </option>
-              <optgroup label="Bags, shoes, watches and jewellery">
-                {coreBrands.map((b) => (
-                  <option key={b.id} value={b.name}>
-                    {b.name}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Jewellery only">
-                {jewelleryOnlyBrands.map((b) => (
-                  <option key={b.id} value={b.name}>
-                    {b.name}
-                  </option>
-                ))}
-              </optgroup>
+              {brands.map((b) => (
+                <option key={b.id} value={b.name}>
+                  {b.name}
+                  {b.categories.length < 4 ? " (bags and shoes)" : ""}
+                </option>
+              ))}
               {brand && !findBrand(brand) && (
                 <option value={brand} disabled>
                   {brand} (not a shop house — choose another to save)

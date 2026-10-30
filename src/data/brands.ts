@@ -1,17 +1,20 @@
 import type { CategoryId } from "./taxonomy";
 
 /**
- * The only houses the shop lists (owner decision, Oct 2026).
+ * The only houses the shop lists: the houses SEVN HEVN actually holds (owner decision, 28 Oct 2026).
  *
- * - Bags, shoes and watches: Hermès, Louis Vuitton, Gucci and Chanel only.
- * - Jewellery: the same four, plus Cartier, Van Cleef & Arpels and Bvlgari — for genuine pieces
- *   SEVN HEVN actually holds. This exception does not extend to watches.
+ * - Hermès and Chanel: bags, shoes, watches and jewellery.
+ * - Miu Miu and Loro Piana: bags and shoes.
+ *
+ * Louis Vuitton, Gucci, Cartier, Van Cleef & Arpels and Bvlgari were listed until 28 Oct 2026 and are
+ * no longer offered anywhere (menus, filters, sourcing form, chat, panel); add a house back here and
+ * in the database when a piece of it is held again.
  *
  * The same list is enforced in the database (supabase/migrations/*_shop_four_categories.sql), so a
  * piece outside it can't be published from the panel or an import either. Keep the two in step.
  * Listing a brand here is not a claim of stock, partnership or authorisation.
  */
-export type BrandId = "hermes" | "louis-vuitton" | "gucci" | "chanel" | "cartier" | "van-cleef-arpels" | "bvlgari";
+export type BrandId = "hermes" | "chanel" | "miu-miu" | "loro-piana";
 
 export interface Brand {
   id: BrandId;
@@ -23,16 +26,14 @@ export interface Brand {
 }
 
 const ALL: readonly CategoryId[] = ["bags", "shoes", "watches", "jewellery"];
-const JEWELLERY_ONLY: readonly CategoryId[] = ["jewellery"];
+const BAGS_AND_SHOES: readonly CategoryId[] = ["bags", "shoes"];
 
+/** In display order. */
 export const brands: Brand[] = [
   { id: "hermes", name: "Hermès", aliases: ["Hermes", "Hermes Paris", "Hermès Paris"], categories: ALL },
-  { id: "louis-vuitton", name: "Louis Vuitton", aliases: ["LV", "Louis-Vuitton", "Vuitton"], categories: ALL },
-  { id: "gucci", name: "Gucci", aliases: [], categories: ALL },
   { id: "chanel", name: "Chanel", aliases: [], categories: ALL },
-  { id: "cartier", name: "Cartier", aliases: [], categories: JEWELLERY_ONLY },
-  { id: "van-cleef-arpels", name: "Van Cleef & Arpels", aliases: ["Van Cleef and Arpels", "Van Cleef", "VCA"], categories: JEWELLERY_ONLY },
-  { id: "bvlgari", name: "Bvlgari", aliases: ["Bulgari"], categories: JEWELLERY_ONLY },
+  { id: "miu-miu", name: "Miu Miu", aliases: ["MiuMiu", "Miu-Miu"], categories: BAGS_AND_SHOES },
+  { id: "loro-piana", name: "Loro Piana", aliases: ["LoroPiana", "Loro-Piana"], categories: BAGS_AND_SHOES },
 ];
 
 export const brandById = Object.fromEntries(brands.map((b) => [b.id, b])) as Record<BrandId, Brand>;
@@ -70,8 +71,3 @@ export function brandAllowedIn(category: CategoryId, raw: string | null | undefi
 export function brandsFor(category: CategoryId) {
   return brands.filter((b) => b.categories.includes(category));
 }
-
-/** The four houses offered in every category. */
-export const coreBrands = brands.filter((b) => b.categories.length === ALL.length);
-/** Houses offered for jewellery only. */
-export const jewelleryOnlyBrands = brands.filter((b) => b.categories.length === 1);
