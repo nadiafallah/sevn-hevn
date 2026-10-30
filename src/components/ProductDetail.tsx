@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { site } from "@/config/site";
 import type { Item, Variant } from "@/data/types";
 import { useI18n } from "@/i18n/I18nProvider";
+import { returnsLine } from "@/lib/compliance-rules";
 import { findVariant, isPurchasable, priceLabel, unitStock } from "@/lib/format";
 import { categoryPath, type ShopItem } from "@/lib/paths";
 import { availabilityOf } from "@/lib/shop";
@@ -30,7 +31,7 @@ function matching(variants: Variant[], choice: Choice, except?: Dim) {
 }
 
 export function ProductDetail({ item, related, initialSku }: { item: Item; related: ShopItem[]; initialSku?: string }) {
-  const { cart, openPanel } = useSite();
+  const { cart, openPanel, rules } = useSite();
   const { t, locale, fmt, href } = useI18n();
   const s = t.shop;
   const p = s.product;
@@ -110,6 +111,7 @@ export function ProductDetail({ item, related, initialSku }: { item: Item; relat
     ...(item.category !== "watches" ? ([[p.specs.reference, item.modelReference]] as [string, string | undefined][]) : []),
     ...byCategory[item.category],
     [p.specs.year, item.year],
+    [p.specs.origin, item.countryOfOrigin],
   ];
   const condition: [string, string | undefined][] = [
     [p.specs.condition, item.condition ? t.conditions[item.condition] : undefined],
@@ -296,6 +298,12 @@ export function ProductDetail({ item, related, initialSku }: { item: Item; relat
               <details open>
                 <summary>{p.details}</summary>
                 <Specs rows={specs} />
+                {item.compositionAr && (
+                  <p className="pdp-ar" dir="rtl" lang="ar">
+                    <span className="muted">{p.specs.compositionAr}: </span>
+                    {item.compositionAr}
+                  </p>
+                )}
               </details>
               {condition.some(([, x]) => x) && (
                 <details>
@@ -311,11 +319,15 @@ export function ProductDetail({ item, related, initialSku }: { item: Item; relat
               <details>
                 <summary>{p.deliveryTitle}</summary>
                 <p>{item.delivery ?? p.deliveryDefault}</p>
-                <p>{item.returns ?? p.returnsDefault}</p>
+                <p>{item.returns ?? returnsLine(rules, t.returnsTerms)}</p>
                 {buyable && <p className="muted small">{p.notReserved}</p>}
                 <p>
                   <button type="button" className="link-btn small" onClick={() => openPanel({ type: "policy", id: "shipping" })}>
-                    {p.policies}
+                    {t.policies.shipping.title}
+                  </button>
+                  {" · "}
+                  <button type="button" className="link-btn small" onClick={() => openPanel({ type: "policy", id: "returns" })}>
+                    {t.policies.returns.title}
                   </button>
                 </p>
               </details>

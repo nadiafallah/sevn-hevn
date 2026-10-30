@@ -1,6 +1,18 @@
 # Project status: SEVN HEVN
 
-Last updated: 27 October 2026
+Last updated: 30 October 2026
+
+## Compliance on the website (30 Oct 2026)
+
+Branch `feat/compliance-on-site`. The website now follows the approved rules. Details: [docs/COMPLIANCE.md](docs/COMPLIANCE.md), "What the website does with the rules".
+
+| Part | State |
+| --- | --- |
+| Returns notice built from the rules (change of mind 7 days, faults without warranty 30 days from when they appear, discount within 7 days) | done; still labelled interim |
+| Checkout tick box for the returns notice and terms, checked on the server and stored with the request | done |
+| Product page: returns line from the rules, country of origin, materials in Arabic | done (fields filled in the panel) |
+| Panel: origin and Arabic fields; pre-owned pieces need condition notes to publish; Compliance → "On the website" | done |
+| Migration `20261030120000_compliance_site.sql` | **not applied in production yet**, together with the three earlier pending ones (`20261007…`, `20261011…`, `20261013…`). The assistant's database connector was refused for production schema changes; the combined file goes to the owner for the SQL Editor. Until then the site uses the built-in defaults (same values) and hides the new product fields |
 
 ## Compliance ledger (27 Oct 2026)
 

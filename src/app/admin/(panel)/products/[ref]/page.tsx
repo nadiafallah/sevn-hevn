@@ -7,7 +7,7 @@ import { Flash, one, type SP } from "@/components/admin/Flash";
 import { ProductFields } from "@/components/admin/ProductFields";
 import { ProductPhotoUpload } from "@/components/admin/ProductPhotoUpload";
 import { conditionLabels, money, when } from "@/lib/admin/labels";
-import { PRODUCT_PHOTO_LIMIT, PRODUCT_SELECT, PRODUCT_SELECT_LEGACY, productImageUrl, productStatusLabel, type PanelProduct } from "@/lib/admin/products";
+import { PRODUCT_PHOTO_LIMIT, PRODUCT_SELECT, PRODUCT_SELECT_COMPLIANCE, PRODUCT_SELECT_LEGACY, productImageUrl, productStatusLabel, type PanelProduct } from "@/lib/admin/products";
 import { deleteProduct, deleteVariant, removeProductPhoto, saveProduct, saveVariant, setMainProductPhoto, setProductPublished } from "../../../actions";
 
 export const metadata = { title: "Piece" };
@@ -19,15 +19,33 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   const { ref } = await params;
   const sp = await searchParams;
   const query = (sel: string) =>
-    select<PanelProduct[]>(api, "products", { select: sel, ref: `eq.${ref}`, status: "neq.editorial_preview", "product_images.order": "position.asc,id.asc", ...(sel === PRODUCT_SELECT ? { "product_variants.order": "position.asc,id.asc" } : {}) }, token);
+    select<PanelProduct[]>(api, "products", { select: sel, ref: `eq.${ref}`, status: "neq.editorial_preview", "product_images.order": "position.asc,id.asc", ...(sel !== PRODUCT_SELECT_LEGACY ? { "product_variants.order": "position.asc,id.asc" } : {}) }, token);
   // Until the shop migration has run, versions and the new detail fields don't exist yet.
+  // Likewise the origin and Arabic composition fields until the compliance migration has run.
   let shopReady = true;
+  let complianceReady = true;
+  const fallback = (next: () => Promise<PanelProduct[]>, mark: () => void) => (e: unknown) => {
+    if (!(e instanceof DbError) || e.status !== 400) throw e;
+    mark();
+    return next();
+  };
   const rows = REF.test(ref)
-    ? await query(PRODUCT_SELECT).catch((e) => {
-        if (!(e instanceof DbError) || e.status !== 400) throw e;
-        shopReady = false;
-        return query(PRODUCT_SELECT_LEGACY);
-      })
+    ? await query(PRODUCT_SELECT_COMPLIANCE).catch(
+        fallback(
+          () =>
+            query(PRODUCT_SELECT).catch(
+              fallback(
+                () => query(PRODUCT_SELECT_LEGACY),
+                () => {
+                  shopReady = false;
+                },
+              ),
+            ),
+          () => {
+            complianceReady = false;
+          },
+        ),
+      )
     : [];
   const p = rows[0];
   if (!p) {
@@ -245,7 +263,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
           <h2>Details</h2>
           <form action={saveProduct} className="adm-form">
             <input type="hidden" name="ref" value={p.ref} />
-            <ProductFields p={p} />
+            <ProductFields p={p} compliance={complianceReady} />
             <button type="submit" className="adm-btn adm-btn--dark">
               Save changes
             </button>

@@ -7,7 +7,7 @@ import { productStatusOptions, type PanelProduct } from "@/lib/admin/products";
  * The details of a piece. Everything except name, category and house is optional; fill in only what
  * is documented. Houses are limited to the shop's list (also enforced by the database).
  */
-export function ProductFields({ p }: { p?: PanelProduct }) {
+export function ProductFields({ p, compliance = false }: { p?: PanelProduct; compliance?: boolean }) {
   const brand = findBrand(p?.brand)?.name ?? p?.brand ?? "";
   const type = p && isCategoryId(p.category) ? (subcategoryId(p.category, p.subcategory) ?? "") : "";
   return (
@@ -122,7 +122,7 @@ export function ProductFields({ p }: { p?: PanelProduct }) {
           </label>
         </div>
         <label>
-          Condition notes
+          Condition notes (needed to publish a pre-owned piece: excellent, very good, good or fair)
           <input name="condition_notes" maxLength={500} defaultValue={p?.condition_notes ?? ""} placeholder="e.g. Light wear on the corners" />
         </label>
         <div className="adm-row">
@@ -194,6 +194,23 @@ export function ProductFields({ p }: { p?: PanelProduct }) {
           can’t show.
         </p>
       </fieldset>
+
+      {compliance && (
+        <fieldset className="adm-fieldset">
+          <legend>Information buyers must see (UAE)</legend>
+          <p className="adm-muted adm-small">Cabinet Resolution 66/2023, Art. 40: country of origin, and the materials in Arabic as well as English. Both are shown on the product page. See Compliance.</p>
+          <div className="adm-row">
+            <label>
+              Country of origin
+              <input name="country_of_origin" maxLength={80} defaultValue={p?.country_of_origin ?? ""} placeholder="e.g. France" />
+            </label>
+          </div>
+          <label>
+            Materials in Arabic
+            <textarea name="composition_ar" rows={2} maxLength={500} dir="rtl" lang="ar" defaultValue={p?.composition_ar ?? ""} placeholder="مثال: جلد توغو، معدن مطلي بالبلاديوم" />
+          </label>
+        </fieldset>
+      )}
 
       <fieldset className="adm-fieldset">
         <legend>Price and availability</legend>

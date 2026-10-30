@@ -149,6 +149,8 @@ export const shopEn = {
       stones: "Stones",
       audience: "For",
       included: "Comes with",
+      origin: "Made in",
+      compositionAr: "المواد",
     },
     gallery: {
       label: "Photos of {name}",
@@ -211,6 +213,7 @@ export const shopEn = {
     paymentStrong: "Online card payment isn’t connected yet.",
     paymentText:
       "Submitting sends a purchase request to our team in Dubai. No payment is taken now. We’ll confirm availability, the delivery cost, VAT if it applies, and a secure way to pay before anything is charged.",
+    terms: "I have read the returns notice and the terms.",
     consent: "I agree that SEVN HEVN may contact me about this request.",
     submit: "Send purchase request",
     sending: "Sending…",
@@ -224,6 +227,7 @@ export const shopEn = {
       city: "Enter the city or emirate.",
       address: "Enter the delivery address.",
       consent: "Please confirm we may contact you about this request.",
+      terms: "Please confirm you have read the returns notice and the terms.",
       generic: "We couldn’t send your request just now. Please try again, or continue on WhatsApp.",
       network: "We couldn’t reach our server. Check your connection, or continue on WhatsApp.",
       rate: "Too many requests from this connection. Please try again later, or continue on WhatsApp.",

@@ -11,6 +11,8 @@ import {
   severityLabels,
   when,
 } from "@/lib/admin/labels";
+import { siteCoverage, type CoverageState } from "@/lib/compliance-rules";
+import { getSiteRules } from "@/lib/compliance";
 import { decideComplianceChange } from "../../actions";
 
 export const metadata = { title: "Compliance" };
@@ -75,6 +77,8 @@ interface Run {
 }
 
 const severityOrder = { high: 0, medium: 1, low: 2 };
+const coverageLabels: Record<CoverageState, string> = { live: "On the website", partial: "Partly", not_yet: "Not yet", off_site: "Outside the website" };
+const coverageOrder: Record<CoverageState, number> = { not_yet: 0, partial: 1, live: 2, off_site: 3 };
 const resultLabels: Record<string, string> = { no_change: "No change", change_found: "Change found", unreachable: "Couldn’t reach" };
 
 const label = (map: Record<string, string>, key: string) => map[key] ?? key.replaceAll("_", " ");
@@ -126,11 +130,12 @@ function Decide({ id }: { id: string }) {
 export default async function Compliance({ searchParams }: { searchParams: SP }) {
   const { api, token } = await requireOwner();
   const sp = await searchParams;
-  const [rules, changes, sources, runs] = await Promise.all([
+  const [rules, changes, sources, runs, siteRules] = await Promise.all([
     select<Rule[]>(api, "compliance_rules", { select: "*", order: "area.asc,code.asc" }, token),
     select<Change[]>(api, "compliance_changes", { select: "*", order: "created_at.desc", limit: "200" }, token),
     select<Source[]>(api, "compliance_sources", { select: "*", order: "authority.asc,name.asc" }, token),
     select<Run[]>(api, "compliance_runs", { select: "*", order: "started_at.desc", limit: "10" }, token),
+    getSiteRules(),
   ]);
 
   const ruleById = new Map(rules.map((r) => [r.id, r]));
@@ -217,6 +222,45 @@ export default async function Compliance({ searchParams }: { searchParams: SP })
           })}
         </div>
       )}
+
+      <h2>On the website</h2>
+      <p className="adm-muted adm-small">
+        {siteRules.source === "ledger"
+          ? "The website reads the approved rules below (changes show within a minute of approval)."
+          : "The website can’t read the rules from the database yet (run the compliance database update), so it uses its built-in defaults."}{" "}
+        Now: change-of-mind returns {siteRules.changeOfMindDays} days from delivery · faults on pieces without a warranty {siteRules.defectWindowDays} days
+        {siteRules.defectWindowFrom === "purchase_date" ? " from purchase" : " from when the fault appears"} · returns and terms tick box at checkout{" "}
+        {siteRules.requireTermsCheckbox ? "on" : "off"}.
+      </p>
+      <div className="adm-table-wrap adm-section">
+        <table className="adm-table">
+          <thead>
+            <tr>
+              <th>Rule</th>
+              <th>Status</th>
+              <th>Where</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rules
+              .filter((r) => r.status === "active")
+              .map((r) => ({ r, c: siteCoverage[r.code] ?? { state: "off_site" as CoverageState, where: "Not part of the website." } }))
+              .sort((a, b) => coverageOrder[a.c.state] - coverageOrder[b.c.state] || a.r.code.localeCompare(b.r.code))
+              .map(({ r, c }) => (
+                <tr key={r.id}>
+                  <td>
+                    <span className="adm-ref">{r.code}</span>
+                    <span className="adm-code">{r.title_en}</span>
+                  </td>
+                  <td>
+                    <span className={`adm-badge adm-badge--v-${c.state}`}>{coverageLabels[c.state]}</span>
+                  </td>
+                  <td className="adm-small">{c.where}</td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
 
       <h2>Rules</h2>
       {rules.length === 0 && <p className="adm-empty">No rules yet.</p>}

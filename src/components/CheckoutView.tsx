@@ -17,7 +17,7 @@ import { WhatsAppIcon } from "./icons";
 type Line = { ref: string; sku?: string; brand?: string; name: string; options?: string; qty: number; unitAED: number; lineAED: number };
 type Verified = { lines: Line[]; subtotalAED: number; subtotalLabel: string };
 type Check = { kind: "checking" } | { kind: "ok"; verified: Verified } | { kind: "issues"; issues: { ref: string; sku?: string; code: string; max?: number }[] } | { kind: "error" };
-type Details = { name: string; email: string; phone: string; method: "whatsapp" | "call" | "email"; mode: "deliver" | "collect"; country: string; city: string; address: string; notes: string; consent: boolean };
+type Details = { name: string; email: string; phone: string; method: "whatsapp" | "call" | "email"; mode: "deliver" | "collect"; country: string; city: string; address: string; notes: string; consent: boolean; terms: boolean };
 type Submit = { kind: "idle" } | { kind: "sending" } | { kind: "unavailable"; verified?: Verified } | { kind: "error"; message: string };
 
 const DETAILS_KEY = "sevn-hevn-checkout-details";
@@ -25,7 +25,7 @@ const IDEM_KEY = "sevn-hevn-checkout-key";
 export const RECEIVED_KEY = "sevn-hevn-last-request";
 const FIRST = ["AE", "SA", "KW", "QA", "BH", "OM"];
 
-const emptyDetails: Details = { name: "", email: "", phone: "", method: "whatsapp", mode: "deliver", country: "AE", city: "", address: "", notes: "", consent: false };
+const emptyDetails: Details = { name: "", email: "", phone: "", method: "whatsapp", mode: "deliver", country: "AE", city: "", address: "", notes: "", consent: false, terms: false };
 
 function readSession<T>(key: string): T | null {
   try {
@@ -50,7 +50,7 @@ function writeSession(key: string, value: unknown) {
  */
 export function CheckoutView() {
   const router = useRouter();
-  const { cart, itemByRef } = useSite();
+  const { cart, itemByRef, openPanel, rules } = useSite();
   const { t, href, fmt, locale } = useI18n();
   const s = t.shop;
   const c = s.checkout;
@@ -90,10 +90,10 @@ export function CheckoutView() {
     restored.current = true;
     const saved = readSession<Details>(DETAILS_KEY);
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (saved) setDetails({ ...emptyDetails, ...saved, consent: false });
+    if (saved) setDetails({ ...emptyDetails, ...saved, consent: false, terms: false });
   }, []);
   useEffect(() => {
-    if (restored.current) writeSession(DETAILS_KEY, { ...details, consent: false });
+    if (restored.current) writeSession(DETAILS_KEY, { ...details, consent: false, terms: false });
   }, [details]);
 
   const countries = useMemo(() => {
@@ -165,9 +165,11 @@ export function CheckoutView() {
 
   async function send(e: FormEvent) {
     e.preventDefault();
-    if (!details.consent) {
-      setErrors({ consent: c.errors.consent });
-      requestAnimationFrame(() => document.getElementById(id("consent"))?.focus());
+    // The returns notice and terms must be accepted before sending (rule DIS-PRE-ORDER); checked again on the server.
+    const termsMissing = rules.requireTermsCheckbox && !details.terms;
+    if (termsMissing || !details.consent) {
+      setErrors({ ...(termsMissing ? { terms: c.errors.terms } : {}), ...(!details.consent ? { consent: c.errors.consent } : {}) });
+      requestAnimationFrame(() => document.getElementById(id(termsMissing ? "terms" : "consent"))?.focus());
       return;
     }
     let key = readSession<{ bag: string; key: string }>(IDEM_KEY);
@@ -186,6 +188,7 @@ export function CheckoutView() {
           customer: { name: details.name, email: details.email, phone: details.phone, method: details.method },
           delivery: { mode: details.mode, country: details.country, city: details.city, address: details.address, notes: details.notes },
           consent: true,
+          termsAccepted: details.terms,
           idempotencyKey: key.key,
           website: (document.getElementById(id("website")) as HTMLInputElement | null)?.value ?? "",
         }),
@@ -390,6 +393,35 @@ export function CheckoutView() {
                 <label htmlFor={id("website")}>{t.websiteSend.honeypot}</label>
                 <input id={id("website")} tabIndex={-1} autoComplete="off" />
               </div>
+              {rules.requireTermsCheckbox && (
+                <>
+                  <label className="consent">
+                    <input
+                      id={id("terms")}
+                      type="checkbox"
+                      checked={details.terms}
+                      onChange={(e) => set("terms", e.target.checked)}
+                      aria-invalid={!!errors.terms}
+                      aria-describedby={errors.terms ? `${id("terms-err")} ${id("terms-links")}` : id("terms-links")}
+                    />
+                    <span>{c.terms}</span>
+                  </label>
+                  <p id={id("terms-links")} className="small checkout-terms">
+                    <button type="button" className="link-btn small" onClick={() => openPanel({ type: "policy", id: "returns" })}>
+                      {t.policies.returns.title}
+                    </button>
+                    {" · "}
+                    <button type="button" className="link-btn small" onClick={() => openPanel({ type: "policy", id: "terms" })}>
+                      {t.policies.terms.title}
+                    </button>
+                  </p>
+                  {errors.terms && (
+                    <p id={id("terms-err")} className="field__error">
+                      {errors.terms}
+                    </p>
+                  )}
+                </>
+              )}
               <label className="consent">
                 <input id={id("consent")} type="checkbox" checked={details.consent} onChange={(e) => set("consent", e.target.checked)} aria-invalid={!!errors.consent} aria-describedby={errors.consent ? id("consent-err") : undefined} />
                 <span>{c.consent}</span>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { site } from "@/config/site";
 import { policyFinal } from "@/content/policies";
+import { returnsNotice } from "@/lib/compliance-rules";
 import { categories, type CategoryId } from "@/data/taxonomy";
 import { useI18n } from "@/i18n/I18nProvider";
 import { generalMessage, whatsappUrl } from "@/lib/whatsapp";
@@ -281,11 +282,13 @@ function MenuPanel() {
 }
 
 export function SitePanels() {
-  const { panel, closePanel, openPanel } = useSite();
+  const { panel, closePanel, openPanel, rules } = useSite();
   const { t } = useI18n();
   const p = t.panels;
   const is = (type: string) => panel?.type === type;
   const policy = panel?.type === "policy" ? t.policies[panel.id] : null;
+  // The returns notice is built from the approved compliance rules (docs/COMPLIANCE.md).
+  const policyBody = panel?.type === "policy" && panel.id === "returns" ? returnsNotice(rules, t.returnsTerms) : policy?.body ?? [];
 
   return (
     <>
@@ -326,7 +329,7 @@ export function SitePanels() {
         {panel?.type === "policy" && policy && (
           <div className="policy">
             {!policyFinal[panel.id] && <p className="tag tag--line">{p.interim}</p>}
-            {policy.body.map((para) => (
+            {policyBody.map((para) => (
               <p key={para}>{para}</p>
             ))}
             <p className="muted small">

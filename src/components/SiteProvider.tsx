@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { isPolicyId, type PolicyId } from "@/content/policies";
+import { defaultSiteRules, type SiteRules } from "@/lib/compliance-rules";
 import { findVariant, maxQuantity } from "@/lib/format";
 import type { ShopItem } from "@/lib/paths";
 import { track } from "@/lib/analytics";
@@ -48,6 +49,8 @@ interface SiteContextValue {
   websiteEnquiries: boolean;
   /** True once the journal has a published article (shows its links). */
   journal: boolean;
+  /** The approved compliance rules the site follows (returns notice, product pages, checkout). */
+  rules: SiteRules;
   cart: {
     ready: boolean;
     lines: CartLine[];
@@ -80,7 +83,7 @@ function readStoredCart(): CartLine[] {
   }
 }
 
-export function SiteProvider({ items, websiteEnquiries, journal = false, children }: { items: ShopItem[]; websiteEnquiries: boolean; journal?: boolean; children: ReactNode }) {
+export function SiteProvider({ items, websiteEnquiries, journal = false, rules = defaultSiteRules, children }: { items: ShopItem[]; websiteEnquiries: boolean; journal?: boolean; rules?: SiteRules; children: ReactNode }) {
   const [panel, setPanel] = useState<Panel | null>(null);
   const [lines, setLines] = useState<CartLine[]>([]);
   const [ready, setReady] = useState(false);
@@ -170,6 +173,7 @@ export function SiteProvider({ items, websiteEnquiries, journal = false, childre
       itemByRef,
       websiteEnquiries,
       journal,
+      rules,
       cart: {
         ready,
         lines,
@@ -181,7 +185,7 @@ export function SiteProvider({ items, websiteEnquiries, journal = false, childre
         clear,
       },
     }),
-    [panel, openPanel, closePanel, items, itemByRef, websiteEnquiries, journal, ready, lines, add, remove, setQty, clear],
+    [panel, openPanel, closePanel, items, itemByRef, websiteEnquiries, journal, rules, ready, lines, add, remove, setQty, clear],
   );
 
   return <SiteContext.Provider value={value}>{children}</SiteContext.Provider>;

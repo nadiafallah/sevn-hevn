@@ -35,9 +35,19 @@ Either:
 
 Approving runs `private.compliance_decide`: an amendment updates the rule, a new rule is added, a repeal retires the rule, a check marks it as verified. Every decision goes to the activity log. A change can be decided once.
 
-## What it does not do yet
+## What the website does with the rules
 
-The website does not read these rules yet. The returns, terms and privacy texts in `src/content/policies.ts` are unchanged, and checkout does not yet use the return windows or thresholds. That is the next step: checkout, the returns policy and invoices read `site_params` from the active rules, after the owner approves the final policy wording.
+The website reads the active rules' numbers through `public.compliance_site_settings()` (rule code → `site_params` only; requirements, notes, sources and changes stay private). They are cached for ten minutes; approving a change in the panel refreshes them at once. If the database can't be read, the site uses the defaults in `src/lib/compliance-rules.ts`, which match the rules approved on 27 Oct 2026.
+
+| Where | What | Rules |
+| --- | --- | --- |
+| Returns notice (footer → Returns & refunds) | Built from the rules: when a piece can be returned, faults, the window for pieces without a warranty, the change-of-mind window, discounts after purchase. Still marked as an interim notice. | RET-ONLINE-NONCONFORM, RET-DEFECT-REMEDY, RET-NO-WARRANTY-30, RET-CHANGE-OF-MIND, PRC-DISCOUNT-7D |
+| Product page | Returns line from the rules (unless the piece has its own), links to the shipping and returns notices, country of origin and materials in Arabic when filled in. | RET-CHANGE-OF-MIND, DIS-PRE-ORDER, DIS-ARABIC |
+| Checkout | A required tick box: “I have read the returns notice and the terms”, with links to both. Checked again on the server; the purchase request stores what was accepted (the windows in force at that moment). | DIS-PRE-ORDER |
+| Panel → Products | Country of origin and materials in Arabic. A pre-owned piece (excellent, very good, good or fair) can't be published without condition notes; the database refuses it too. | DIS-PRE-ORDER, DIS-ARABIC, DIS-CONDITION |
+| Panel → Compliance → On the website | Every rule with where it is applied: on the website, partly, not yet, or outside the website (accounting, buying, licensing). | all |
+
+Not yet on the website: the trade licence number (set `licence` in `src/config/site.ts`), warranty terms and invoices in Arabic, VAT-inclusive prices (once VAT-registered), digital invoices (needs online payment), an automatic alert when a price drops after a sale. The final returns and terms wording still needs the owner's (and ideally a lawyer's) approval before the "interim" label is removed in `src/content/policies.ts`.
 
 ## Files
 
@@ -48,3 +58,5 @@ The website does not read these rules yet. The returns, terms and privacy texts 
 | Undo | `supabase/rollbacks/20261027191858_compliance.down.sql` (deletes the ledger; export first) |
 | Tests | `supabase/tests/compliance.test.mjs` (`npm run db:test`) |
 | Panel page | `src/app/admin/(panel)/compliance/page.tsx`, action `decideComplianceChange` in `src/app/admin/actions.ts` |
+| Website settings, product fields, condition notes | `supabase/migrations/20261030120000_compliance_site.sql` (tests: `supabase/tests/compliance-site.test.mjs`) |
+| Reading the rules on the website | `src/lib/compliance.ts` (server), `src/lib/compliance-rules.ts` (defaults, returns wording, coverage; tests: `tests/compliance-rules.test.ts`) |

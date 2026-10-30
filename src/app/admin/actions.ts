@@ -13,6 +13,7 @@ import { sendRecovery, signInWithPassword, signOut, signUp, updatePassword } fro
 import { clearSessionCookies, currentStaff, requireOwner, requireStaff, setSessionCookies } from "@/lib/admin/session";
 import { fromDubaiLocal, knowledgeTopics, languageCode, staffSettableStatuses } from "@/lib/admin/labels";
 import { CATALOG_TAG } from "@/lib/catalog";
+import { COMPLIANCE_TAG } from "@/lib/compliance";
 import { JOURNAL_TAG } from "@/lib/journal";
 import { PRODUCT_IMAGES_BUCKET } from "@/lib/supabase";
 
@@ -424,11 +425,21 @@ export async function createProduct(form: FormData) {
   back(`/admin/products/${ref}`, { ok: "product_created" });
 }
 
+/** Origin and Arabic composition (compliance migration), saved separately when the form has them. */
+function complianceFields(form: FormData) {
+  const f: Record<string, string> = {};
+  if (form.has("country_of_origin")) f.country_of_origin = str(form, "country_of_origin", 80);
+  if (form.has("composition_ar")) f.composition_ar = str(form, "composition_ar", 500);
+  return f;
+}
+
 export async function saveProduct(form: FormData) {
   const ctx = await requireOwner();
   const ref = productRef(form);
   try {
     await rpc(ctx.api, "admin_save_product", { p_ref: ref, p_fields: productFields(form) }, ctx.token);
+    const extra = complianceFields(form);
+    if (Object.keys(extra).length) await rpc(ctx.api, "admin_save_product_compliance", { p_ref: ref, p_fields: extra }, ctx.token);
   } catch (e) {
     back(`/admin/products/${ref}`, { error: codeOf(e) });
   }
@@ -603,6 +614,8 @@ export async function decideComplianceChange(form: FormData) {
   } catch (e) {
     back("/admin/compliance", { error: codeOf(e) });
   }
+  // The website reads the approved rules (returns notice, checkout): show the change on the next visit.
+  revalidateTag(COMPLIANCE_TAG, { expire: 0 });
   back("/admin/compliance", { ok: `compliance_${result || decision}` });
 }
 
