@@ -184,6 +184,7 @@ describe("shop", () => {
     await page.getByRole("button", { name: "Send purchase request" }).click();
     await page.getByText(/Please confirm we may contact you/).waitFor();
     await page.getByLabel(/may contact me/).check();
+    await page.getByLabel(/I have read the returns notice/).check();
     await page.getByRole("button", { name: "Send purchase request" }).click();
     await page.waitForURL(/\/checkout\/received\?ref=REQ-/);
     const ref = new URL(page.url()).searchParams.get("ref");
@@ -206,7 +207,7 @@ describe("shop", () => {
         fetch("/api/purchase-request", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ items: [{ ref: "SH-0102", sku: "SH-0102-38", qty: 1 }], customer: { name: "Twice", phone: "+447700900457", method: "whatsapp" }, delivery: { mode: "collect" }, consent: true, locale: "en", idempotencyKey: "e2e-twice-0000000001" }),
+          body: JSON.stringify({ items: [{ ref: "SH-0102", sku: "SH-0102-38", qty: 1 }], customer: { name: "Twice", phone: "+447700900457", method: "whatsapp" }, delivery: { mode: "collect" }, consent: true, termsAccepted: true, locale: "en", idempotencyKey: "e2e-twice-0000000001" }),
         }).then((r) => r.json());
       return [await send(), await send()];
     });
@@ -229,6 +230,7 @@ describe("shop", () => {
     await page.getByLabel(/Collect in Dubai/).check();
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByLabel(/may contact me/).check();
+    await page.getByLabel(/I have read the returns notice/).check();
     await page.getByRole("button", { name: "Send purchase request" }).click();
     await page.getByText("Sending from the website isn’t available right now.").waitFor();
     const wa = await page.getByRole("link", { name: "Continue on WhatsApp" }).getAttribute("href");
