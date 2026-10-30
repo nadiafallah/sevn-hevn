@@ -20,6 +20,8 @@ manifest: [{"src": "...jpg", "out": "ref/01.jpg", "mode": "stand|flat", "drop": 
   erase  — [{"poly": [[x, y], …] in percent of the photo, "only": "light" | "colour"}]: remove packaging
            the cut-out kept, by hand; "only" limits it to light pixels (tissue next to black leather)
            or to coloured ones (suede next to silver)
+  dark   — [{"poly": […], "below": 175}]: inside the outline, keep what is dark or saturated
+           (black leather on light paper, where the cut-out breaks up on reflections)
   neutral — silver: take out the colour the box or cushion reflects in it
   both   — combine two cut-out models, for white pieces on the white table
   add    — [[[x, y], …], …] in percent of the photo: outlines of parts the cut-out missed
@@ -144,6 +146,22 @@ def erase(px, a, areas):
     return keep_main(a, share=0.01)
 
 
+def dark_key(px, a, areas):
+    """Black leather against light paper: inside the outline, keep what is dark (or saturated, like gold)."""
+    h, w = a.shape
+    spread = px.max(axis=2) - px.min(axis=2)
+    lum = px.mean(axis=2)
+    for area in areas:
+        poly = Image.new("L", (w, h), 0)
+        ImageDraw.Draw(poly).polygon([(x * w / 100, y * h / 100) for x, y in area["poly"]], fill=255)
+        inside = np.asarray(poly) > 0
+        keep = (lum < area.get("below", 175)) | (spread > 60)
+        keep = ndimage.binary_opening(ndimage.binary_closing(keep, iterations=3), iterations=2)
+        soft = ndimage.gaussian_filter(keep.astype(np.float32), 1.5)
+        a = np.where(inside, soft, a)
+    return a
+
+
 def neutral(px, a, keep=0.3):
     lum = px.mean(axis=2, keepdims=True)
     grey = lum + (px - lum) * keep
@@ -246,6 +264,10 @@ def main(out, manifest, prefix):
             a = drop_packaging(px, a, job["drop"])
         if job.get("erase"):
             a = erase(px, a, job["erase"])
+        if job.get("dark"):
+            a = dark_key(px, a, job["dark"])
+        if job.get("erase_after"):
+            a = erase(px, a, job["erase_after"])
         if job.get("holes"):
             a = clear_holes(px, a)
         if job.get("neutral"):
