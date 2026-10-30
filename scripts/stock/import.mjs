@@ -2,7 +2,10 @@
 // Storage bucket and writes the products, photos and versions — the same rows the panel would write.
 // Running it again replaces those pieces' photos and versions, so a corrected batch can be re-run.
 //
-//   node --env-file=.env.local scripts/stock/import.mjs scripts/stock/2026-10-28.json <photos folder>
+//   node --env-file=.env.local scripts/stock/import.mjs scripts/stock/2026-10-28.json <photos folder> [REF …]
+//
+// With references, only those pieces are written. A replaced photo needs a new "path" in the data
+// (e.g. "REF/01-v2.jpg"): image caches keep a file under its old address.
 //
 // Needs SUPABASE_URL and SUPABASE_SECRET_KEY (Supabase → Project Settings → API Keys). Keep the key
 // in .env.local only; never in a commit or a chat. Changes made this way are not in the panel's
@@ -11,7 +14,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import sharp from "sharp";
 
-const [dataFile, photoDir] = process.argv.slice(2);
+const [dataFile, photoDir, ...onlyRefs] = process.argv.slice(2);
 if (!dataFile || !photoDir) {
   console.error("usage: node --env-file=.env.local scripts/stock/import.mjs <data.json> <photos folder>");
   process.exit(1);
@@ -35,7 +38,9 @@ async function call(path, init = {}) {
 const rest = (path, method, body, prefer = "return=representation") =>
   call(`/rest/v1/${path}`, { method, body: JSON.stringify(body), headers: { "content-type": "application/json", prefer } });
 
-const { products } = JSON.parse(readFileSync(dataFile, "utf8"));
+const all = JSON.parse(readFileSync(dataFile, "utf8")).products;
+const products = onlyRefs.length ? all.filter((p) => onlyRefs.includes(p.ref)) : all;
+if (onlyRefs.length && products.length !== onlyRefs.length) throw new Error(`Not in the data: ${onlyRefs.filter((r) => !all.some((p) => p.ref === r)).join(", ")}`);
 const PRODUCT_FIELDS = [
   "ref", "published", "status", "name", "category", "subcategory", "brand", "model_reference", "description", "price_aed", "stock",
   "condition", "condition_notes", "year", "material", "colour", "size", "size_system", "dimensions", "hardware", "purity", "stones",
@@ -53,7 +58,7 @@ for (const p of products) {
   for (const [i, photo] of p.photos.entries()) {
     const bytes = readFileSync(join(photoDir, photo.file));
     const { width, height } = await sharp(bytes).metadata();
-    const path = `${p.ref}/${String(i + 1).padStart(2, "0")}.jpg`;
+    const path = photo.path ?? `${p.ref}/${String(i + 1).padStart(2, "0")}.jpg`;
     await call(`/storage/v1/object/${BUCKET}/${path}`, {
       method: "POST",
       body: bytes,

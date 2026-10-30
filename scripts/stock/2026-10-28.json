@@ -2,9 +2,9 @@
  "listed": "2026-10-28",
  "products": [
   {
-   "ref": "HER-BAB-SMALL",
+   "ref": "HER-BAB-SMALL-ORANGE",
    "status": "available",
-   "name": "Bride-à-Brac case, small model",
+   "name": "Bride-à-Brac case in orange, small model",
    "brand": "Hermès",
    "category": "bags",
    "subcategory": "pouches",
@@ -12,9 +12,9 @@
    "material": "Canvas",
    "hardware": "Silver-tone snaps",
    "size": "Small model",
-   "description": "Hermès Bride-à-Brac case in the small size: canvas with an embroidered H and a striped webbing handle that snaps closed. Two colours, one of each. Brand new.",
+   "description": "Hermès Bride-à-Brac case in the small size, in orange: canvas with an embroidered H and a striped webbing handle that snaps closed. Brand new.",
    "price_aed": 4200,
-   "stock": 2,
+   "stock": 1,
    "condition": "new",
    "authentication": "Bought new from a Hermès boutique. The original receipt can be seen on request.",
    "delivery": "Delivery options, timing and any costs are confirmed with you personally before you pay.",
@@ -32,7 +32,31 @@
     {
      "file": "her-bab-small/03.jpg",
      "alt": "Orange Bride-à-Brac case from above, handle snapped closed"
-    },
+    }
+   ],
+   "published": true,
+   "colour": "Orange"
+  },
+  {
+   "ref": "HER-BAB-SMALL-PINK",
+   "status": "available",
+   "name": "Bride-à-Brac case in pink, small model",
+   "brand": "Hermès",
+   "category": "bags",
+   "subcategory": "pouches",
+   "model_reference": "H104222M",
+   "material": "Canvas",
+   "hardware": "Silver-tone snaps",
+   "size": "Small model",
+   "description": "Hermès Bride-à-Brac case in the small size, in pink: canvas with an embroidered H and a striped webbing handle that snaps closed. Brand new.",
+   "price_aed": 4200,
+   "stock": 1,
+   "condition": "new",
+   "authentication": "Bought new from a Hermès boutique. The original receipt can be seen on request.",
+   "delivery": "Delivery options, timing and any costs are confirmed with you personally before you pay.",
+   "featured": true,
+   "listed_at": "2026-10-28",
+   "photos": [
     {
      "file": "her-bab-small/04.jpg",
      "alt": "Hermès Bride-à-Brac case in pink canvas, front"
@@ -46,21 +70,8 @@
      "alt": "Pink Bride-à-Brac case from above, handle snapped closed"
     }
    ],
-   "variants": [
-    {
-     "sku": "HER-BAB-SMALL-ORANGE",
-     "colour": "Orange",
-     "stock": 1,
-     "photo": 0
-    },
-    {
-     "sku": "HER-BAB-SMALL-PINK",
-     "colour": "Pink",
-     "stock": 1,
-     "photo": 3
-    }
-   ],
-   "published": true
+   "published": true,
+   "colour": "Pink"
   },
   {
    "ref": "CHA-VANITY-NOIR",
@@ -316,7 +327,8 @@
    "photos": [
     {
      "file": "her-kd25-noir/01.jpg",
-     "alt": "Hermès Kelly Dépêches 25 in Noir Box calfskin with its felt protector, gold-tone turn-lock and wrist strap"
+     "alt": "Hermès Kelly Dépêches 25 in Noir Box calfskin with its felt protector, gold-tone turn-lock and wrist strap",
+     "path": "HER-KD25-NOIR/01-v2.jpg"
     }
    ],
    "published": true

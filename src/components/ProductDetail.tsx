@@ -148,7 +148,7 @@ export function ProductDetail({ item, related, initialSku }: { item: Item; relat
           <section className="pdp-gallery" aria-label={fmt(p.gallery.label, { name: title })}>
             {image && (
               <button type="button" className={`pdp-gallery__main pdp-gallery__main--${frameFit(image)}`} onClick={() => setZoom(active)} aria-label={fmt(p.gallery.zoom, { n: active + 1, total: item.images.length })}>
-                <Image key={image.src} src={image.src} alt={image.alt} width={image.width} height={image.height} sizes="(min-width: 1000px) 52vw, 100vw" priority className="pdp-gallery__img" />
+                <Image key={image.src} quality={95} src={image.src} alt={image.alt} width={image.width} height={image.height} sizes="(min-width: 1000px) 52vw, 100vw" priority className="pdp-gallery__img" />
                 <span className="pdp-gallery__zoom" aria-hidden="true">
                   <ZoomIcon size={18} />
                 </span>
@@ -419,7 +419,7 @@ function Zoom({
   return (
     <div className="zoom">
       <div className={`zoom__stage${big ? " zoom__stage--big" : ""}`}>
-        <Image src={image.src} alt={image.alt} width={image.width} height={image.height} sizes={big ? "200vw" : "100vw"} quality={85} className="zoom__img" onClick={() => setBig((b) => !b)} />
+        <Image quality={95} src={image.src} alt={image.alt} width={image.width} height={image.height} sizes={big ? "200vw" : "100vw"} className="zoom__img" onClick={() => setBig((b) => !b)} />
       </div>
       <div className="zoom__bar">
         {total > 1 && (
