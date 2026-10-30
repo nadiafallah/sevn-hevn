@@ -90,9 +90,9 @@ node --env-file=.env.local scripts/stock/import.mjs scripts/stock/2026-10-28.jso
 
 The first batch (`scripts/stock/2026-10-28.json`, 28 Oct 2026) is 15 pieces from the owner's inventory and photos:
 
-- Photos: the owner's own, given one studio treatment: the piece cut out of its photo, colour and exposure balanced against the white table it was shot on, placed on one warm studio background (#F3EFE9) with a soft shadow, 3:4, 1800 × 2400. The piece itself is never redrawn. Close-ups and pieces photographed in their box (Kelly Dépêches, Farandole) keep their own background, colour-balanced only.
+- Photos: the owner's own, given one studio treatment (`scripts/stock/studio.py`; Python with `rembg[cpu] pillow numpy scipy`, the isnet-general-use model on the CPU provider — the CoreML provider stalls on this Mac): the piece cut out of its photo, colour and exposure balanced against the white table it was shot on, placed on one warm studio background (#F3EFE9) with a soft shadow, 3:4, 1800 × 2400. The piece itself is never redrawn. Close-ups and pieces photographed in their box (Kelly Dépêches, Farandole) keep their own background, colour-balanced only.
 - Prices: the prices in the owner's Instagram posts; where there was none, the owner's estimate (inventory "Dubai asking" price), and for Miu Miu and Oran an estimate from UAE retail prices, to be confirmed by the owner.
-- Five pieces held but not photographed yet (Constance Élan, Birkin 25, Evelyne 16, Chanel mini flap, Chaîne d'Ancre pendant) are listed enquiry-only with a branded "photographs coming soon" card that shows no product. Replace the card with real photos in the panel when they exist. Photos of other sellers or of the brands are never used.
+- Five pieces held but not photographed yet (Constance Élan, Birkin 25, Evelyne 16, Chanel mini flap, Chaîne d'Ancre pendant) are listed enquiry-only with a branded "photographs coming soon" card that shows no product. The card is made by `scripts/stock/placeholder.py` with the site's fonts (Jost, Cormorant Garamond). Replace the card with real photos in the panel when they exist. Photos of other sellers or of the brands are never used.
 
 ## Private design preview (drafts)
 
