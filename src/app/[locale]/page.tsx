@@ -121,6 +121,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
                   {c.image && (
                     <Image
                       src={c.image.src}
+                      quality={95}
                       alt={c.image.alt}
                       width={c.image.width}
                       height={c.image.height}

@@ -63,10 +63,10 @@ export function ItemCard({
       <Link href={href(productPath(item.ref))} className="card__link">
         <div className={`card__media${second ? " card__media--swap" : ""}`}>
           {first && (
-            <Image src={first.src} alt={first.alt} width={first.width} height={first.height} sizes={sizes} priority={priority} className={`card__img card__img--${frameFit(first)}`} />
+            <Image src={first.src} alt={first.alt} width={first.width} height={first.height} sizes={sizes} quality={95} priority={priority} className={`card__img card__img--${frameFit(first)}`} />
           )}
           {second && (
-            <Image src={second.src} alt="" width={second.width} height={second.height} sizes={sizes} className={`card__img card__img--alt card__img--${frameFit(second)}`} />
+            <Image src={second.src} alt="" width={second.width} height={second.height} sizes={sizes} quality={95} className={`card__img card__img--alt card__img--${frameFit(second)}`} />
           )}
           <div className="card__badge">
             <ItemBadge item={item} />

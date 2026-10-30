@@ -37,7 +37,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
     formats: ["image/avif", "image/webp"],
-    qualities: [75, 85],
+    // 95 for product photos (a customer has to see the real piece: grain, stitching, hallmarks).
+    qualities: [75, 85, 95],
     // Product photos, and the stills of the houses' films shown in journal articles before play.
     remotePatterns: [...productImagePatterns, { protocol: "https", hostname: "i.ytimg.com", pathname: "/vi/**" }],
     dangerouslyAllowLocalIP: localStack,
