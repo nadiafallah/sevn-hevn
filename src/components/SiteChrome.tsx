@@ -4,6 +4,7 @@ import type { Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import { getCatalog } from "@/lib/catalog";
+import { getSiteRules } from "@/lib/compliance";
 import { supabaseWriteConfig } from "@/lib/supabase";
 import { conciergeReady } from "@/lib/concierge/config";
 import { getJournalCards } from "@/lib/journal";
@@ -25,6 +26,8 @@ export async function SiteChrome({ locale, children }: { locale: Locale; childre
   const chatReady = await conciergeReady();
   // The Journal link appears once there is a published article.
   const journalReady = (await getJournalCards()).length > 0;
+  // The approved compliance rules: returns notice, product pages and checkout read their numbers.
+  const rules = await getSiteRules();
 
   const organizationJsonLd = {
     "@context": "https://schema.org",
@@ -44,7 +47,7 @@ export async function SiteChrome({ locale, children }: { locale: Locale; childre
 
   return (
     <I18nProvider locale={locale} ui={t.ui}>
-      <SiteProvider items={items} websiteEnquiries={supabaseWriteConfig() !== null} journal={journalReady}>
+      <SiteProvider items={items} websiteEnquiries={supabaseWriteConfig() !== null} journal={journalReady} rules={rules}>
         <a href="#main" className="skip-link">
           {t.ui.skip}
         </a>

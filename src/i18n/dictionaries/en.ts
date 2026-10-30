@@ -213,7 +213,7 @@ export const en = {
       returns: {
         title: "Returns & refunds",
         body: [
-          "Our returns and refunds policy is being finalised and will be published here before online purchases open.",
+          // Shown only if the returns wording above can't be built (see SitePanels).
           "For any piece you are considering, please ask us about return eligibility before purchase — the terms that apply will be confirmed to you in writing.",
         ],
       },
@@ -244,6 +244,25 @@ export const en = {
           "SEVN HEVN is an independent business and is not affiliated with, authorised by or endorsed by any brand mentioned on this website.",
         ],
       },
+    },
+
+    /**
+     * The returns notice, filled in with the numbers of the approved compliance rules
+     * (src/lib/compliance-rules.ts). Replaces `policies.returns.body` on the website.
+     */
+    returnsTerms: {
+      grounds:
+        "You can return a piece, or ask us to replace it, if it arrives defective, incomplete or damaged, differs from its description, arrives so late that it no longer serves its purpose, or does not match the terms agreed for your order. This does not apply to a piece that has been used other than to check it.",
+      defect: "If a piece turns out to be faulty, we repair or replace it at our cost, or refund its price.",
+      noWarrantyFromDefect: "For a piece sold without a warranty, tell us within {days} days of the fault appearing and we will take it back and refund its price.",
+      noWarrantyFromPurchase: "For a piece sold without a warranty, tell us within {days} days of your purchase if a fault appears and we will take it back and refund its price.",
+      changeOfMind:
+        "Changed your mind? You can return a piece within {days} days of delivery, unused and as you received it, with everything it came with (tags, packaging and papers). This is our own commitment and does not limit your rights for a faulty piece.",
+      noChangeOfMind: "We do not take back pieces in perfect condition because of a change of mind. Your rights for a faulty or non-conforming piece are not affected.",
+      priceDrop: "If a discount on a piece you bought starts within {days} days of your purchase, we will tell you. If we do not, you can claim the difference within {refundDays} days of your purchase.",
+      howTo: "Online payment isn’t connected yet. Before you pay, the terms that apply to your piece are confirmed to you in writing. To return a piece or report a fault, contact us and quote your request reference.",
+      productLine: "Returns within {days} days of delivery, unused and with everything the piece came with. Faulty pieces are repaired, replaced or refunded.",
+      productLineNoChangeOfMind: "Faulty or non-conforming pieces are repaired, replaced or refunded.",
     },
 
 

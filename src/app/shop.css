@@ -1693,3 +1693,18 @@ a.shop-nav__trigger {
     transform: none;
   }
 }
+
+/* Arabic composition statement on the product page (Cabinet Resolution 66/2023, Art. 40). */
+.pdp-ar {
+  margin: 0 0 16px;
+  font-family: "Geeza Pro", "Noto Naskh Arabic", "Segoe UI", Tahoma, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  text-align: right;
+}
+
+/* Links to the returns notice and terms under the checkout tick box. */
+.checkout-terms {
+  margin: 0 0 6px;
+  padding-left: 32px;
+}

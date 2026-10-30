@@ -84,6 +84,10 @@ export interface Item {
   audience?: Audience;
   /** e.g. ["Original box", "Papers dated 2019", "Dust bag"] */
   included?: string[];
+  /** Country where the piece was made, as documented (Cabinet Resolution 66/2023, Art. 40). */
+  countryOfOrigin?: string;
+  /** Materials and composition in Arabic (Cabinet Resolution 66/2023, Art. 40(1)(c)). */
+  compositionAr?: string;
   /** Factual description of documentation held (never claim independent authentication without it). */
   authentication?: string;
   /** Delivery details for this piece. Required for `available`. */

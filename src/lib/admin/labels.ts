@@ -146,6 +146,7 @@ export const errorMessages: Record<string, string> = {
   duplicate: "That already exists.",
   journal_meta: "Add the meta title, meta description and summary before publishing (Edit → Save).",
   already_decided: "That change was already decided (perhaps by your reply to the weekly email).",
+  condition_notes_needed: "Add condition notes before publishing: a pre-owned piece (excellent, very good, good or fair) must say what wear it shows (UAE consumer protection rules).",
   rate_limited: "Too many attempts. Please wait a few minutes and try again.",
   unreachable: "The database couldn’t be reached. Please try again.",
   db_error: "Something went wrong. Please try again.",

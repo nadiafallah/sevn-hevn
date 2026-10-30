@@ -35,6 +35,9 @@ export interface PanelProduct {
   purity?: string | null;
   stones?: string | null;
   audience?: string | null;
+  // Added by the compliance migration (20261030120000); undefined until it has run.
+  country_of_origin?: string | null;
+  composition_ar?: string | null;
   product_images: { id: number; storage_path: string; width: number; height: number; alt: string; position: number }[];
   product_variants?: PanelVariant[];
 }
@@ -58,6 +61,8 @@ const BASE =
   "product_images(id,storage_path,width,height,alt,position)";
 
 export const PRODUCT_SELECT = `${BASE},hardware,size_system,case_diameter_mm,movement,purity,stones,audience,product_variants(id,sku,colour,size,hardware,material,price_aed,stock,image_id,position)`;
+/** With the origin and Arabic composition fields (compliance migration 20261030120000). */
+export const PRODUCT_SELECT_COMPLIANCE = `${PRODUCT_SELECT},country_of_origin,composition_ar`;
 /** Before the shop migration has run, the new columns and versions don't exist yet. */
 export const PRODUCT_SELECT_LEGACY = BASE;
 

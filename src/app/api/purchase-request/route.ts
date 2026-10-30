@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyBag, sameOrigin } from "@/lib/checkout";
+import { getSiteRules } from "@/lib/compliance";
 import { clientHash, conciergeServer } from "@/lib/concierge/config";
 import { DbError, rpc } from "@/lib/concierge/db";
 import { isEmail, parsePhone } from "@/lib/concierge/phone";
@@ -67,6 +68,9 @@ export async function POST(request: Request) {
     if (!address) errors.push("address");
   }
   if (body.consent !== true) errors.push("consent");
+  // Rule DIS-PRE-ORDER: the returns notice and terms are accepted before the request is sent.
+  const rules = await getSiteRules();
+  if (rules.requireTermsCheckbox && body.termsAccepted !== true) errors.push("terms");
   if (!IDEM.test(idem)) errors.push("invalid_request");
   if (errors.length) return fail(400, "invalid_details", { fields: errors });
 
@@ -78,6 +82,7 @@ export async function POST(request: Request) {
     "Purchase request from the website:",
     ...bag.lines.map((l) => `${l.brand ?? ""} ${l.name}${l.options ? ` (${l.options})` : ""} — ${l.sku && l.sku !== l.ref ? `${l.ref} / ${l.sku}` : l.ref} — ${l.qty} × AED ${l.unitAED.toLocaleString("en-US")}`.trim()),
     `Subtotal: ${bag.subtotalLabel}. Delivery and VAT to be confirmed. Not paid.`,
+    ...(body.termsAccepted === true ? [`Returns notice and terms accepted (change of mind: ${rules.changeOfMindDays} days; faults without warranty: ${rules.defectWindowDays} days).`] : []),
   ].join("\n");
 
   try {
@@ -102,6 +107,14 @@ export async function POST(request: Request) {
           payment: "not_connected",
           delivery: { mode, country: mode === "deliver" ? country : null, city: mode === "deliver" ? city : null, address: mode === "deliver" ? address : null },
           notes: notes || null,
+          // What the buyer accepted, so the team applies the same terms (rules as read at submission).
+          terms: {
+            accepted: body.termsAccepted === true,
+            change_of_mind_days: rules.changeOfMindDays,
+            defect_window_days: rules.defectWindowDays,
+            defect_window_from: rules.defectWindowFrom,
+            rules_source: rules.source,
+          },
         },
       },
     });

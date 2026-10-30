@@ -773,3 +773,22 @@ p.adm-pre.adm-fa {
 .adm-badge--s-low {
   color: var(--muted);
 }
+
+.adm-badge--v-live {
+  border-color: #5d7a5a;
+  color: #3f5c3c;
+}
+
+.adm-badge--v-partial {
+  border-color: #8a6d1b;
+  color: #6f5714;
+}
+
+.adm-badge--v-not_yet {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.adm-badge--v-off_site {
+  color: var(--muted);
+}

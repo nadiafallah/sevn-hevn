@@ -56,6 +56,9 @@ type ProductRow = {
   purity?: string | null;
   stones?: string | null;
   audience?: Audience | null;
+  // Added by the compliance migration (20261030120000); absent until it has run.
+  country_of_origin?: string | null;
+  composition_ar?: string | null;
   product_variants?: { sku: string; colour: string | null; size: string | null; hardware: string | null; material: string | null; price_aed: number | null; stock: number | null; image_id: number | null }[];
   product_images: { id?: number; storage_path: string; width: number; height: number; alt: string }[];
 };
@@ -66,11 +69,11 @@ const BASE_COLUMNS = [
   "authentication", "delivery", "returns", "featured", "editorial_note", "listed_at",
 ];
 const SHOP_COLUMNS = ["hardware", "size_system", "case_diameter_mm", "movement", "purity", "stones", "audience"];
-const SELECT_FULL = [
-  ...BASE_COLUMNS, ...SHOP_COLUMNS,
-  "product_images(id,storage_path,width,height,alt)",
-  "product_variants(sku,colour,size,hardware,material,price_aed,stock,image_id)",
-].join(",");
+const COMPLIANCE_COLUMNS = ["country_of_origin", "composition_ar"];
+const SHOP_RELATIONS = ["product_images(id,storage_path,width,height,alt)", "product_variants(sku,colour,size,hardware,material,price_aed,stock,image_id)"];
+const SELECT_FULL = [...BASE_COLUMNS, ...SHOP_COLUMNS, ...COMPLIANCE_COLUMNS, ...SHOP_RELATIONS].join(",");
+/** Before the compliance migration: no origin or Arabic composition columns yet. */
+const SELECT_SHOP = [...BASE_COLUMNS, ...SHOP_COLUMNS, ...SHOP_RELATIONS].join(",");
 const SELECT_LEGACY = [...BASE_COLUMNS, "product_images(storage_path,width,height,alt)"].join(",");
 
 const opt = <T,>(v: T | null | undefined) => (v === null ? undefined : v);
@@ -116,6 +119,8 @@ function fromRow(url: string, r: ProductRow): Item | null {
     purity: opt(r.purity),
     stones: opt(r.stones),
     audience: opt(r.audience),
+    countryOfOrigin: opt(r.country_of_origin),
+    compositionAr: opt(r.composition_ar),
     included: r.included?.length ? r.included : undefined,
     authentication: opt(r.authentication),
     delivery: opt(r.delivery),
@@ -142,7 +147,7 @@ async function fetchGenuine(fresh: boolean): Promise<Item[]> {
       published: "is.true",
       order: "listed_at.desc.nullslast,ref.asc",
       "product_images.order": "position.asc,id.asc",
-      ...(select === SELECT_FULL ? { "product_variants.order": "position.asc,id.asc" } : {}),
+      ...(select !== SELECT_LEGACY ? { "product_variants.order": "position.asc,id.asc" } : {}),
     });
     return fetch(`${cfg.url}/rest/v1/products?${params}`, {
       headers: { apikey: cfg.key, accept: "application/json" },
@@ -151,8 +156,9 @@ async function fetchGenuine(fresh: boolean): Promise<Item[]> {
     });
   };
   let res = await request(SELECT_FULL);
-  // Until the shop migration has run, the new columns and the variants table don't exist (HTTP 400):
-  // read the original columns so the shop keeps working.
+  // Until the compliance or shop migration has run, their columns (and the variants table) don't
+  // exist (HTTP 400): read what the database has, so the shop keeps working.
+  if (res.status === 400) res = await request(SELECT_SHOP);
   if (res.status === 400) res = await request(SELECT_LEGACY);
   if (!res.ok) throw new Error(`[catalog] Supabase catalogue request failed with HTTP ${res.status}`);
   const rows = (await res.json()) as ProductRow[];
