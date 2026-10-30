@@ -28,6 +28,21 @@ Branch `feat/compliance-ledger`. A ledger of the UAE rules for selling online, w
 
 Tests: `supabase/tests/compliance.test.mjs` (access rules, owner-only decisions, amendment, rejection, new rule, repeal, verification). Run in CI; the session that built this had no npm registry access, so local checks were not run.
 
+## Real stock and the shop's houses (28 Oct 2026)
+
+Branch `feat/real-stock`. Owner decisions (28 Oct 2026): the shop lists only the houses SEVN HEVN holds; the AI stand-in images on the home category cards go; the owner's own pieces go on the website with studio-treated photos. Details: [docs/SHOP.md](docs/SHOP.md).
+
+| Part | State |
+| --- | --- |
+| Houses | Hermès and Chanel in every category; Miu Miu and Loro Piana for bags and shoes. Louis Vuitton, Gucci, Cartier, Van Cleef & Arpels and Bvlgari removed from menus, filters, sourcing form, chat, panel, site copy and the journal's video sources. Migration `20261028120000_shop_houses.sql` (unpublishes pieces of removed houses, deletes nothing) |
+| Bag type | New: Pouches & cases (Hermès Bride-à-Brac) |
+| Home category cards | No AI images: the newest piece's own photo, or a typographic card while a category is empty (Watches for now) |
+| Stock batch | 15 pieces in `scripts/stock/2026-10-28.json`, imported by `scripts/stock/import.mjs` (photos to Storage + products, photos, versions). 10 with the owner's photos (studio-treated, one background), 5 held but not photographed yet, listed by enquiry with a "photographs coming soon" card. Prices: Instagram prices; owner's estimates for the Chanel Vanity and the Chaîne d'Ancre bracelet; UAE-retail-based estimates for Miu Miu and Oran, to be confirmed |
+| Photos to replace | Kelly Dépêches and Farandole (Instagram photos in their box), the five "coming soon" pieces |
+| Production | **Not live.** Needs the owner's SQL file `SEVN-HEVN-shop-update.sql` (now four migrations, tested on PGlite in production's order), then the import with the Supabase secret key in `.env.local`, then the merge |
+
+Tests (28–30 Oct 2026, on a copy outside iCloud): `npm run typecheck`, `npm run lint`; `npm run test:unit` 72 of 72; `npm run db:test` 55 of 55 (new: the houses update); `tests/e2e/run.sh` 28 of 28. The import script was run against the local stack (all 15 pieces, 47 photos) and the pages checked in Chromium on desktop and phone. Not run: HawkScan (no CLI or API key).
+
 ## Home hero film (17 Oct 2026)
 
 Branch `feat/hero-video`. The home hero shows the new approved image (three women, a black top-handle bag, an emerald tote) with a cinemagraph made from it: a breeze through the hair and the satin dresses, the seated woman slowly uncrossing and recrossing her legs, the woman in espresso brushing back her hair, breathing and blinks; no camera move. Headline, buttons and links are unchanged and remain HTML over the empty wall.

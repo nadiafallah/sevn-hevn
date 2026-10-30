@@ -172,7 +172,8 @@ async function asRole(claims, fn) {
   await c.connect();
   try {
     await c.query("begin");
-    await c.query(`set local role ${claims ? "authenticated" : "anon"}`);
+    // A service-role token (a secret key on Supabase) bypasses row-level security, as on the platform.
+    await c.query(`set local role ${claims?.role === "service_role" ? "service_role" : claims ? "authenticated" : "anon"}`);
     await c.query("select set_config('request.jwt.claims', $1, true)", [claims ? JSON.stringify(claims) : ""]);
     const out = await fn(c);
     await c.query("commit");

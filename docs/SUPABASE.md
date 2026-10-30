@@ -20,7 +20,7 @@ The rest of this section describes the same fields for working directly in the S
 
 1. **Add a piece**: *Insert row*.
    - `ref`: unique reference, letters, numbers and dashes only, e.g. `SH-0001`.
-   - `name`, `category`: one of `bags`, `shoes`, `watches`, `jewellery`, and `brand`: Hermès, Louis Vuitton, Gucci or Chanel (for `jewellery` also Cartier, Van Cleef & Arpels or Bvlgari). The database refuses to publish anything else (`out_of_scope`) and unifies spellings ("Hermes" → "Hermès"). The panel (/admin/products) is the easier way; see [SHOP.md](SHOP.md).
+   - `name`, `category`: one of `bags`, `shoes`, `watches`, `jewellery`, and `brand`: Hermès or Chanel (for `bags` and `shoes` also Miu Miu or Loro Piana). The database refuses to publish anything else (`out_of_scope`) and unifies spellings ("Hermes" → "Hermès"). The panel (/admin/products) is the easier way; see [SHOP.md](SHOP.md).
    - Optional details: `subcategory` (a type id, e.g. `clutches`), `model_reference`, `description`, `condition`, `year`, `material`, `colour`, `size`, `size_system`, `dimensions`, `hardware`, `case_diameter_mm`, `movement`, `purity`, `stones`, `audience`, `included` (a list such as `{"Box","Dust bag"}`), `authentication` (documented facts only), `delivery`, `returns`.
    - Leave `published` **unticked** while you prepare it. Unpublished pieces never appear on the site.
 2. **Add photos**: see the next section.

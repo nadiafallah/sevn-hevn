@@ -50,7 +50,7 @@ Edit `src/config/site.ts`. Every link on the site reads from it. To show Faceboo
 
 ## Adding products
 
-Add pieces in the private panel (`/admin/products`): photos, price, stock, versions (colours / sizes) and publishing, without touching code. The shop lists only **Bags, Shoes, Watches and Jewellery**, and only **Hermès, Louis Vuitton, Gucci and Chanel** — plus **Cartier, Van Cleef & Arpels and Bvlgari** for Jewellery. The panel offers nothing else and the database refuses anything else (`out_of_scope`, `brand_not_allowed`), so an import or a dashboard edit can't publish it either. Rules, fields per category and the go-live steps: [docs/SHOP.md](docs/SHOP.md).
+Add pieces in the private panel (`/admin/products`): photos, price, stock, versions (colours / sizes) and publishing, without touching code. The shop lists only **Bags, Shoes, Watches and Jewellery**, and only **Hermès and Chanel** — plus **Miu Miu and Loro Piana** for Bags and Shoes. The panel offers nothing else and the database refuses anything else (`out_of_scope`, `brand_not_allowed`), so an import or a dashboard edit can't publish it either. Rules, fields per category and the go-live steps: [docs/SHOP.md](docs/SHOP.md).
 
 Each piece has a **status**:
 
