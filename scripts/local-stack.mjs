@@ -304,7 +304,7 @@ const server = http.createServer(async (req, res) => {
         if (b.file_size_limit && bytes.length > Number(b.file_size_limit)) return send(res, 413, { message: "Payload too large" });
         if (b.allowed_mime_types && !b.allowed_mime_types.includes(req.headers["content-type"])) return send(res, 415, { message: "mime type not supported" });
         try {
-          await asRole(claims, (c) => c.query("insert into storage.objects (bucket_id, name, owner) values ($1, $2, $3)", [bucket, name, claims?.sub ?? null]));
+          await asRole(claims, (c) => c.query(`insert into storage.objects (bucket_id, name, owner) values ($1, $2, $3)${req.headers["x-upsert"] === "true" ? " on conflict (bucket_id, name) do nothing" : ""}`, [bucket, name, claims?.sub ?? null]));
         } catch (e) {
           return send(res, 403, { statusCode: "403", error: "Unauthorized", message: e.message });
         }
